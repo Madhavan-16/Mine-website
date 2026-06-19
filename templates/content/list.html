@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Content{% endblock %}
+{% block content %}
+  <div class="toolbar">
+    <h1 style="margin:0;">Content</h1>
+    {% if current_user.role in ['admin','moderator'] %}
+    <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">Create knowledge content</a>
+    {% endif %}
+  </div>
+  <table class="table" style="margin-top: 12px;">
+    <thead>
+      <tr>
+        <th scope="col">Title</th>
+        <th scope="col">Module</th>
+        <th scope="col">Status</th>
+        <th scope="col">Author</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in rows %}
+        <tr>
+          <td><a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a></td>
+          <td><span class="badge">{{ item.module }}</span></td>
+          <td class="meta">{{ item.status }}</td>
+          <td class="meta">{{ item.author_name }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

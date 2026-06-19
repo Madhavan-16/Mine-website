@@ -1,0 +1,65 @@
+<footer class="site-footer" role="contentinfo">
+  <div class="site-footer__inner">
+    <div class="site-footer__grid">
+      <div class="site-footer__col">
+        <h2 class="site-footer__heading">Quick links</h2>
+        <ul class="site-footer__list">
+          {% if current_user %}
+            <li><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('main.knowledge') }}">Knowledge repository</a></li>
+            <li><a href="{{ url_for('projects.project_list') }}">Programs &amp; projects</a></li>
+            <li><a href="{{ url_for('search.search') }}">Search</a></li>
+          {% else %}
+            <li><a href="{{ url_for('main.landing') }}">Home</a></li>
+            <li><a href="{{ url_for('main.journey') }}">Freeport–Hexaware Journey</a></li>
+            <li><a href="{{ url_for('auth.login') }}">Sign in</a></li>
+          {% endif %}
+        </ul>
+      </div>
+      <div class="site-footer__col">
+        <h2 class="site-footer__heading">Resources</h2>
+        <ul class="site-footer__list">
+          <li><a href="{{ url_for('reference.fmi_kyc') }}#kyc-evolution-timeline">Evolution timeline</a></li>
+          <li><a href="{{ url_for('reference.fmi_kyc') }}">Know your Customer — Freeport</a></li>
+          {% if current_user %}
+            <li><a href="{{ url_for('main.welcome') }}">Platform overview</a></li>
+            <li><a href="{{ url_for('main.software_tools') }}">Software &amp; tools</a></li>
+            {% if current_user.role in ['admin', 'moderator'] %}
+              <li><a href="{{ url_for('admin.analytics') }}">Analytics</a></li>
+            {% endif %}
+          {% endif %}
+        </ul>
+      </div>
+      <div class="site-footer__col">
+        <h2 class="site-footer__heading">Platform status</h2>
+        <div class="site-footer__status-row">
+          <span class="site-footer__status-indicator" aria-hidden="true"></span>
+          <span class="site-footer__status-label">Operational</span>
+        </div>
+        <p class="site-footer__note">Portal and catalog endpoints are available. Indication is informational only (as of this page load).</p>
+      </div>
+      <div class="site-footer__col">
+        <h2 class="site-footer__heading">Contact</h2>
+        <ul class="site-footer__list site-footer__list--inline">
+          <li>
+            <a href="https://www.hexaware.com" target="_blank" rel="noopener noreferrer">Hexaware</a>
+          </li>
+          <li>
+            <a href="https://www.fcx.com" target="_blank" rel="noopener noreferrer">Freeport-McMoRan</a>
+          </li>
+        </ul>
+        <p class="site-footer__note">For MiNe access or content: use your engagement lead or corporate service desk.</p>
+      </div>
+    </div>
+    <div class="site-footer__rule" aria-hidden="true"></div>
+    <div class="site-footer__bottom">
+      <p class="site-footer__copyright">
+        <span>&copy; 2026 Hexaware Technologies</span>
+        <span class="site-footer__bullet" aria-hidden="true"></span>
+        <span>MiNe v2.0</span>
+        <span class="site-footer__bullet" aria-hidden="true"></span>
+        <span>Freeport Account</span>
+      </p>
+    </div>
+  </div>
+</footer>

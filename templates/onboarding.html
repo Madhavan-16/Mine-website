@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Onboarding Kit{% endblock %}
+{% block page_header %}
+  <div class="page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('reference.fmi_kyc') }}">Program map</a><span class="breadcrumb-sep" aria-hidden="true">›</span><a href="{{ url_for('main.onboarding') }}">Onboarding kit</a></nav>
+    <h1 class="page-title" style="text-transform:none;">Onboarding kit — Welcome to Freeport account</h1>
+  </div>
+{% endblock %}
+{% block content %}
+  {% include "includes/back_program_map.html" %}
+
+  {% if current_user.role in ['admin','moderator'] %}
+  <div class="toolbar" style="margin-bottom: 12px;">
+    <a class="btn btn-primary" href="{{ url_for('repo_standalone.repo_new', segment='onboarding') }}">Add onboarding note</a>
+  </div>
+  {% endif %}
+
+  <div class="tabs-radios card" style="padding: 16px 18px 8px;">
+    <input type="radio" name="ob-tab" id="ob-tab-dos" checked />
+    <input type="radio" name="ob-tab" id="ob-tab-tools" />
+    <input type="radio" name="ob-tab" id="ob-tab-who" />
+    <div class="tab-labels">
+      <label for="ob-tab-dos">Do’s &amp; don’ts</label>
+      <label for="ob-tab-tools">Software &amp; tools</label>
+      <label for="ob-tab-who">Who’s who</label>
+    </div>
+    <div class="tab-panels">
+      <div class="tab-panel tab-panel--dos">
+        <div class="dos-dont-grid">
+          <div class="dos-col">
+            <h3>✅ Do’s</h3>
+            <ul>
+              <li>Follow Freeport naming conventions and document standards.</li>
+              <li>Use approved communication channels for account work.</li>
+              <li>Attend weekly account standups and governance forums.</li>
+              <li>Log decisions and assets in MiNe so others can reuse them.</li>
+            </ul>
+          </div>
+          <div class="dont-col">
+            <h3>❌ Don’ts</h3>
+            <ul>
+              <li>Never share client data outside approved collaboration spaces.</li>
+              <li>Don’t install unapproved software on account devices.</li>
+              <li>Never bypass change management for production-impacting work.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="tab-panel tab-panel--tools">
+        <div class="tools-table-wrap">
+          <table class="tools-table">
+            <thead>
+              <tr><th scope="col">Tool</th><th scope="col">Purpose</th><th scope="col">Required</th><th scope="col">Link</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>MS Teams</td><td>Communication</td><td>✅ Yes</td><td><a href="#" aria-label="External (placeholder)">↗</a></td></tr>
+              <tr><td>ServiceNow</td><td>ITSM</td><td>✅ Yes</td><td><a href="#" aria-label="External (placeholder)">↗</a></td></tr>
+              <tr><td>Jira</td><td>Project management</td><td>✅ Yes</td><td><a href="#" aria-label="External (placeholder)">↗</a></td></tr>
+              <tr><td>Confluence</td><td>Knowledge base</td><td>Optional</td><td><a href="#" aria-label="External (placeholder)">↗</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="meta" style="margin-top:12px;">Replace links with your tenant URLs. Published onboarding articles below may add more tools.</p>
+      </div>
+      <div class="tab-panel tab-panel--who">
+        <div class="who-filters">
+          <div class="field">
+            <label for="who-dept">Department</label>
+            <select id="who-dept" disabled><option>All departments</option></select>
+          </div>
+          <div class="field">
+            <label for="who-prog">Program</label>
+            <select id="who-prog" disabled><option>All programs</option></select>
+          </div>
+        </div>
+        <p class="meta">Directory filters wire to your HR source in a later phase. Sample cards:</p>
+        <div class="who-card-grid">
+          <div class="who-card"><div class="avatar" aria-hidden="true"></div><div class="name">R. Kumar</div><div class="meta">Account · Director · ERP program</div></div>
+          <div class="who-card"><div class="avatar" aria-hidden="true"></div><div class="name">A. Sharma</div><div class="meta">Delivery · Tech lead · Data platform</div></div>
+          <div class="who-card"><div class="avatar" aria-hidden="true"></div><div class="name">P. Verma</div><div class="meta">Engineering · Developer · Service desk</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-rule">Published onboarding</div>
+  {% include "_content_cards.html" %}
+{% endblock %}

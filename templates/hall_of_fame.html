@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Hall of Fame{% endblock %}
+{% block page_header %}
+  <div class="page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('reference.fmi_kyc') }}">Program map</a><span class="breadcrumb-sep" aria-hidden="true">›</span><a href="{{ url_for('main.hall_of_fame') }}">Hall of Fame</a></nav>
+    <h1 class="page-title" style="text-transform:none;">🏆 Hall of fame</h1>
+    <p class="page-lede">Celebrating excellence on the Freeport account.</p>
+  </div>
+{% endblock %}
+{% block content %}
+  {% include "includes/back_program_map.html" %}
+
+  <div class="hof-year-bar">
+    <span class="label">Filter: Year</span>
+    <a href="{{ url_for('main.hall_of_fame') }}" class="{% if not year_filter %}is-active{% endif %}">All</a>
+    {% for y in years %}
+      <a href="{{ url_for('main.hall_of_fame', year=y) }}" class="{% if year_filter == y %}is-active{% endif %}">{{ y }}</a>
+    {% endfor %}
+  </div>
+
+  {% if current_user.role in ['admin','moderator'] %}
+  <div class="toolbar" style="margin: 16px 0 12px;">
+    <a class="btn btn-primary" href="{{ url_for('repo_standalone.repo_new', segment='hall-of-fame') }}">Nominate highlight</a>
+  </div>
+  {% endif %}
+
+  {% if rows and rows|length > 0 %}
+    <div class="card-grid" style="margin-top: 8px;">
+      {% for item in rows %}
+        <article class="hof-card">
+          <div class="meta" style="margin-bottom:8px;" aria-hidden="true">⭐</div>
+          <p class="quote">"{% if item.summary %}{{ item.summary|e }}{% else %}{{ item.title|e }}{% endif %}"</p>
+          <div class="row">📅 {{ item.updated_at }}</div>
+          <div class="row">📄 {{ item.title }}</div>
+          <div class="row">👤 {{ item.author_name }}</div>
+          <div style="margin-top:12px;"><a href="{{ url_for('content.content_view', cid=item.id) }}">Open record</a></div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card meta" style="margin-top: 12px;">No highlights for this filter yet.</div>
+  {% endif %}
+{% endblock %}

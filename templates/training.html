@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Training Corner{% endblock %}
+{% block page_header %}
+  <div class="page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('reference.fmi_kyc') }}">Program map</a><span class="breadcrumb-sep" aria-hidden="true">›</span><a href="{{ url_for('main.training') }}">Training corner</a></nav>
+    <h1 class="page-title" style="text-transform:none;">Training corner</h1>
+    <p class="page-lede">Materials, certifications, and skill tracks for the account.</p>
+  </div>
+{% endblock %}
+{% block content %}
+  {% include "includes/back_program_map.html" %}
+
+  {% if current_user.role in ['admin','moderator'] %}
+  <div class="toolbar" style="margin-bottom: 12px;">
+    <a class="btn btn-primary" href="{{ url_for('repo_standalone.repo_new', segment='training') }}">Add training item</a>
+  </div>
+  {% endif %}
+  {% include "_content_cards.html" %}
+{% endblock %}

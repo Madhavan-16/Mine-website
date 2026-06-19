@@ -1,0 +1,45 @@
+{% macro motif_icon(slug) %}
+  {% if slug == 'pit' %}
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 19.5h18M7 19.5l3.5-7 2.8 4.5 2.7-6.5L19 19.5" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 7.5 11 4h2l2 3.5" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  {% elif slug == 'copper' %}
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="7.5" stroke="currentColor" stroke-width="1.65"/><path d="M10 8.5h4M9.5 12h5M10.5 15.5h3" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/></svg>
+  {% elif slug == 'haul' %}
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 14.5h10.5l2-3.5H6.5L4 14.5Z" stroke="currentColor" stroke-width="1.65" stroke-linejoin="round"/><circle cx="7.5" cy="16.5" r="1.6" stroke="currentColor" stroke-width="1.5"/><circle cx="13.5" cy="16.5" r="1.6" stroke="currentColor" stroke-width="1.5"/><path d="M14.5 11h4.5l-1.2 3.5h-4" stroke="currentColor" stroke-width="1.65" stroke-linejoin="round"/></svg>
+  {% elif slug == 'process' %}
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.65"/><path d="M12 4.5v2.2M12 17.3v2.2M6.2 6.2l1.6 1.6M16.2 16.2l1.6 1.6M4.5 12h2.2M17.3 12h2.2M6.2 17.8l1.6-1.6M16.2 7.8l1.6-1.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+  {% elif slug == 'safety' %}
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4.5 5.5 7.5V12c0 3.6 2.8 6.9 6.5 7.8 3.7-.9 6.5-4.2 6.5-7.8V7.5L12 4.5Z" stroke="currentColor" stroke-width="1.65" stroke-linejoin="round"/><path d="m9.2 12.2 1.9 1.9 3.7-3.8" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  {% else %}
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6.5 4.5h8.2l3.3 3.3v12.2H6.5V4.5Z" stroke="currentColor" stroke-width="1.65" stroke-linejoin="round"/><path d="M14.7 4.5v3h3M9.5 11.5h5.5M9.5 14.8h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+  {% endif %}
+{% endmacro %}
+
+<div class="landing-hero-motif-board">
+  <div class="landing-hero-motif-board__head">
+    <span class="landing-hero-motif-board__line" aria-hidden="true"></span>
+    <p class="landing-hero-motif-board__kicker">Across the mining value chain</p>
+  </div>
+  <ul class="landing-hero-motif-bento" data-landing-stagger>
+    {% for motif in hero_motifs %}
+      <li
+        class="landing-hero-motif-bento__cell{% if motif.featured %} landing-hero-motif-bento__cell--featured{% endif %}"
+        data-landing-item
+      >
+        <button
+          type="button"
+          class="landing-hero-motif-card landing-hero-motif-card--{{ motif.accent }}"
+          data-motif-open="{{ motif.slug }}"
+          aria-haspopup="dialog"
+        >
+          <span class="landing-hero-motif-card__glow" aria-hidden="true"></span>
+          <span class="landing-hero-motif-card__icon">{{ motif_icon(motif.slug) }}</span>
+          <span class="landing-hero-motif-card__copy">
+            <span class="landing-hero-motif-card__label">{{ motif.label }}</span>
+            <span class="landing-hero-motif-card__desc">{{ motif.desc }}</span>
+          </span>
+          <span class="landing-hero-motif-card__arrow" aria-hidden="true">→</span>
+        </button>
+      </li>
+    {% endfor %}
+  </ul>
+</div>

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Moderation{% endblock %}
+{% block page_header %}
+  <div class="page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><span>Admin</span><span class="breadcrumb-sep" aria-hidden="true">›</span><span>Moderation</span></nav>
+    <h1 class="page-title">Content moderation queue <span class="page-title-meta">({{ rows|length }} pending)</span></h1>
+  </div>
+{% endblock %}
+{% block content %}
+  <p class="page-lede" style="margin-bottom:16px;">
+    Review the full text below, then approve or reject. Rejections require a reason and notify the author.
+    Use <strong>Open full record</strong> only if you need attachments or the full-page layout.
+  </p>
+
+  {% if rows and rows|length > 0 %}
+    <div class="mod-review-list">
+      {% for item in rows %}
+        <article class="mod-review-card" id="mod-item-{{ item.id }}">
+          <header class="mod-review-card-head">
+            <div>
+              <h2 class="mod-review-title">{{ item.title }}</h2>
+              <p class="meta" style="margin:6px 0 0;">
+                <span class="badge">{{ item.module }}</span>
+                · {{ item.author_name }} · {{ item.author_email|e }}
+                · Submitted {{ item.updated_at }}
+              </p>
+            </div>
+            <div class="mod-actions">
+              <form method="post" action="{{ url_for('admin.approve', cid=item.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <button class="btn btn-primary" type="submit">✅ Approve</button>
+              </form>
+              <button class="btn btn-danger" type="button" data-reject-open="{{ item.id }}">❌ Reject</button>
+              <a class="btn btn-secondary" href="{{ url_for('content.content_view', cid=item.id) }}" target="_blank" rel="noopener">Open full record</a>
+            </div>
+          </header>
+
+          <div class="mod-review-body">
+            <h3 class="mod-review-subhead">Summary</h3>
+            <p class="mod-review-summary">{% if item.summary %}{{ item.summary|e }}{% else %}<span class="meta">No summary provided.</span>{% endif %}</p>
+
+            <h3 class="mod-review-subhead">Body</h3>
+            <div class="mod-preview-scroll" tabindex="0" aria-label="Submission body for {{ item.title|e }}">
+              {% if item.body %}
+                <pre class="mod-preview-pre">{{ item.body|e }}</pre>
+              {% else %}
+                <p class="meta">No body text.</p>
+              {% endif %}
+            </div>
+
+            {% set files = attachments_by_content.get(item.id, []) %}
+            {% if files and files|length > 0 %}
+              <h3 class="mod-review-subhead">Attachments</h3>
+              <ul class="mod-attach-list">
+                {% for f in files %}
+                  {% set name = f.file_name or "" %}
+                  {% set parts = name.split(".") %}
+                  {% set ext = parts[-1]|lower if parts|length > 1 else "" %}
+                  {% set office_src = office_embed_src(f.id) if ext in ["ppt", "pptx", "xlsx", "xls"] else none %}
+                  {% set has_pdf_preview = f.preview_path %}
+                  {% set xlsx_table_url = url_for("content.attachment_preview_xlsx_html", aid=f.id) if ext == "xlsx" else none %}
+                  <li>
+                    <span class="mod-attach-name">{{ f.file_name|e }}</span>
+                    <span class="mod-attach-links">
+                      {% if has_pdf_preview %}
+                        <a href="{{ url_for('content.attachment_preview_pdf', aid=f.id) }}" target="_blank" rel="noopener">PDF preview</a>
+                      {% elif ext in ["png", "jpg", "jpeg", "gif", "webp", "pdf"] %}
+                        <a href="{{ url_for('content.download_attachment', aid=f.id, inline=1) }}" target="_blank" rel="noopener">View inline</a>
+                      {% elif office_src %}
+                        <a href="{{ office_src }}" target="_blank" rel="noopener">Preview (Office Online)</a>
+                      {% elif ext == "xlsx" and xlsx_table_url and not has_pdf_preview and not office_src %}
+                        <a href="{{ xlsx_table_url }}" target="_blank" rel="noopener">Table preview</a>
+                      {% endif %}
+                      <a href="{{ url_for('content.download_attachment', aid=f.id) }}">Download original</a>
+                    </span>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+
+    <dialog id="reject-dialog" class="reject-modal" aria-labelledby="reject-dialog-title">
+      <form method="post" id="reject-dialog-form" action="">
+        <h2 id="reject-dialog-title">Reason for rejection</h2>
+        <p class="meta">This field is required. The author will see your feedback.</p>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <label class="visually-hidden" for="reject-note">Reason</label>
+        <textarea id="reject-note" name="note" required maxlength="2000" rows="6" placeholder="Explain what needs to change…"></textarea>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="reject-dialog-cancel">Cancel</button>
+          <button type="submit" class="btn btn-danger">Submit rejection</button>
+        </div>
+      </form>
+    </dialog>
+    <script>
+(function () {
+  var dialog = document.getElementById("reject-dialog");
+  var form = document.getElementById("reject-dialog-form");
+  var ta = document.getElementById("reject-note");
+  var cancel = document.getElementById("reject-dialog-cancel");
+  if (!dialog || !form) return;
+  document.querySelectorAll("[data-reject-open]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var id = btn.getAttribute("data-reject-open");
+      form.action = "/admin/reject/" + id;
+      ta.value = "";
+      dialog.showModal();
+      ta.focus();
+    });
+  });
+  cancel.addEventListener("click", function () { dialog.close(); });
+  dialog.addEventListener("click", function (e) {
+    if (e.target === dialog) dialog.close();
+  });
+})();
+    </script>
+  {% else %}
+    <div class="card meta" style="margin-top: 12px;">No pending items.</div>
+  {% endif %}
+{% endblock %}

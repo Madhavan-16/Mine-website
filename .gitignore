@@ -1,0 +1,10 @@
+mine.db
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+uploads/*
+!uploads/.gitkeep
+node_modules/
+logs/mail-outbox.log

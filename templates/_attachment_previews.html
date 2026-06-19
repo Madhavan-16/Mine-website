@@ -1,0 +1,88 @@
+{# Expects: files (attachment rows). Optional: attachment_manage_url for empty-state CTA. #}
+<section class="card attach-previews-card" aria-label="Attachments">
+  <h2 style="margin-top: 0;">Attachments</h2>
+  {% if files and files|length > 0 %}
+    <p class="meta" style="margin: 0 0 14px;">
+      Previews when available. <strong>Download original</strong> always gives the file as uploaded.
+    </p>
+    {% for f in files %}
+      {% set name = f.file_name or "" %}
+      {% set parts = name.split(".") %}
+      {% set ext = parts[-1]|lower if parts|length > 1 else "" %}
+      {% set inline_url = url_for("content.download_attachment", aid=f.id, inline=1) %}
+      {% set download_url = url_for("content.download_attachment", aid=f.id) %}
+      {% set preview_pdf_url = url_for("content.attachment_preview_pdf", aid=f.id) %}
+      {% set office_src = office_embed_src(f.id) if ext in ["ppt", "pptx", "xlsx", "xls"] else none %}
+      {% set has_pdf_preview = f.preview_path %}
+      {% set xlsx_table_url = url_for("content.attachment_preview_xlsx_html", aid=f.id) if ext == "xlsx" else none %}
+      <div class="attach-preview-block" id="attach-{{ f.id }}">
+        <div class="attach-preview-toolbar">
+          <strong class="attach-preview-name">{{ name|e }}</strong>
+          <div class="attach-preview-actions">
+            {# Download always first so it stays visible on narrow layouts #}
+            <a class="btn btn-primary attach-preview-download" href="{{ download_url }}">Download original</a>
+            {% if ext == "pdf" %}
+              <a class="btn btn-secondary" href="{{ inline_url }}" target="_blank" rel="noopener">Open in new tab</a>
+            {% elif has_pdf_preview %}
+              <a class="btn btn-secondary" href="{{ preview_pdf_url }}" target="_blank" rel="noopener">Open preview (PDF)</a>
+            {% endif %}
+            {% if office_src %}
+              <a class="btn btn-secondary" href="{{ office_src }}" target="_blank" rel="noopener">{% if ext in ["xlsx", "xls"] %}Open in Office Online (new tab){% else %}Open in new tab{% endif %}</a>
+            {% endif %}
+            {% if ext == "xlsx" and xlsx_table_url and not has_pdf_preview %}
+              <a class="btn btn-secondary" href="{{ xlsx_table_url }}" target="_blank" rel="noopener">Open table preview (new tab)</a>
+            {% endif %}
+          </div>
+        </div>
+        {% if has_pdf_preview %}
+          <div class="attach-preview-frame attach-preview-frame--pdf">
+            <iframe title="PDF preview of {{ name|e }}" src="{{ preview_pdf_url }}"></iframe>
+          </div>
+        {% elif ext in ["png", "jpg", "jpeg", "gif", "webp"] %}
+          <div class="attach-preview-frame">
+            <img src="{{ inline_url }}" alt="{{ name|e }}" loading="lazy" />
+          </div>
+        {% elif ext == "pdf" %}
+          <div class="attach-preview-frame attach-preview-frame--pdf">
+            <iframe title="{{ name|e }}" src="{{ inline_url }}"></iframe>
+          </div>
+        {# Prefer built-in .xlsx table preview (works on localhost); Office Online embed often appears blank when the app URL is not public #}
+        {% elif ext == "xlsx" and xlsx_table_url and not has_pdf_preview %}
+          <div class="attach-preview-frame attach-preview-frame--pdf attach-preview-frame--xlsx">
+            <iframe title="Table preview of {{ name|e }}" src="{{ xlsx_table_url }}"></iframe>
+          </div>
+        {% elif office_src %}
+          <div class="attach-preview-frame attach-preview-frame--pdf attach-preview-frame--office">
+            <iframe title="{{ name|e }}" src="{{ office_src }}" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+          </div>
+        {% elif ext in ["ppt", "pptx", "xls"] and not config.ENABLE_OFFICE_EMBED_PREVIEW and not has_pdf_preview %}
+          <p class="meta attach-preview-fallback">
+            Office Online preview is turned off in configuration (<code>ENABLE_OFFICE_EMBED_PREVIEW</code>). Use <strong>Download original</strong> to open the file locally.
+          </p>
+        {% elif ext in ["ppt", "pptx", "docx", "xls"] %}
+          <p class="meta attach-preview-fallback">
+            No in-page preview for this file right now. Use <strong>Download original</strong> to open it.
+          </p>
+        {% elif ext == "xlsx" %}
+          <p class="meta attach-preview-fallback">
+            Could not build a table preview for this workbook. Use <strong>Download original</strong> to open it.
+          </p>
+        {% else %}
+          <p class="meta attach-preview-fallback">
+            No in-page preview for {% if ext %}<code>.{{ ext|e }}</code>{% else %}this{% endif %} file type. Use Download original to open.
+          </p>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="meta attach-preview-empty" style="margin: 0 0 10px;">
+      No files are attached to this record yet. After you upload a file on the edit screen (for example an Excel workbook),
+      a preview and <strong>Download original</strong> will appear here.
+    </p>
+    {% if attachment_manage_url %}
+      <p style="margin: 0;">
+        <a class="btn btn-secondary" href="{{ attachment_manage_url }}">Add or replace attachment</a>
+      </p>
+    {% endif %}
+  {% endif %}
+</section>

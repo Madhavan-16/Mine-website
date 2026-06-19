@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+  <h1>Settings</h1>
+
+  <div class="card" style="margin-top: 12px; max-width: 560px;">
+    <h2 style="margin-top: 0;">Security</h2>
+    <p class="meta">Signed in as <strong>{{ current_user.username }}</strong> ({{ current_user.role }}).</p>
+    <div class="toolbar" style="margin-top: 14px;">
+      <a class="btn btn-primary" href="{{ url_for('auth.account_settings_password') }}">Change password</a>
+    </div>
+  </div>
+{% endblock %}

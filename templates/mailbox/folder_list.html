@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{ folder_title }} · Outlook Mailbox{% endblock %}
+{% block content %}
+  <h1>Outlook Mailbox — {{ folder_title }}</h1>
+  <p class="meta" style="max-width: 72ch;">
+    {% if account_email %}Connected as <code>{{ account_email }}</code>.{% endif %}
+    Browse your Microsoft 365 mailbox via Microsoft Graph.
+  </p>
+
+  <div class="toolbar" style="margin-top: 10px; gap: 8px; flex-wrap: wrap;">
+    <a class="btn btn-secondary" href="{{ url_for('mailbox.inbox') }}">Inbox</a>
+    <a class="btn btn-secondary" href="{{ url_for('mailbox.sent') }}">Sent</a>
+    <a class="btn btn-secondary" href="{{ url_for('mailbox.drafts') }}">Drafts</a>
+    <a class="btn btn-secondary" href="{{ url_for('mailbox.trash') }}">Trash</a>
+    <a class="btn btn-primary" href="{{ url_for('mailbox.compose') }}">Compose</a>
+    <a class="btn btn-secondary" href="{{ url_for('mailbox.connect') }}">Connection</a>
+  </div>
+
+  {% if rows %}
+    <table class="table" style="margin-top: 12px;">
+      <thead>
+        <tr>
+          <th scope="col">From</th>
+          <th scope="col">Subject</th>
+          <th scope="col">Received/Sent</th>
+          <th scope="col">Flags</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+          {% set from_obj = r.get("from", {}).get("emailAddress", {}) %}
+          <tr>
+            <td class="meta">{{ from_obj.get("address") or "—" }}</td>
+            <td>
+              <a href="{{ url_for('mailbox.message_detail', mid=r.get('id')) }}">
+                {{ r.get("subject") or "(no subject)" }}
+              </a>
+              {% if r.get("bodyPreview") %}
+                <div class="meta" style="margin-top:4px;">{{ r.get("bodyPreview") }}</div>
+              {% endif %}
+            </td>
+            <td class="meta">{{ r.get("receivedDateTime") or r.get("sentDateTime") or "—" }}</td>
+            <td class="meta">
+              {% if r.get("hasAttachments") %}attachments {% endif %}
+              {% if r.get("isRead") is sameas false %}unread{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="card meta" style="margin-top: 12px;">No messages found in {{ folder_title }}.</div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,8 @@
+# Optional: capture outbound SMTP locally (web UI http://localhost:8025, SMTP localhost:1025).
+# Then in .env: MAIL_DUMMY=0, MAIL_SERVER=127.0.0.1, MAIL_PORT=1025, MAIL_USE_TLS=0, MAIL_USERNAME= (empty)
+services:
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"

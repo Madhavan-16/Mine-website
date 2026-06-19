@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block head_extra %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/reference.css') }}" />
+{% endblock %}
+{% block content %}
+  <div class="spec-layout">
+    {% include "includes/back_program_map.html" %}
+    <article class="spec-article" id="spec-main">
+      {% block spec_article %}{% endblock %}
+    </article>
+  </div>
+{% endblock %}

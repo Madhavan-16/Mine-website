@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ row.title }}{% endblock %}
+{% block page_header %}
+  <div class="page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="{{ url_for('projects.project_list') }}">Programs</a>
+      <span class="breadcrumb-sep" aria-hidden="true">›</span>
+      <span>{{ row.title }}</span>
+    </nav>
+    <div class="project-title-row">
+      <div>
+        <h1 class="page-title" style="border:0; padding:0; margin:0; text-transform:none;">{{ row.title }}</h1>
+        <p class="meta" style="margin:6px 0 0;">Program: {{ row.program_name or "—" }}</p>
+      </div>
+      <span class="status-pill">
+        <span class="status-dot {{ status_class }}" aria-hidden="true"></span>
+        {{ row.delivery_status or "Status not set" }}
+      </span>
+    </div>
+  </div>
+{% endblock %}
+{% block content %}
+  <div class="toolbar" style="margin-bottom: 14px;">
+    <a class="btn btn-primary" href="{{ url_for('content.content_view', cid=row.id) }}">Open full record</a>
+  </div>
+
+  <section class="fieldset-panel">
+    <div class="panel-legend">Description</div>
+    <div class="panel-body body-text">{% if row.summary %}{{ row.summary|e }}{% else %}—{% endif %}</div>
+    {% if row.body %}
+      <div class="panel-body body-text" style="margin-top:12px;">{{ row.body|e }}</div>
+    {% endif %}
+  </section>
+
+  <section class="fieldset-panel">
+    <div class="panel-legend">Project manager</div>
+    <div class="panel-body">{{ row.project_manager or "—" }}</div>
+  </section>
+
+  {% if region %}
+  <section class="fieldset-panel">
+    <div class="panel-legend">Region</div>
+    <div class="panel-body">{{ region|e }}</div>
+  </section>
+  {% endif %}
+
+  {% include "_attachment_previews.html" %}
+{% endblock %}

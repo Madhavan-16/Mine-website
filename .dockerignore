@@ -1,0 +1,10 @@
+.venv
+venv
+static_site
+__pycache__
+*.pyc
+.git
+.env
+mine.db
+uploads/*
+!uploads/.gitkeep

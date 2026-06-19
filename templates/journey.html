@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Freeport–Hexaware Journey{% endblock %}
+{% block page_header %}
+  <div class="page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="{{ url_for('main.dashboard') if current_user else url_for('main.landing') }}">Home</a>
+      <span class="breadcrumb-sep" aria-hidden="true">›</span>
+      <span>Freeport–Hexaware Journey</span>
+    </nav>
+    <h1 class="page-title">Freeport – Hexaware Journey</h1>
+    <p class="page-lede">Freeport–Hexaware partnership context and supporting program detail. For the interactive company evolution timeline, see <a href="{{ url_for('reference.fmi_kyc') }}#kyc-evolution-timeline">Know your Customer — Freeport</a> (section&nbsp;2.2).</p>
+  </div>
+{% endblock %}
+{% block content %}
+  {% include "includes/back_program_map.html" %}
+
+  <section class="card journey-digital" style="margin-top: 0;" aria-labelledby="freeport-story-h2">
+    <h2 id="freeport-story-h2" style="margin-top: 0;">3.1 The Freeport story — from sulfur to copper superpower</h2>
+    <p class="journey-digital__lede">
+      Freeport-McMoRan is one of the world’s largest copper producers with global mining operations. The timeline below traces
+      more than a century of company evolution—from sulfur origins and Grasberg through Phelps Dodge, the Indonesian partnership,
+      and the copper–AI era.
+    </p>
+    <figure
+      class="journey-digital__figure"
+      role="group"
+      aria-label="The Technological Evolution: A Data-Driven Timeline"
+    >
+      <img
+        src="{{ url_for('static', filename='img/freeport-story-timeline.png') }}"
+        alt="Infographic titled The Technological Evolution: A Data-Driven Timeline. Horizontal timeline from 1912 through 2026: sulfur origins, diversification, Indonesia and Ertsberg, McMoRan merger, Grasberg, Phelps Dodge, oil and gas period, Indonesian partnership, and the copper-AI era."
+        class="journey-digital__img"
+        width="1024"
+        height="560"
+        decoding="async"
+        loading="lazy"
+      />
+      <figcaption class="meta">
+        Static infographic reference (PNG) for print or offline viewing. For the interactive timeline, see
+        <a href="{{ url_for('reference.fmi_kyc') }}#kyc-evolution-timeline">Know your Customer — Freeport (§2.2 Evolution timeline)</a>.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="card journey-digital" style="margin-top: 14px;" aria-labelledby="partnership-milestones-heading">
+    <h2 id="partnership-milestones-heading" style="margin-top: 0;">Freeport–Hexaware partnership milestones</h2>
+    <figure class="journey-digital__figure" role="group" aria-label="Freeport–Hexaware Partnership Milestones">
+      <img
+        src="{{ url_for('static', filename='img/freeport-hexaware-partnership-milestones.png') }}"
+        alt="Freeport–Hexaware Partnership Milestones: subtitle A journey of partnership, delivery excellence, and transformation at scale. Timeline: Jan 2019 Partnership begins — Hexaware onboarded as a strategic IT partner across the Freeport account. Jul 2019 First delivery go-live — first production milestone and delivery governance. Mar 2020 Scope expansion — new workstreams and regional coverage as Freeport accelerated digital initiatives and platform consolidation. Present — ongoing partnership — innovation, operational excellence, and future-ready solutions. Footer Partnering for impact: stronger delivery governance and cadence; scalable operations across programs and regions; accelerated digital initiatives and consolidation; enabling predictive operations and outcomes."
+        class="journey-digital__img"
+        width="1024"
+        height="510"
+        decoding="async"
+        loading="lazy"
+      />
+    </figure>
+  </section>
+
+  <section class="card journey-digital" style="margin-top: 14px;" aria-labelledby="journey-digital-h2">
+    <h2 id="journey-digital-h2">From data silos to predictive operations</h2>
+    <p class="journey-digital__lede">
+      Technology path from legacy reporting and lakes to Snowflake on Azure, massive fleet IoT scaling, and analytics that show up in throughput, cost, and safety metrics.
+    </p>
+    <figure class="journey-digital__figure">
+      <img
+        src="{{ url_for('static', filename='img/freeport-autonomous-mining-revolution.png') }}"
+        alt="Infographic: The Autonomous Mining Revolution—from legacy SAP BW, Teradata, and Hortonworks Hadoop to Snowflake and Azure; real-time IoT at roughly 60,000 readings per second from 200 sensors across 300 trucks; predictive risk modeling; and highlighted outcomes—about 200 million pounds annual production uplift, roughly 50% lower total cost of ownership, and roughly 95% predictive jam detection with about an eight-minute lead time."
+        class="journey-digital__img"
+        width="1024"
+        height="571"
+        decoding="async"
+        loading="lazy"
+      />
+    </figure>
+  </section>
+
+  <div class="card journey-digital" style="margin-top: 14px;">
+    <h2 class="visually-hidden">Strategic context for delivery teams</h2>
+    <figure class="journey-digital__figure">
+      <img
+        src="{{ url_for('static', filename='img/strategic-context-delivery-teams.png') }}"
+        alt="Strategic Context for Delivery Teams. Five highlights: AI and data centers — AI and data centers significantly increase copper demand. US refined copper link — about 70 percent of US refined copper production is linked to Freeport. Hidden Mine innovation — the Hidden Mine concept enables extraction from waste rock. Geopolitical relevance — strong relevance from a global mining footprint. 2024–2026 The Copper–AI era — AI infrastructure, EVs, and renewables fuel demand; about 70 percent of US refined copper linked to Freeport; proprietary Hidden Mine technology unlocks roughly 200–800 million lbs copper per year from waste."
+        class="journey-digital__img"
+        width="1024"
+        height="605"
+        decoding="async"
+        loading="lazy"
+      />
+    </figure>
+    <p class="meta" style="margin-bottom:0;">
+      For the full “Know your customer” tables (snapshot, leadership roster), see
+      <a href="{{ url_for('reference.fmi_kyc') }}">Freeport — Know your customer</a>.
+    </p>
+  </div>
+{% endblock %}

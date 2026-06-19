@@ -1,0 +1,120 @@
+{# Intelligence search UX — expects: search_xp_placeholders, search_xp_categories, search_xp_filter_tags, search_spotlight #}
+<section
+  id="enterprise-search"
+  class="enterprise-search-xp"
+  aria-labelledby="search-xp-heading"
+  data-aos="fade-up"
+  data-aos-duration="520"
+  data-search-xp-root
+  data-placeholders="{{ search_xp_placeholders|tojson }}"
+>
+  <div class="enterprise-search-xp__halo" aria-hidden="true"></div>
+  <div class="enterprise-search-xp__gridlines" aria-hidden="true"></div>
+  <header class="enterprise-search-xp__head">
+    <p class="enterprise-search-xp__kicker">
+      <span class="enterprise-search-xp__pulse" aria-hidden="true"></span>
+      Enterprise knowledge graph
+    </p>
+    <h2 id="search-xp-heading" class="enterprise-search-xp__title">MiNe intelligence search</h2>
+    <p class="enterprise-search-xp__sub">
+      Scoped to approved catalogue content; filter by domain, layer in tags, and jump to artefacts in one flow.
+    </p>
+  </header>
+
+  <div class="enterprise-search-xp__shell">
+    <form
+      class="enterprise-search-xp__form"
+      method="get"
+      action="{{ url_for('search.search') }}"
+      role="search"
+      data-search-xp-form
+    >
+      <input type="hidden" name="module" value="" data-search-module-input />
+      <div class="enterprise-search-xp__bar-wrap">
+        <label class="visually-hidden" for="enterprise-search-q">Search query</label>
+        <span class="enterprise-search-xp__bar-icon" aria-hidden="true">
+          <svg class="enterprise-search-xp__lens" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="10.5" cy="10.5" r="6.75" stroke="currentColor" stroke-width="1.65" />
+            <path d="m16 16 5 5" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" />
+          </svg>
+        </span>
+        <div class="enterprise-search-xp__input-slot">
+          <input
+            id="enterprise-search-q"
+            name="q"
+            type="search"
+            class="enterprise-search-xp__input"
+            autocomplete="off"
+            maxlength="280"
+            data-search-q-input
+            placeholder=" "
+            aria-describedby="search-xp-hint"
+          />
+          <span class="enterprise-search-xp__ghost" aria-hidden="true" data-search-ghost>
+            <span class="enterprise-search-xp__ghost-inner" data-search-ghost-text></span>
+          </span>
+        </div>
+        <button type="submit" class="enterprise-search-xp__submit">
+          <span>Open results</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="enterprise-search-xp__row enterprise-search-xp__row--categories">
+        <span class="enterprise-search-xp__row-label">Scope</span>
+        <div class="enterprise-search-xp__pills" role="toolbar" aria-label="Catalogue scope">
+          {% for cat in search_xp_categories %}
+            <button
+              type="button"
+              class="enterprise-search-xp__pill{% if loop.first %} is-active{% endif %}"
+              data-search-module="{{ cat.value }}"
+            >
+              {{ cat.label }}
+            </button>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="enterprise-search-xp__row enterprise-search-xp__row--tags">
+        <span class="enterprise-search-xp__row-label">Signals</span>
+        <div class="enterprise-search-xp__tags" role="toolbar" aria-label="Suggested filter tags">
+          {% for tag in search_xp_filter_tags %}
+            <button type="button" class="enterprise-search-xp__tag" data-search-tag="{{ tag }}">
+              <span class="enterprise-search-xp__tag-dot" aria-hidden="true"></span>
+              {{ tag }}
+            </button>
+          {% endfor %}
+        </div>
+      </div>
+
+      <p id="search-xp-hint" class="enterprise-search-xp__hint">
+        Full-text retrieval uses the same approved catalogue index as the header search bar.
+      </p>
+    </form>
+
+    <div class="enterprise-search-xp__split">
+      <div class="enterprise-search-xp__col">
+        <h3 class="enterprise-search-xp__col-title">Recent</h3>
+        <p class="enterprise-search-xp__col-note">Synced on this browser after you run a search.</p>
+        <ul class="enterprise-search-xp__chips-list" data-recent-search-list></ul>
+        <p class="enterprise-search-xp__empty-msg" data-recent-empty>Your recent queries appear here.</p>
+      </div>
+      <div class="enterprise-search-xp__col">
+        <h3 class="enterprise-search-xp__col-title">Suggested knowledge</h3>
+        <p class="enterprise-search-xp__col-note">Latest approved artefacts from the catalogue.</p>
+        <div class="enterprise-search-xp__assets">
+          {% for item in search_spotlight %}
+            <a class="enterprise-search-xp__asset" href="{{ url_for('content.content_view', cid=item.id) }}">
+              <span class="enterprise-search-xp__asset-pill">{{ item.module_label }}</span>
+              <span class="enterprise-search-xp__asset-title">{{ item.title }}</span>
+            </a>
+          {% else %}
+            <p class="enterprise-search-xp__empty-msg">Approved content will populate this rail as authors publish.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

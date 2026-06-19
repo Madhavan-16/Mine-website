@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Domain Knowledge — Open-Pit Copper{% endblock %}
+{% block head_extra %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/open-pit-copper-domain.css') }}" />
+{% endblock %}
+{% block content %}
+  <div class="domain-knowledge-page" data-motion-skip>
+    {% include "partials/open_pit_copper_domain_content.html" %}
+  </div>
+  <script src="{{ url_for('static', filename='js/open-pit-copper-domain.js') }}" defer></script>
+{% endblock %}

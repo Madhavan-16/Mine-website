@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+{% block content %}
+  <h1>User management</h1>
+  <p class="meta">Administrators can create users, assign roles, deactivate accounts, or permanently delete a user.</p>
+
+  <div class="card" style="margin-top: 12px;">
+    <h2>Create user</h2>
+    <form method="post" action="{{ url_for('admin.users_create') }}" class="form">
+      {{ create_form.hidden_tag() }}
+      <label for="username">Username</label>
+      {{ create_form.username() }}
+      <label for="email">Email</label>
+      {{ create_form.email() }}
+      <label for="display_name">Display name</label>
+      {{ create_form.display_name() }}
+      <label for="password">Temporary password</label>
+      {{ create_form.password() }}
+      <label for="role">Role</label>
+      {{ create_form.role() }}
+      <div class="toolbar" style="margin-top: 10px;">
+        <button class="btn btn-primary" type="submit">Create</button>
+      </div>
+    </form>
+  </div>
+
+  <h2 style="margin-top: 18px;">Directory</h2>
+  <table class="table" style="margin-top: 10px;">
+    <thead>
+      <tr>
+        <th scope="col">User</th>
+        <th scope="col">Email</th>
+        <th scope="col">Role</th>
+        <th scope="col">Active</th>
+        <th scope="col">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in rows %}
+        <tr>
+          <td>{{ u.display_name }} <span class="meta">({{ u.username }})</span></td>
+          <td class="meta">{{ u.email }}</td>
+          <td>
+            <form method="post" action="{{ url_for('admin.users_update') }}" class="toolbar" style="margin:0; gap:8px;">
+              {{ update_form.hidden_tag() }}
+              <input type="hidden" name="user_id" value="{{ u.id }}" />
+              <select name="role" aria-label="Role for {{ u.username }}">
+                <option value="user" {% if u.role=='user' %}selected{% endif %}>user</option>
+                <option value="moderator" {% if u.role=='moderator' %}selected{% endif %}>moderator</option>
+                <option value="admin" {% if u.role=='admin' %}selected{% endif %}>admin</option>
+              </select>
+              <button class="btn btn-secondary" type="submit">Update</button>
+            </form>
+          </td>
+          <td class="meta">{% if u.is_active %}yes{% else %}no{% endif %}</td>
+          <td>
+            <div class="toolbar" style="margin:0; gap:8px; flex-wrap:wrap;">
+              {% if u.id != current_user.id %}
+                {% if u.is_active %}
+                  <form method="post" action="{{ url_for('admin.users_deactivate') }}" onsubmit="return confirm('Deactivate this user? They will no longer be able to sign in.');" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <input type="hidden" name="user_id" value="{{ u.id }}" />
+                    <button class="btn btn-danger" type="submit">Deactivate</button>
+                  </form>
+                {% endif %}
+                <form method="post" action="{{ url_for('admin.users_delete') }}" onsubmit="return confirm('Permanently delete this user? This cannot be undone. All catalogue content they authored will be reassigned to your account.');" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <input type="hidden" name="user_id" value="{{ u.id }}" />
+                  <button class="btn btn-secondary" type="submit" style="border-color: var(--color-danger); color: var(--color-danger);">Delete permanently</button>
+                </form>
+              {% else %}
+                <span class="meta">This is you</span>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

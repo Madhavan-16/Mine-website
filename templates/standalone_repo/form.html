@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == "create" %}{{ repo_ui.create_h1 }}{% else %}{{ repo_ui.edit_h1 }}{% endif %}{% endblock %}
+{% block page_header %}
+  <div class="page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="{{ url_for('reference.fmi_kyc') }}">Program map</a>
+      <span class="breadcrumb-sep" aria-hidden="true">›</span>
+      <a href="{{ url_for(repo_ui.list_endpoint) }}">{{ repo_ui.list_label }}</a>
+      <span class="breadcrumb-sep" aria-hidden="true">›</span>
+      <span>{% if mode == "create" %}Add{% else %}Edit{% endif %}</span>
+    </nav>
+    <h1 class="page-title" style="text-transform:none;">{% if mode == "create" %}{{ repo_ui.create_h1 }}{% else %}{{ repo_ui.edit_h1 }}{% endif %}</h1>
+  </div>
+{% endblock %}
+{% block content %}
+  <p class="meta" style="margin: 0 0 1rem; max-width: 72ch;">
+    Submissions use the same <strong>moderation workflow</strong> as other catalogue content: save a draft, or
+    <strong>Submit for review</strong> so a moderator or admin can approve it. For KYC, KYA, newsletters, case studies, and other
+    <strong>knowledge series</strong>, use
+    <a href="{{ url_for('content.content_create') }}">Create knowledge content</a>.
+  </p>
+  <form method="post" class="form" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    {% if form.errors %}
+      <div class="flash flash-danger" role="alert">
+        <strong>Form errors:</strong>
+        <ul style="margin:8px 0 0; padding-left:1.2rem;">
+          {% for field_name, field_errors in form.errors.items() %}
+            {% for err in field_errors %}<li><code>{{ field_name }}</code>: {{ err }}</li>{% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <label for="title">Title</label>
+    {{ form.title() }}
+    <label for="summary">Summary</label>
+    {{ form.summary() }}
+    <label for="body">Body</label>
+    {{ form.body(rows=10) }}
+    <label for="tags">Tags</label>
+    {{ form.tags(placeholder="comma, separated, values") }}
+
+    <label for="content-attachment-field">Attachment (optional)</label>
+    {{ form.attachment() }}
+    <p class="help">Allowed types: PDF, DOCX, XLSX, PPT, PPTX, PNG, JPG — max 10 MB per request.</p>
+    <div class="toolbar" style="margin-top: 10px; flex-wrap: wrap; gap: 8px; align-items: center;">
+      <button type="button" class="btn btn-secondary" id="btn-autofill-from-file">Suggest title &amp; summary from file</button>
+      <span class="meta" id="autofill-status" aria-live="polite"></span>
+    </div>
+
+    <div class="toolbar content-form-actions" style="margin-top: 14px; justify-content: flex-end;">
+      <button class="btn btn-primary" name="action" value="submit" type="submit">Submit for review</button>
+      <button class="btn btn-secondary" name="action" value="draft" type="submit">Save draft</button>
+      <a class="btn btn-ghost" href="{{ url_for(repo_ui.list_endpoint) }}">Cancel</a>
+    </div>
+  </form>
+  <script>
+(function () {
+  var btn = document.getElementById("btn-autofill-from-file");
+  var statusEl = document.getElementById("autofill-status");
+  var suggestUrl = {{ url_for("content.content_suggest_fields") | tojson }};
+
+  function getFileInput() {
+    return document.getElementById("content-attachment-field") || document.querySelector('input[type="file"][name="attachment"]');
+  }
+
+  function runAutofill() {
+    var fileInput = getFileInput();
+    var csrf = document.querySelector('input[name="csrf_token"]');
+    if (!fileInput || !fileInput.files || !fileInput.files.length) {
+      if (statusEl) statusEl.textContent = "Choose a file in Attachment first.";
+      return;
+    }
+    if (!csrf || !csrf.value) {
+      if (statusEl) statusEl.textContent = "Missing security token; refresh the page.";
+      return;
+    }
+    if (statusEl) statusEl.textContent = "Reading file…";
+    var fd = new FormData();
+    fd.append("csrf_token", csrf.value);
+    fd.append("file", fileInput.files[0], fileInput.files[0].name);
+    fetch(suggestUrl, { method: "POST", body: fd, credentials: "same-origin" })
+      .then(function (r) {
+        var ct = (r.headers.get("content-type") || "").toLowerCase();
+        if (ct.indexOf("application/json") === -1) {
+          return r.text().then(function (t) {
+            throw new Error(t ? t.slice(0, 240) : "Server did not return JSON (" + r.status + ").");
+          });
+        }
+        return r.json().then(function (j) {
+          return { ok: r.ok, status: r.status, j: j };
+        });
+      })
+      .then(function (res) {
+        if (!res.ok || !res.j || !res.j.ok) {
+          var err = (res.j && res.j.error) ? res.j.error : "Request failed (" + res.status + ").";
+          if (statusEl) statusEl.textContent = err;
+          return;
+        }
+        var tEl = document.getElementById("title");
+        var sEl = document.getElementById("summary");
+        if (tEl) tEl.value = res.j.title || "";
+        if (sEl) sEl.value = res.j.summary || "";
+        if (statusEl) statusEl.textContent = "Title and summary filled from file if possible.";
+      })
+      .catch(function (e) {
+        if (statusEl) statusEl.textContent = e && e.message ? e.message : "Network error; try again.";
+      });
+  }
+
+  if (btn) btn.addEventListener("click", runAutofill);
+})();
+  </script>
+{% endblock %}

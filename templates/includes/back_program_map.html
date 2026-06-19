@@ -1,0 +1,7 @@
+{% if current_user %}
+  <p class="back-program-map">
+    <a href="{{ url_for('main.dashboard') }}" class="back-program-map__link">
+      <span class="back-program-map__arrow" aria-hidden="true">←</span> Back to dashboard
+    </a>
+  </p>
+{% endif %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Software &amp; tools — master list{% endblock %}
+{% block page_header %}
+  <div class="page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="{{ url_for('main.dashboard') }}">Home</a>
+      <span class="breadcrumb-sep" aria-hidden="true">›</span>
+      <span>Software &amp; tools</span>
+    </nav>
+    <h1 class="page-title">Software &amp; tools — master list</h1>
+    <p class="page-lede">Single place to track IDEs, platforms, mining systems, and collaboration tools used on the Freeport account. Edit this list with your program office as the source of truth.</p>
+  </div>
+{% endblock %}
+{% block content %}
+  {% include "includes/back_program_map.html" %}
+
+  <div class="card" style="max-width: 960px;">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Category</th>
+          <th scope="col">Tool / platform</th>
+          <th scope="col">Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Development &amp; IDE</td>
+          <td>—</td>
+          <td class="meta">e.g. VS Code, Azure DevOps, Git</td>
+        </tr>
+        <tr>
+          <td>Collaboration</td>
+          <td>—</td>
+          <td class="meta">e.g. MiNe, Teams, Jira</td>
+        </tr>
+        <tr>
+          <td>Mining / OT systems</td>
+          <td>—</td>
+          <td class="meta">Account-specific applications</td>
+        </tr>
+        <tr>
+          <td>Data &amp; reporting</td>
+          <td>—</td>
+          <td class="meta">Dashboards, analytics, exports</td>
+        </tr>
+        <tr>
+          <td>Other</td>
+          <td>—</td>
+          <td class="meta">Add rows as the master list matures</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="meta" style="margin-top: 12px;">Replace the placeholders above with the approved master list. New tools can be documented here and linked from onboarding and training as needed.</p>
+  </div>
+{% endblock %}

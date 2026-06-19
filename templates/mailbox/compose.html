@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Compose · Outlook Mailbox{% endblock %}
+{% block content %}
+  <h1>Compose Email (Outlook Graph)</h1>
+  <p class="meta" style="max-width:72ch;">
+    This sends from your connected Microsoft account via Microsoft Graph API.
+  </p>
+
+  <div class="toolbar" style="margin-top: 10px; gap: 8px; flex-wrap: wrap;">
+    <a class="btn btn-secondary" href="{{ url_for('mailbox.inbox') }}">Inbox</a>
+    <a class="btn btn-secondary" href="{{ url_for('mailbox.sent') }}">Sent</a>
+    <a class="btn btn-secondary" href="{{ url_for('mailbox.drafts') }}">Drafts</a>
+    <a class="btn btn-secondary" href="{{ url_for('mailbox.trash') }}">Trash</a>
+    <a class="btn btn-secondary" href="{{ url_for('mailbox.connect') }}">Connection</a>
+  </div>
+
+  <div class="card" style="margin-top: 14px; max-width: 760px;">
+    <form method="post" class="form" enctype="multipart/form-data">
+      {{ form.hidden_tag() }}
+
+      <label for="{{ form.to_addresses.id }}">{{ form.to_addresses.label.text }}</label>
+      {{ form.to_addresses(rows=2, placeholder="alice@company.com, bob@company.com") }}
+      {% for e in form.to_addresses.errors %}<p class="meta" style="color: var(--color-danger);">{{ e }}</p>{% endfor %}
+
+      <label for="{{ form.cc_addresses.id }}">{{ form.cc_addresses.label.text }}</label>
+      {{ form.cc_addresses(rows=2, placeholder="Optional") }}
+      {% for e in form.cc_addresses.errors %}<p class="meta" style="color: var(--color-danger);">{{ e }}</p>{% endfor %}
+
+      <label for="{{ form.bcc_addresses.id }}">{{ form.bcc_addresses.label.text }}</label>
+      {{ form.bcc_addresses(rows=2, placeholder="Optional") }}
+      {% for e in form.bcc_addresses.errors %}<p class="meta" style="color: var(--color-danger);">{{ e }}</p>{% endfor %}
+
+      <label for="{{ form.subject.id }}">{{ form.subject.label.text }}</label>
+      {{ form.subject() }}
+      {% for e in form.subject.errors %}<p class="meta" style="color: var(--color-danger);">{{ e }}</p>{% endfor %}
+
+      <label for="{{ form.body.id }}">{{ form.body.label.text }}</label>
+      {{ form.body(rows=12) }}
+      {% for e in form.body.errors %}<p class="meta" style="color: var(--color-danger);">{{ e }}</p>{% endfor %}
+
+      <label for="{{ form.attachments.id }}">{{ form.attachments.label.text }}</label>
+      {{ form.attachments(multiple=true) }}
+      <p class="help">Allowed types follow the app upload policy. Max 3MB per attachment.</p>
+
+      <div class="toolbar" style="margin-top: 14px;">
+        <button class="btn btn-primary" type="submit">Send</button>
+        <a class="btn btn-secondary" href="{{ url_for('mailbox.inbox') }}">Cancel</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Security{% endblock %}
+{% block content %}
+  <h1>Security</h1>
+
+  <div class="card" style="margin-top: 12px; max-width: 560px;">
+    <p class="meta">Signed in as <strong>{{ current_user.username }}</strong> (admin).</p>
+    <div class="toolbar" style="margin-top: 14px; flex-wrap: wrap; gap: 8px;">
+      <a class="btn btn-primary" href="{{ url_for('admin.settings_password') }}">Change password</a>
+    </div>
+  </div>
+{% endblock %}

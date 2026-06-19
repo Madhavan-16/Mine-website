@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+{% block head_extra %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+{% endblock %}
+{% block content %}
+  {# Prep class before paint-with-content: scoped to homepage only (see landing.css). #}
+  <script>
+(function () {
+  try {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!document.body || !document.body.classList.contains("layout-landing")) return;
+    document.documentElement.classList.add("landing-motion-prep");
+    window.setTimeout(function () {
+      document.documentElement.classList.remove("landing-motion-prep");
+    }, 3500);
+  } catch (_) {}
+})();
+  </script>
+
+  <section class="landing-hero landing-hero--fresh" aria-labelledby="landing-title" data-landing-motion>
+    <span class="landing-hero-effects" aria-hidden="true"></span>
+    <div class="landing-hero-inner">
+      <div class="landing-hero-layout">
+        <div class="landing-hero-main">
+          <span class="landing-hero-deco" aria-hidden="true"></span>
+          <div class="landing-hero-main__surface">
+            <p class="landing-hero-eyebrow">
+              <span class="landing-hero-badge">Hexaware × Freeport</span>
+              <span class="landing-hero-badge landing-hero-badge--soft">Governed knowledge</span>
+            </p>
+            <h1 id="landing-title" class="landing-hero-brand">MiNe</h1>
+            <p class="landing-hero-expand">Mining Intelligence and Knowledge Enablement</p>
+            <p class="landing-hero-tagline">
+              Your single source of truth for everything Freeport — context, delivery evidence, and onboarding in one searchable home.
+            </p>
+            {% include "includes/landing_hero_motifs.html" %}
+          </div>
+        </div>
+        {% if hero_showcase %}
+        <aside class="landing-hero-showcase" aria-label="Freeport mining operations" data-hero-showcase>
+          <div class="landing-hero-showcase__stage">
+            {% for slide in hero_showcase %}
+              <div
+                class="landing-hero-showcase__slide landing-hero-showcase__slide--youtube{% if loop.first %} is-active{% endif %}"
+                data-hero-slide
+                data-caption="{{ slide.caption }}"
+                data-youtube-id="{{ slide.youtube_id }}"
+              >
+                <img
+                  class="landing-hero-showcase__media landing-hero-showcase__thumb"
+                  src="{{ slide.thumbnail_url }}"
+                  alt=""
+                  loading="{% if loop.first %}eager{% else %}lazy{% endif %}"
+                  decoding="async"
+                />
+                <a
+                  class="landing-hero-showcase__play-link"
+                  href="{{ slide.watch_url }}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Play on YouTube: {{ slide.caption }}"
+                >
+                  <span class="landing-hero-showcase__play-icon" aria-hidden="true"></span>
+                  <span class="landing-hero-showcase__play-text">Watch on YouTube</span>
+                </a>
+              </div>
+            {% endfor %}
+            <div class="landing-hero-showcase__scrim" aria-hidden="true"></div>
+            <p class="landing-hero-showcase__caption" data-hero-caption aria-live="polite">
+              {{ hero_showcase[0].caption }}
+            </p>
+          </div>
+          {% if hero_showcase|length > 1 %}
+          <div class="landing-hero-showcase__controls">
+            <button type="button" class="landing-hero-showcase__btn" data-hero-prev aria-label="Previous slide">‹</button>
+            <div class="landing-hero-showcase__dots" data-hero-dots>
+              {% for slide in hero_showcase %}
+                <button
+                  type="button"
+                  class="landing-hero-showcase__dot{% if loop.first %} is-active{% endif %}"
+                  data-hero-dot="{{ loop.index0 }}"
+                  aria-label="Slide {{ loop.index }}: {{ slide.caption }}"
+                ></button>
+              {% endfor %}
+            </div>
+            <button type="button" class="landing-hero-showcase__btn" data-hero-next aria-label="Next slide">›</button>
+          </div>
+          {% endif %}
+        </aside>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <div class="landing-motif-modal" id="landing-motif-modal" aria-hidden="true" hidden>
+    <div class="landing-motif-modal__backdrop" data-motif-close tabindex="-1" aria-hidden="true"></div>
+    <div
+      class="landing-motif-modal__dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="landing-motif-modal-title"
+      tabindex="-1"
+    >
+      <button type="button" class="landing-motif-modal__close" data-motif-close aria-label="Close insight panel">×</button>
+      <div class="landing-motif-modal__panels">
+        {% for motif in hero_motifs %}
+          <article
+            class="landing-motif-modal__panel"
+            id="motif-panel-{{ motif.slug }}"
+            data-motif-panel="{{ motif.slug }}"
+            hidden
+          >
+            <div class="landing-motif-modal__media">
+            <img
+              src="{{ url_for('static', filename=motif.modal_image) }}"
+              alt="{{ motif.modal_image_alt }}"
+              loading="lazy"
+              decoding="async"
+            />
+            </div>
+            <div class="landing-motif-modal__body">
+              <h3 class="landing-motif-modal__title" id="landing-motif-modal-title-{{ motif.slug }}">{{ motif.modal_title }}</h3>
+              <p class="landing-motif-modal__lead">{{ motif.modal_lead }}</p>
+              {% if motif.modal_points %}
+                <ul class="landing-motif-modal__list">
+                  {% for point in motif.modal_points %}
+                    <li>{{ point }}</li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/landing-hero-showcase.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/landing-motif-modal.js') }}" defer></script>
+
+  <nav class="landing-jump-pills" aria-label="Jump to sections">
+    <a class="landing-jump-pill" href="#portal-stats">Live stats</a>
+    <a class="landing-jump-pill" href="#value-title">Value for you</a>
+    <a class="landing-jump-pill" href="#explore-mine">Quick access</a>
+    <a class="landing-jump-pill" href="#problem-title">Why MiNe</a>
+  </nav>
+
+  <section id="portal-stats" class="landing-stats-band" aria-labelledby="stats-title" data-landing-motion>
+    <div class="landing-stats-band__inner">
+      <header class="landing-stats-band__head">
+        <span class="landing-section-eyebrow">Live from the catalog</span>
+        <h2 id="stats-title" class="landing-section-title landing-section-title--on-dark">Portal at a glance</h2>
+        <p class="landing-stats-band__lead">
+          Real totals from the MiNe knowledge base and directory — numbers count up when you scroll here.
+        </p>
+      </header>
+      <div id="landing-kpi-scope" class="landing-kpi-grid landing-kpi-grid--band" role="list" aria-label="Key performance indicators" data-landing-stagger>
+        <article class="landing-kpi-card landing-kpi-card--band" role="listitem" data-landing-item>
+          <div class="landing-kpi-card__glow" aria-hidden="true"></div>
+          <div class="landing-kpi-card__inner">
+            <div class="landing-kpi-icon-wrap">
+              <span class="landing-kpi-pulse" aria-hidden="true"></span>
+              <span class="landing-kpi-icon" aria-hidden="true">📄</span>
+            </div>
+            <div class="landing-kpi-body">
+              <span class="landing-kpi-live"><span class="landing-kpi-live-dot" aria-hidden="true"></span> Live</span>
+              <span class="landing-kpi-value" data-kpi-target="{{ portal_stats.knowledge_items | int }}">0</span>
+              <span class="landing-kpi-label">Knowledge items</span>
+            </div>
+          </div>
+        </article>
+        <article class="landing-kpi-card landing-kpi-card--band" role="listitem" data-landing-item>
+          <div class="landing-kpi-card__glow" aria-hidden="true"></div>
+          <div class="landing-kpi-card__inner">
+            <div class="landing-kpi-icon-wrap">
+              <span class="landing-kpi-pulse" aria-hidden="true"></span>
+              <span class="landing-kpi-icon" aria-hidden="true">📊</span>
+            </div>
+            <div class="landing-kpi-body">
+              <span class="landing-kpi-live"><span class="landing-kpi-live-dot" aria-hidden="true"></span> Live</span>
+              <span class="landing-kpi-value" data-kpi-target="{{ portal_stats.projects | int }}">0</span>
+              <span class="landing-kpi-label">Active projects</span>
+            </div>
+          </div>
+        </article>
+        <article class="landing-kpi-card landing-kpi-card--band" role="listitem" data-landing-item>
+          <div class="landing-kpi-card__glow" aria-hidden="true"></div>
+          <div class="landing-kpi-card__inner">
+            <div class="landing-kpi-icon-wrap">
+              <span class="landing-kpi-pulse" aria-hidden="true"></span>
+              <span class="landing-kpi-icon" aria-hidden="true">💡</span>
+            </div>
+            <div class="landing-kpi-body">
+              <span class="landing-kpi-live"><span class="landing-kpi-live-dot" aria-hidden="true"></span> Live</span>
+              <span class="landing-kpi-value" data-kpi-target="{{ portal_stats.innovations | int }}">0</span>
+              <span class="landing-kpi-label">Innovations delivered</span>
+            </div>
+          </div>
+        </article>
+        <article class="landing-kpi-card landing-kpi-card--band" role="listitem" data-landing-item>
+          <div class="landing-kpi-card__glow" aria-hidden="true"></div>
+          <div class="landing-kpi-card__inner">
+            <div class="landing-kpi-icon-wrap">
+              <span class="landing-kpi-pulse" aria-hidden="true"></span>
+              <span class="landing-kpi-icon" aria-hidden="true">👥</span>
+            </div>
+            <div class="landing-kpi-body">
+              <span class="landing-kpi-live"><span class="landing-kpi-live-dot" aria-hidden="true"></span> Live</span>
+              <span class="landing-kpi-value" data-kpi-target="{{ portal_stats.team_members | int }}">0</span>
+              <span class="landing-kpi-label">Team members</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+  <script src="{{ url_for('static', filename='js/landing-kpi.js') }}" defer></script>
+
+  <section class="landing-narrow landing-section-value-why" aria-labelledby="value-title" data-landing-motion>
+    <header class="landing-role-section-head">
+      <span class="landing-section-eyebrow">Built for every role</span>
+      <h2 id="value-title" class="landing-section-title">Value for you</h2>
+      <p class="landing-role-section-lead">
+        Tailored routes into MiNe — <strong>preview on hover</strong>, or <strong>open</strong> a card for the full checklist.
+      </p>
+    </header>
+    <div class="landing-role-grid" role="list" data-landing-stagger>
+      {% for card in value_cards %}
+        <details class="landing-role-card landing-role-card--{{ card.slug }}" id="value-{{ card.slug }}" role="listitem" data-landing-item>
+          <summary class="landing-role-card__summary">
+            <span class="landing-role-card__sheen" aria-hidden="true"></span>
+            <span class="landing-role-card__glow" aria-hidden="true"></span>
+            <div class="landing-role-card__row">
+              <span class="landing-role-card__icon">
+                {% include "includes/value_role_icon.html" %}
+              </span>
+              <div class="landing-role-card__copy">
+                <span class="landing-role-card__eyebrow">{{ card.lens }}</span>
+                <span class="landing-role-card__title">{{ card.title }}</span>
+                <p class="landing-role-card__tagline">{{ card.tagline }}</p>
+              </div>
+              <span class="landing-role-card__chev" aria-hidden="true"></span>
+            </div>
+            {% if card.peek %}
+            <ul class="landing-role-card__peek">
+              {% for line in card.peek %}
+                <li>{{ line }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </summary>
+          <div class="landing-role-card__panel">
+            <p class="landing-role-card__panel-label">Inside this card</p>
+            <ul class="landing-role-card__features">
+              {% for line in card.highlights %}
+                <li class="landing-role-card__feature">
+                  <span class="landing-role-card__feature-mark" aria-hidden="true"></span>
+                  <span>{{ line }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </details>
+      {% endfor %}
+    </div>
+    <div class="card landing-why-mine-card" aria-labelledby="why-mine-title">
+      <h3 id="why-mine-title" class="landing-why-mine-heading">Why “MiNe”?</h3>
+      <ul class="landing-list-plain landing-why-mine-list">
+        <li><strong>Mining domain relevance</strong> — ties directly to the industry context.</li>
+        <li><strong>Ownership mindset</strong> — “This knowledge is MiNe.”</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="explore-mine" class="landing-narrow landing-section-explore" aria-labelledby="explore-title" data-landing-motion>
+    <header class="landing-explore-head">
+      <span class="landing-section-eyebrow">One click away</span>
+      <h2 id="explore-title" class="landing-section-title">Explore MiNe</h2>
+      <p class="landing-section-lead">Jump into the areas that matter; counts reflect approved catalog items where applicable.</p>
+    </header>
+    <div class="landing-quick-grid landing-quick-grid--bento" role="list" data-landing-stagger>
+      {% for tile in quick_access %}
+        <a class="card landing-quick-tile{% if loop.index <= 2 %} landing-quick-tile--featured{% endif %}" href="{{ tile.href }}" role="listitem" data-landing-item>
+          <span class="landing-quick-emoji" aria-hidden="true">{{ tile.emoji }}</span>
+          <span class="landing-quick-title">{{ tile.label }}</span>
+          <span class="landing-quick-desc">Open section</span>
+          <span class="landing-quick-count">{{ tile.count }} items</span>
+        </a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="landing-narrow landing-section-knowledge" aria-labelledby="problem-title" data-landing-motion>
+    <header class="landing-problem-head">
+      <span class="landing-section-eyebrow">The challenge</span>
+      <h2 id="problem-title" class="landing-section-title">The knowledge problem</h2>
+      <p class="landing-section-lead landing-knowledge-matrix__lead">
+        As the account scaled, several critical issues emerged — MiNe was built to close these gaps.
+      </p>
+    </header>
+    <figure class="landing-knowledge-table" data-knowledge-matrix>
+      <figcaption class="visually-hidden">Structured pain points and impact descriptions.</figcaption>
+      <div class="landing-knowledge-problem" role="group" aria-label="Knowledge maturity gaps">
+        <div class="landing-knowledge-problem-grid" data-landing-stagger>
+          <article class="landing-problem-card" data-knowledge-row data-landing-item tabindex="0">
+            <div class="landing-problem-card__icon" aria-hidden="true">📚</div>
+            <h3 class="landing-problem-card__title">Knowledge silos</h3>
+            <p class="landing-problem-card__desc">Information resides with individuals.</p>
+          </article>
+          <article class="landing-problem-card" data-knowledge-row data-landing-item tabindex="0">
+            <div class="landing-problem-card__icon" aria-hidden="true">🧭</div>
+            <h3 class="landing-problem-card__title">Slow onboarding</h3>
+            <p class="landing-problem-card__desc">New joiners struggle to find context.</p>
+          </article>
+          <article class="landing-problem-card" data-knowledge-row data-landing-item tabindex="0">
+            <div class="landing-problem-card__icon" aria-hidden="true">🔭</div>
+            <h3 class="landing-problem-card__title">Innovation invisibility</h3>
+            <p class="landing-problem-card__desc">Delivered value is not captured centrally.</p>
+          </article>
+          <article class="landing-problem-card" data-knowledge-row data-landing-item tabindex="0">
+            <div class="landing-problem-card__icon" aria-hidden="true">⚙️</div>
+            <h3 class="landing-problem-card__title">Inconsistent delivery</h3>
+            <p class="landing-problem-card__desc">Lack of standardized references.</p>
+          </article>
+          <article class="landing-problem-card landing-problem-card--solution" data-knowledge-row data-landing-item tabindex="0">
+            <div class="landing-problem-card__icon" aria-hidden="true">🤝</div>
+            <h3 class="landing-problem-card__title">Poor cross-team visibility</h3>
+            <p class="landing-problem-card__desc">Limited knowledge sharing.</p>
+          </article>
+        </div>
+      </div>
+    </figure>
+  </section>
+
+  {% if current_user %}
+  <section class="landing-narrow landing-section-spaced landing-featured" data-landing-motion>
+    <span class="landing-section-eyebrow">Curated for you</span>
+    <h2 class="landing-section-title landing-section-title--featured">Featured knowledge</h2>
+    <p class="meta">Approved catalog highlights (click a title to open).</p>
+    <div class="toolbar landing-featured-actions">
+      {% if current_user.role in ['admin','moderator'] %}
+        <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">Create knowledge content</a>
+      {% endif %}
+    </div>
+    {% if featured and featured|length > 0 %}
+      <div class="card-grid" data-landing-stagger>
+        {% for item in featured %}
+          <article class="card" data-landing-item>
+            <div class="toolbar landing-card-title-row">
+              <h3>
+                <a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a>
+              </h3>
+              <span class="badge">{{ item.module }}</span>
+            </div>
+            <p class="meta landing-card-summary">{{ item.summary or "No summary provided." }}</p>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card meta">No approved content yet. Sign in as an administrator to seed the first articles.</div>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  <section class="landing-cta-band" aria-labelledby="cta-band-title" data-landing-motion>
+    <div class="landing-cta-band__inner">
+      <div class="landing-cta-band__copy">
+        <h2 id="cta-band-title" class="landing-cta-band__title">Ready to dive in?</h2>
+        <p class="landing-cta-band__text">
+          {% if current_user %}
+            Your dashboard, catalog, and account context are one click away.
+          {% else %}
+            Sign in to unlock the full knowledge catalog, domain guides, and team directory.
+          {% endif %}
+        </p>
+      </div>
+      <div class="landing-cta-band__actions">
+        {% if current_user %}
+          <a class="btn btn-primary" href="{{ url_for('main.dashboard') }}">Go to dashboard</a>
+          <a class="btn btn-secondary" href="#explore-mine">Explore sections</a>
+        {% else %}
+          <a class="btn btn-primary" href="{{ url_for('auth.login') }}">Sign in to MiNe</a>
+          <a class="btn btn-secondary" href="#explore-mine">See what’s inside</a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <script src="{{ url_for('static', filename='js/landing-motion.bundle.js') }}" defer></script>
+{% endblock %}

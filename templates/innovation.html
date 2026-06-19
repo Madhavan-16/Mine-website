@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Innovation Center{% endblock %}
+{% block page_header %}
+  <div class="page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('reference.fmi_kyc') }}">Program map</a><span class="breadcrumb-sep" aria-hidden="true">›</span><a href="{{ url_for('main.innovation') }}">Innovation center</a></nav>
+    <h1 class="page-title" style="text-transform:none;">Customer value adds / Innovation center</h1>
+  </div>
+{% endblock %}
+{% block content %}
+  {% include "includes/back_program_map.html" %}
+
+  {% if current_user.role in ['admin','moderator'] %}
+  <div class="toolbar" style="margin-bottom: 12px;">
+    <a class="btn btn-primary" href="{{ url_for('repo_standalone.repo_new', segment='innovation') }}">Submit innovation</a>
+  </div>
+  {% endif %}
+
+  <div class="innov-stats">
+    {% for s in innovation_stats %}
+      <div class="innov-stat-card">
+        <span class="icon" aria-hidden="true">{{ s.icon }}</span>
+        <div>
+          <div class="label">{{ s.label }}</div>
+          <div class="count">({{ s.count }})</div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="section-rule">Featured innovations</div>
+  {% if rows and rows|length > 0 %}
+    {% for item in rows %}
+      <article class="innov-card">
+        <h3>💡 {{ item.title }}</h3>
+        <p class="sub">🏷️ Innovation · {{ item.module }}</p>
+        {% if item.summary %}
+          <p class="impact">Impact: {{ item.summary|e }}</p>
+        {% endif %}
+        <p class="metrics">Effort &amp; savings: see full record for details.</p>
+        <div class="read"><a href="{{ url_for('content.content_view', cid=item.id) }}">Read more</a></div>
+      </article>
+    {% endfor %}
+  {% else %}
+    <div class="card meta">Nothing published here yet.</div>
+  {% endif %}
+{% endblock %}

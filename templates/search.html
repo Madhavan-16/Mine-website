@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Search{% endblock %}
+{% block content %}
+  <h1>Search</h1>
+  <p class="meta">Full-text search across approved knowledge (FTS5).</p>
+
+  <form method="get" class="search-form" action="{{ url_for('search.search') }}" style="margin-top: 12px; max-width: 920px;">
+    <input type="search" name="q" value="{{ q }}" placeholder="Search…" />
+    <select name="module" aria-label="Module filter">
+      <option value="" {% if not module %}selected{% endif %}>All modules</option>
+      <option value="kyc" {% if module=='kyc' %}selected{% endif %}>KYC</option>
+      <option value="kya" {% if module=='kya' %}selected{% endif %}>KYA</option>
+      <option value="case_study" {% if module=='case_study' %}selected{% endif %}>Case study</option>
+      <option value="projects" {% if module=='projects' %}selected{% endif %}>Projects</option>
+    </select>
+    <button class="btn btn-primary" type="submit">Search</button>
+  </form>
+
+  {% if not q %}
+    <div class="card meta" style="margin-top: 12px;">Enter a query to search.</div>
+  {% elif rows and rows|length > 0 %}
+    <div class="card-grid" style="margin-top: 12px;">
+      {% for item in rows %}
+        <article class="card">
+          <h2 style="margin:0; font-size:16px;"><a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a></h2>
+          <p class="meta" style="margin: 8px 0 0;">{{ item.summary or "—" }}</p>
+          {% if item.rank is not none %}
+            <p class="meta" style="margin: 8px 0 0;">rank: {{ "%.3f"|format(item.rank) }}</p>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card meta" style="margin-top: 12px;">No matches (try simpler keywords).</div>
+  {% endif %}
+{% endblock %}

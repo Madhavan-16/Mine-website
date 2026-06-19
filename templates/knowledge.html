@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Knowledge Repository{% endblock %}
+{% block head_extra %}
+{% if landing %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/enterprise-search-xp.css') }}" />
+{% endif %}
+{% endblock %}
+{% block page_header %}
+  {% if not landing %}
+  <div class="page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
+      {% if module %}
+        <span class="breadcrumb-sep" aria-hidden="true">›</span>
+        <span>{{ module_label }}</span>
+      {% elif q or author %}
+        <span class="breadcrumb-sep" aria-hidden="true">›</span>
+        <span>Search</span>
+      {% endif %}
+    </nav>
+    <h1 class="page-title">
+      {% if module %}{{ module_label }}<span class="page-title-meta"> ({{ rows|length }} items)</span>
+      {% else %}Knowledge repository<span class="page-title-meta"> ({{ rows|length }} items)</span>
+      {% endif %}
+    </h1>
+  </div>
+  {% endif %}
+{% endblock %}
+{% block content %}
+  {% if landing %}
+  <div class="page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><span>Home</span><span class="breadcrumb-sep" aria-hidden="true">›</span><span>Knowledge repository</span></nav>
+    <h1 class="page-title">Knowledge repository</h1>
+    <p class="page-lede">Browse categories and recent additions, or launch full-text search below.</p>
+  </div>
+
+  {% include "includes/enterprise_search_xp.html" %}
+
+  <div class="card knowledge-repo-browse-card" style="margin-top: clamp(1rem, 2vw, 1.5rem);">
+
+    <div class="knowledge-cat-grid">
+      {% for key, label in modules_meta %}
+        <a class="knowledge-cat-card" href="{{ url_for('main.knowledge', module=key) }}">
+          <span class="name">{{ label }}</span>
+          <span class="count">({{ module_counts.get(key, 0) }})</span>
+        </a>
+      {% endfor %}
+    </div>
+
+    <div class="section-rule">Recently added</div>
+    {% if recent_rows and recent_rows|length > 0 %}
+      <div class="knowledge-recent-row">
+        {% for item in recent_rows %}
+          <article class="knowledge-recent-card">
+            <a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a>
+            <p class="meta" style="margin:6px 0 0;">{{ item.module }} · {{ item.author_name }}</p>
+            {% if item.summary and item.summary.strip() %}
+              <p class="knowledge-recent-excerpt">{{ item.summary|truncate(220)|e }}</p>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="meta">No approved items yet.</p>
+    {% endif %}
+
+    {% if current_user.role in ['admin','moderator'] %}
+    <div class="knowledge-cta-row">
+      <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create knowledge content</a>
+    </div>
+    {% endif %}
+  </div>
+  <script src="{{ url_for('static', filename='js/enterprise-search-xp.js') }}" defer></script>
+  {% else %}
+
+  <form class="filters-bar" method="get" action="{{ url_for('main.knowledge') }}">
+    <div class="field">
+      <label for="flt-module">Module</label>
+      <select id="flt-module" name="module" onchange="this.form.submit()">
+        <option value="">All in repository</option>
+        {% for key, label in modules_meta %}
+          <option value="{{ key }}" {% if module==key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="flt-author">Author</label>
+      <select id="flt-author" name="author" onchange="this.form.submit()">
+        <option value="">All</option>
+        {% for opt in author_options %}
+          <option value="{{ opt.n }}" {% if author==opt.n %}selected{% endif %}>{{ opt.n }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field" style="flex:1; min-width:200px;">
+      <label for="flt-q">Search</label>
+      <input id="flt-q" type="search" name="q" placeholder="Search…" value="{{ q or '' }}" />
+    </div>
+    <div class="field" style="align-self:flex-end;">
+      <button class="btn btn-secondary" type="submit">Apply</button>
+    </div>
+  </form>
+
+  {% if rows and rows|length > 0 %}
+    {% for item in rows %}
+      <article class="knowledge-hit">
+        <div class="knowledge-hit-header">
+          <h2 class="knowledge-hit-title">📄 <a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a></h2>
+          <span class="badge">{{ item.module }}</span>
+        </div>
+        <p class="knowledge-hit-meta">By {{ item.author_name }} · {{ item.updated_at }} · 🏷️ {{ item.module }}</p>
+        {% if item.summary and item.summary.strip() %}
+          <p class="knowledge-hit-excerpt">{{ item.summary|truncate(320)|e }}</p>
+        {% endif %}
+        <div class="knowledge-hit-actions">
+          <a class="btn btn-secondary" href="{{ url_for('content.content_view', cid=item.id) }}">Read more</a>
+        </div>
+      </article>
+    {% endfor %}
+  {% else %}
+    <div class="card meta">No matching approved items.</div>
+  {% endif %}
+  {% endif %}
+{% endblock %}

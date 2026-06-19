@@ -1,0 +1,20 @@
+{
+  "name": "mine",
+  "version": "1.0.0",
+  "description": "End-to-end Phase 1 portal for the MiNe program specification: **Flask + SQLite + server-rendered HTML**, with moderation, RBAC, FTS search, local uploads, and **public account context** page at `/program/` (Freeport KYC only; other spec sections are implementation reference, not shown in the portal).",
+  "main": "index.js",
+  "scripts": {
+    "build:landing-motion": "esbuild scripts/landing-motion-entry.mjs --bundle --format=iife --outfile=static/js/landing-motion.bundle.js --minify --legal-comments=none",
+    "build:journey-motion": "esbuild scripts/journey-motion-entry.mjs --bundle --format=iife --outfile=static/js/journey-motion.bundle.js --minify --legal-comments=none",
+    "build:site-motion": "esbuild scripts/site-motion-entry.mjs --bundle --format=iife --outfile=static/js/site-motion.bundle.js --minify --legal-comments=none",
+    "build:motion": "npm run build:landing-motion && npm run build:journey-motion && npm run build:site-motion",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "esbuild": "^0.25.12",
+    "motion": "^11.15.0"
+  }
+}

@@ -1,0 +1,15 @@
+{% if rows and rows|length > 0 %}
+  <div class="card-grid" style="margin-top: 12px;">
+    {% for item in rows %}
+      <article class="card">
+        <div class="toolbar" style="margin:0;">
+          <h2 style="margin:0; font-size:16px;"><a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a></h2>
+          <span class="badge">{{ item.module }}</span>
+        </div>
+        <p class="meta" style="margin: 8px 0 0;">{{ item.summary or "—" }}</p>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card meta" style="margin-top: 12px;">Nothing published here yet.</div>
+{% endif %}

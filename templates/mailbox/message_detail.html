@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Message · Outlook Mailbox{% endblock %}
+{% block content %}
+  <h1>Message</h1>
+
+  <div class="toolbar" style="margin-top: 10px; gap: 8px; flex-wrap: wrap;">
+    <a class="btn btn-secondary" href="{{ url_for('mailbox.inbox') }}">Inbox</a>
+    <a class="btn btn-secondary" href="{{ url_for('mailbox.sent') }}">Sent</a>
+    <a class="btn btn-secondary" href="{{ url_for('mailbox.drafts') }}">Drafts</a>
+    <a class="btn btn-secondary" href="{{ url_for('mailbox.trash') }}">Trash</a>
+    <a class="btn btn-primary" href="{{ url_for('mailbox.compose') }}">Compose</a>
+  </div>
+
+  <div class="card" style="margin-top: 12px;">
+    <p><strong>Subject:</strong> {{ row.get("subject") or "(no subject)" }}</p>
+    <p class="meta"><strong>From:</strong> {{ row.get("from", {}).get("emailAddress", {}).get("address") or "—" }}</p>
+    <p class="meta"><strong>To:</strong>
+      {% for x in row.get("toRecipients", []) %}
+        {{ x.get("emailAddress", {}).get("address") }}{% if not loop.last %}, {% endif %}
+      {% endfor %}
+    </p>
+    {% if row.get("ccRecipients") %}
+      <p class="meta"><strong>CC:</strong>
+        {% for x in row.get("ccRecipients", []) %}
+          {{ x.get("emailAddress", {}).get("address") }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
+      </p>
+    {% endif %}
+    {% if row.get("bccRecipients") %}
+      <p class="meta"><strong>BCC:</strong>
+        {% for x in row.get("bccRecipients", []) %}
+          {{ x.get("emailAddress", {}).get("address") }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
+      </p>
+    {% endif %}
+    <p class="meta"><strong>Received:</strong> {{ row.get("receivedDateTime") or "—" }}</p>
+    <p class="meta"><strong>Sent:</strong> {{ row.get("sentDateTime") or "—" }}</p>
+    <hr />
+    {% set body = row.get("body", {}) %}
+    {% if body.get("contentType", "").lower() == "html" %}
+      <div class="meta">Body is HTML. Plain preview:</div>
+      <pre style="white-space: pre-wrap; margin-top: 8px;">{{ row.get("bodyPreview") or "" }}</pre>
+    {% else %}
+      <pre style="white-space: pre-wrap; margin-top: 8px;">{{ body.get("content") or row.get("bodyPreview") or "" }}</pre>
+    {% endif %}
+  </div>
+{% endblock %}

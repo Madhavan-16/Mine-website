@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Programs & Projects{% endblock %}
+{% block page_header %}
+  <div class="page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><span>Programs</span><span class="breadcrumb-sep" aria-hidden="true">›</span><span>Active programs &amp; projects</span></nav>
+    <h1 class="page-title">Active programs &amp; projects</h1>
+  </div>
+{% endblock %}
+{% block content %}
+  {% include "includes/back_program_map.html" %}
+
+  {% if current_user.role in ['admin','moderator'] %}
+  <div class="toolbar" style="margin-bottom: 12px;">
+    <a class="btn btn-primary" href="{{ url_for('projects.project_create') }}">Add program or project</a>
+  </div>
+  {% endif %}
+
+  <form method="get" class="filters-bar" action="{{ url_for('projects.project_list') }}">
+    <div class="field">
+      <label for="status">Status</label>
+      <select id="status" name="status" onchange="this.form.submit()">
+        <option value="">All</option>
+        {% for s in status_options %}
+          <option value="{{ s }}" {% if status==s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="program">Program</label>
+      <select id="program" name="program" onchange="this.form.submit()">
+        <option value="">All</option>
+        {% for p in program_options %}
+          <option value="{{ p }}" {% if program==p %}selected{% endif %}>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field" style="flex:1; min-width:180px;">
+      <label for="q">Search</label>
+      <input id="q" type="search" name="q" placeholder="Search…" value="{{ q or '' }}" />
+    </div>
+    <div class="field">
+      <label for="region">Region contains</label>
+      <input id="region" name="region" type="text" value="{{ region }}" />
+    </div>
+    <div class="field">
+      <label for="sort">Sort</label>
+      <select id="sort" name="sort" onchange="this.form.submit()">
+        <option value="recent" {% if sort=='recent' %}selected{% endif %}>Recent</option>
+        <option value="alpha" {% if sort=='alpha' %}selected{% endif %}>Alphabetical</option>
+      </select>
+    </div>
+    <div class="field" style="align-self:flex-end;">
+      <button class="btn btn-secondary" type="submit">Apply</button>
+    </div>
+  </form>
+
+  <div class="mod-table-wrap">
+    <table class="mod-table">
+      <thead>
+        <tr>
+          <th scope="col">Project name</th>
+          <th scope="col">Program</th>
+          <th scope="col">PM</th>
+          <th scope="col">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in rows %}
+          {% set ds = (item.delivery_status or '')|lower %}
+          <tr>
+            <td><a href="{{ url_for('projects.project_detail', cid=item.id) }}">{{ item.title }}</a></td>
+            <td class="meta">{{ item.program_name or "—" }}</td>
+            <td class="meta">{{ item.project_manager or "—" }}</td>
+            <td>
+              <span class="status-pill">
+                <span class="status-dot {% if not item.delivery_status %}status-dot--na{% elif 'risk' in ds or 'at risk' in ds %}status-dot--risk{% else %}status-dot--ok{% endif %}" aria-hidden="true"></span>{{ item.delivery_status or "—" }}
+              </span>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if not rows or rows|length == 0 %}
+    <p class="meta" style="margin-top:12px;">No projects match these filters.</p>
+  {% endif %}
+{% endblock %}

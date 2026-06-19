@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}{{ row.title }}{% endblock %}
+{% block page_header %}
+  <div class="page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      {% if row.module == 'projects' %}
+        <a href="{{ url_for('projects.project_list') }}">Programs</a>
+      {% elif row.module == 'onboarding' %}
+        <a href="{{ url_for('reference.fmi_kyc') }}">Program map</a>
+        <span class="breadcrumb-sep" aria-hidden="true">›</span>
+        <a href="{{ url_for('main.onboarding') }}">Onboarding kit</a>
+      {% elif row.module == 'innovation' %}
+        <a href="{{ url_for('reference.fmi_kyc') }}">Program map</a>
+        <span class="breadcrumb-sep" aria-hidden="true">›</span>
+        <a href="{{ url_for('main.innovation') }}">Innovation center</a>
+      {% elif row.module == 'training' %}
+        <a href="{{ url_for('reference.fmi_kyc') }}">Program map</a>
+        <span class="breadcrumb-sep" aria-hidden="true">›</span>
+        <a href="{{ url_for('main.training') }}">Training corner</a>
+      {% elif row.module == 'hall_of_fame' %}
+        <a href="{{ url_for('reference.fmi_kyc') }}">Program map</a>
+        <span class="breadcrumb-sep" aria-hidden="true">›</span>
+        <a href="{{ url_for('main.hall_of_fame') }}">Hall of Fame</a>
+      {% else %}
+        <a href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
+        <span class="breadcrumb-sep" aria-hidden="true">›</span>
+        <span>{{ row.module }}</span>
+      {% endif %}
+      <span class="breadcrumb-sep" aria-hidden="true">›</span>
+      <span>{{ row.title }}</span>
+    </nav>
+    <h1 class="page-title" style="text-transform:none;">{{ row.title }}</h1>
+  </div>
+{% endblock %}
+{% block content %}
+  <div class="content-view-reading">
+    {% if current_user and current_user.role in ['admin','moderator'] %}
+      {% if row.status != 'pending' or current_user.role in ['admin','moderator'] %}
+        <p class="meta content-view-actions">
+          {% if row.module == 'projects' %}
+            <a href="{{ url_for('projects.project_edit', cid=row.id) }}">Edit</a>
+          {% else %}
+            <a href="{{ url_for('content.content_edit', cid=row.id) }}">Edit</a>
+          {% endif %}
+          {% if current_user.id == row.author_id or current_user.role == 'admin' %}
+            <span aria-hidden="true"> · </span>
+            <form method="post" action="{{ url_for('content.content_delete', cid=row.id) }}" style="display:inline;" onsubmit="return confirm('Delete this content permanently?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+              <button type="submit" class="btn-link-danger">Delete</button>
+            </form>
+          {% endif %}
+        </p>
+      {% endif %}
+    {% endif %}
+
+    {% if project %}
+      <div class="card content-project-view-strip">
+        <dl class="content-project-view-dl">
+          <div><dt>Program</dt><dd>{{ project.program_name or "—" }}</dd></div>
+          <div><dt>Project manager</dt><dd>{{ project.project_manager or "—" }}</dd></div>
+          <div><dt>Delivery status</dt><dd>{{ project.delivery_status or "—" }}</dd></div>
+          {% if project_region %}
+          <div><dt>Region</dt><dd>{{ project_region|e }}</dd></div>
+          {% endif %}
+        </dl>
+      </div>
+    {% endif %}
+
+    <div class="card content-view-summary-card">
+      <h2 style="margin-top:0;">Summary</h2>
+      <div class="body-rich content-summary-text">
+        {% if row.summary and row.summary.strip() %}
+          {{ row.summary|e }}
+        {% else %}
+          <span class="meta">No summary provided.</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0;">Body</h2>
+      <div class="body-rich">{% if row.body and row.body.strip() %}{{ row.body|e }}{% else %}<span class="meta">—</span>{% endif %}</div>
+    </div>
+
+    {% include "_attachment_previews.html" %}
+
+    {% if related_rows and related_rows|length > 0 %}
+      <section class="related-strip content-view-related">
+        <div class="section-rule">Related content</div>
+        <div class="related-cards">
+          {% for r in related_rows %}
+            <article class="related-card">
+              <a href="{{ url_for('content.content_view', cid=r.id) }}">{{ r.title }}</a>
+              <p class="meta" style="margin:6px 0 0;">{{ r.module }}</p>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  </div>
+{% endblock %}

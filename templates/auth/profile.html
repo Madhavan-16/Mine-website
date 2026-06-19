@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Your profile{% endblock %}
+{% block content %}
+  <div class="card" style="max-width: 720px;">
+    <h1>Your profile</h1>
+    <p class="meta">Signed in as {{ user.display_name }}.</p>
+    <table class="table" style="margin-top: 12px;">
+      <tbody>
+        <tr><th scope="row">Username</th><td>{{ user.username }}</td></tr>
+        <tr><th scope="row">Email</th><td>{{ user.email }}</td></tr>
+        <tr><th scope="row">Role</th><td><span class="badge">{{ user.role }}</span></td></tr>
+      </tbody>
+    </table>
+    <div class="toolbar" style="margin-top: 18px;">
+      <a class="btn btn-primary" href="{{ url_for('auth.account_settings') }}">Settings</a>
+    </div>
+  </div>
+{% endblock %}

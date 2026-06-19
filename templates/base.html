@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}MiNe{% endblock %} · Mining Intelligence and Knowledge Enablement</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/content-cards.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/aos/aos.css') }}" />
+    {% block head_extra %}{% endblock %}
+  </head>
+  {% set _ep = request.endpoint or '' %}
+  {% set _is_landing = _ep in ('main.landing', 'main.welcome') %}
+  {% if request.blueprint == 'admin' %}
+    {% set motion_profile = 'admin-ultra' %}
+  {% elif _ep == 'main.dashboard' %}
+    {% set motion_profile = 'dashboard-balanced' %}
+  {% elif _ep in ('main.knowledge', 'content.content_list', 'main.my_submissions', 'search.search') %}
+    {% set motion_profile = 'portal-soft' %}
+  {% elif _ep == 'main.journey' %}
+    {% set motion_profile = 'journey-soft' %}
+  {% elif request.blueprint == 'reference' %}
+    {% set motion_profile = 'reference-medium' %}
+  {% elif current_user and not _is_landing %}
+    {% set motion_profile = 'portal-soft' %}
+  {% else %}
+    {% set motion_profile = 'public-cinematic' %}
+  {% endif %}
+  <body
+    class="{% if _is_landing %}layout-landing{% elif current_user %}layout-portal{% elif request.blueprint == 'reference' %}layout-reference{% else %}layout-public{% endif %}{% if request.endpoint == 'reference.fmi_kyc' %} has-journey-motion{% endif %}"
+    data-motion-profile="{{ motion_profile }}"
+  >
+    <script>
+      (function () {
+        try {
+          if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+          var b = document.body;
+          if (!b || b.classList.contains("layout-landing") || b.classList.contains("has-journey-motion")) return;
+          if (b.querySelector(".domain-knowledge-page")) return;
+          document.documentElement.classList.add("site-motion-prep");
+          window.setTimeout(function () {
+            document.documentElement.classList.remove("site-motion-prep");
+          }, 3500);
+        } catch (e) {}
+      })();
+    </script>
+    <div class="ambient-backdrop" aria-hidden="true">
+      <div class="ambient-backdrop__gradient"></div>
+      <div class="ambient-backdrop__grid"></div>
+      <canvas class="ambient-backdrop__canvas" id="ambient-canvas" aria-hidden="true"></canvas>
+    </div>
+
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    {% set ep = request.endpoint %}
+    {% set bp = request.blueprint %}
+    {% set nav_programs_active = bp == 'projects' or ep in ('reference.fmi_kyc', 'main.onboarding', 'main.innovation', 'main.training', 'main.hall_of_fame') %}
+    {% set nav_knowledge_active = ep == 'main.knowledge' %}
+    {% set nav_content_active = bp == 'content' %}
+
+    <div class="header-shell header-shell--enterprise" id="site-header">
+    <div class="header-shell__inner">
+    <div class="brand">
+      <a href="{{ url_for('main.dashboard') if current_user else url_for('main.landing') }}" aria-label="{% if current_user %}Go to dashboard{% else %}MiNe home{% endif %}">
+        <span class="brand-mark" aria-hidden="true">M</span>
+        <span class="brand-line">
+          <span>Hexaware + MiNe</span>
+          {% if _is_landing or request.blueprint == 'reference' %}
+          <span class="brand-sub">Mining Intelligence &amp; Knowledge Enablement</span>
+          {% else %}
+          <span class="brand-sub">Knowledge portal</span>
+          {% endif %}
+        </span>
+      </a>
+      <div class="brand-fmi">
+        <img
+          src="{{ url_for('static', filename='img/hexaware-freeport-lockup.png') }}"
+          alt="Hexaware and Freeport-McMoRan"
+          class="brand-fmi-img"
+          width="498"
+          height="108"
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
+    </div>
+
+    <header class="topbar" role="banner">
+      {% if current_user and not _is_landing %}
+      <button type="button" class="nav-burger" data-nav-burger aria-label="Open navigation menu" aria-controls="portal-sidebar" aria-expanded="false">
+        <span class="nav-burger__bar" aria-hidden="true"></span>
+        <span class="nav-burger__bar" aria-hidden="true"></span>
+        <span class="nav-burger__bar" aria-hidden="true"></span>
+      </button>
+      {% endif %}
+      {% if current_user %}
+      <form class="search-form" method="get" action="{{ url_for('search.search') }}" role="search">
+        <label class="visually-hidden" for="global-q">Search</label>
+        <input id="global-q" type="search" name="q" placeholder="Search MiNe…" value="{{ request.args.get('q','') }}" />
+        <label class="visually-hidden" for="global-module">Module filter</label>
+        <select id="global-module" name="module" aria-label="Module filter">
+          <option value="">All modules</option>
+          <option value="kyc" {% if request.args.get('module')=='kyc' %}selected{% endif %}>KYC</option>
+          <option value="kya" {% if request.args.get('module')=='kya' %}selected{% endif %}>KYA</option>
+          <option value="case_study" {% if request.args.get('module')=='case_study' %}selected{% endif %}>Case study</option>
+          <option value="projects" {% if request.args.get('module')=='projects' %}selected{% endif %}>Projects</option>
+        </select>
+        <button class="btn btn-primary" type="submit">Search</button>
+      </form>
+      {% else %}
+      <div class="topbar-spacer" aria-hidden="true"></div>
+      {% endif %}
+
+      <div class="topbar-actions">
+        {% if current_user %}
+        <div class="dropdown">
+          <button class="btn btn-secondary" type="button" aria-haspopup="true" aria-expanded="false">
+            Notifications{% if notif_count %} ({{ notif_count }}){% endif %}
+          </button>
+          <div class="dropdown-panel" role="menu" aria-label="Notifications">
+            {% if notifs_recent %}
+              {% for n in notifs_recent %}
+                <div class="notif-item {% if not n.is_read %}flash-info{% endif %}">
+                  <span class="notif-text">{{ n.message }}</span>
+                  {% if n.is_read %}
+                  <form method="post" action="{{ url_for('admin.notifications_clear', nid=n.id) }}" class="notif-clear-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <button class="notif-clear-btn" type="submit" title="Clear notification" aria-label="Clear notification">×</button>
+                  </form>
+                  {% endif %}
+                </div>
+              {% endfor %}
+              <form method="post" action="{{ url_for('admin.notifications_read') }}" style="margin-top:8px;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <button class="btn btn-secondary" type="submit" style="width:100%;">Mark all read</button>
+              </form>
+            {% else %}
+              <div class="meta" style="padding:8px;">No notifications.</div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="dropdown">
+          <button class="btn btn-secondary" type="button" aria-haspopup="true" aria-expanded="false">{{ current_user.display_name }}</button>
+          <div class="dropdown-panel" role="menu" aria-label="Account">
+            <form method="post" action="{{ url_for('auth.logout') }}" style="padding:8px;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+              <button class="btn btn-secondary" type="submit" style="width:100%;">Sign out</button>
+            </form>
+          </div>
+        </div>
+        {% else %}
+        <a class="btn btn-primary" href="{{ url_for('auth.login') }}">Sign in</a>
+        {% endif %}
+      </div>
+    </header>
+    </div>
+
+    {% if current_user and not _is_landing %}
+    <div class="portal-nav-reveal" id="portal-nav-reveal">
+      <div class="portal-nav-reveal__dock" aria-hidden="true"></div>
+      <p class="portal-nav-reveal__hint">Hover for portal navigation</p>
+    <nav class="portal-nav-bar" id="portal-nav-bar" aria-label="Portal navigation">
+      <div class="portal-nav-bar__scroll">
+        <span class="portal-nav-bar__section">Portal</span>
+        <a class="portal-nav-bar__link" href="{{ url_for('main.welcome') }}"{% if request.endpoint == 'main.welcome' %} aria-current="page"{% endif %}>Platform overview</a>
+        <a class="portal-nav-bar__link" href="{{ url_for('main.dashboard') }}"{% if request.endpoint == 'main.dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
+        <a class="portal-nav-bar__link" href="{{ url_for('main.journey') }}"{% if request.endpoint == 'main.journey' %} aria-current="page"{% endif %}>Freeport–Hexaware Journey</a>
+        <a class="portal-nav-bar__link" href="{{ url_for('main.open_pit_copper_domain') }}"{% if request.endpoint == 'main.open_pit_copper_domain' %} aria-current="page"{% endif %}>Domain Knowledge</a>
+
+        <div class="portal-nav-bar__anchor">
+          <details class="portal-nav-bar__details" data-portal-dropdown{% if request.endpoint == 'reference.fmi_kyc' or request.blueprint == 'projects' or request.endpoint in ('main.onboarding', 'main.innovation', 'main.training', 'main.hall_of_fame') %} open{% endif %}>
+            <summary class="portal-nav-bar__summary">Program map</summary>
+            <div class="portal-nav-bar__menu">
+              <a class="portal-nav-bar__sublink" href="{{ url_for('reference.fmi_kyc') }}"{% if request.endpoint == 'reference.fmi_kyc' %} aria-current="page"{% endif %}>Know your Customer - Freeport</a>
+              <a class="portal-nav-bar__sublink" href="{{ url_for('projects.project_list') }}"{% if request.blueprint == 'projects' %} aria-current="page"{% endif %}>Programs &amp; Projects</a>
+              <a class="portal-nav-bar__sublink" href="{{ url_for('main.onboarding') }}"{% if request.endpoint == 'main.onboarding' %} aria-current="page"{% endif %}>Onboarding Kit</a>
+              <a class="portal-nav-bar__sublink" href="{{ url_for('main.innovation') }}"{% if request.endpoint == 'main.innovation' %} aria-current="page"{% endif %}>Innovation Center</a>
+              <a class="portal-nav-bar__sublink" href="{{ url_for('main.training') }}"{% if request.endpoint == 'main.training' %} aria-current="page"{% endif %}>Training Corner</a>
+              <a class="portal-nav-bar__sublink" href="{{ url_for('main.hall_of_fame') }}"{% if request.endpoint == 'main.hall_of_fame' %} aria-current="page"{% endif %}>Hall of Fame</a>
+            </div>
+          </details>
+        </div>
+
+        <div class="portal-nav-bar__anchor portal-nav-bar__anchor--split">
+          <a class="portal-nav-bar__link" href="{{ url_for('main.knowledge') }}"{% if nav_knowledge_active and not request.args.get('module') %} aria-current="page"{% endif %}>Knowledge</a>
+          <details class="portal-nav-bar__details portal-nav-bar__details--caret" data-portal-dropdown{% if request.endpoint == 'main.knowledge' and request.args.get('module') %} open{% endif %}>
+            <summary class="portal-nav-bar__summary portal-nav-bar__summary--caret" aria-label="Knowledge modules">
+              <span class="visually-hidden">Knowledge modules</span>
+            </summary>
+            <div class="portal-nav-bar__menu">
+              <a class="portal-nav-bar__sublink" href="{{ url_for('main.knowledge') }}"{% if request.endpoint == 'main.knowledge' and not request.args.get('module') %} aria-current="page"{% endif %}>Repository overview</a>
+              <a class="portal-nav-bar__sublink" href="{{ url_for('main.knowledge', module='kyc') }}"{% if request.endpoint == 'main.knowledge' and request.args.get('module')=='kyc' %} aria-current="page"{% endif %}>KYC</a>
+              <a class="portal-nav-bar__sublink" href="{{ url_for('main.knowledge', module='kya') }}"{% if request.endpoint == 'main.knowledge' and request.args.get('module')=='kya' %} aria-current="page"{% endif %}>KYA</a>
+              <a class="portal-nav-bar__sublink" href="{{ url_for('main.knowledge', module='domain_term') }}"{% if request.endpoint == 'main.knowledge' and request.args.get('module')=='domain_term' %} aria-current="page"{% endif %}>Term of the week</a>
+              <a class="portal-nav-bar__sublink" href="{{ url_for('main.knowledge', module='newsletter') }}"{% if request.endpoint == 'main.knowledge' and request.args.get('module')=='newsletter' %} aria-current="page"{% endif %}>Newsletters</a>
+              <a class="portal-nav-bar__sublink" href="{{ url_for('main.knowledge', module='case_study') }}"{% if request.endpoint == 'main.knowledge' and request.args.get('module')=='case_study' %} aria-current="page"{% endif %}>Case studies</a>
+              <a class="portal-nav-bar__sublink" href="{{ url_for('main.knowledge', module='rfp_snippet') }}"{% if request.endpoint == 'main.knowledge' and request.args.get('module')=='rfp_snippet' %} aria-current="page"{% endif %}>RFP snippets</a>
+              <a class="portal-nav-bar__sublink" href="{{ url_for('main.knowledge', module='blog') }}"{% if request.endpoint == 'main.knowledge' and request.args.get('module')=='blog' %} aria-current="page"{% endif %}>Blogs &amp; whitepapers</a>
+            </div>
+          </details>
+        </div>
+
+        {% if current_user.role in ['admin','moderator'] %}
+        <a class="portal-nav-bar__link" href="{{ url_for('main.my_submissions') }}"{% if request.endpoint == 'main.my_submissions' %} aria-current="page"{% endif %}>My Submissions</a>
+        {% endif %}
+        <a class="portal-nav-bar__link" href="{{ url_for('content.content_list') }}"{% if request.blueprint == 'content' %} aria-current="page"{% endif %}>Content</a>
+
+        {% if current_user.role != 'admin' %}
+        <span class="portal-nav-bar__section">Account</span>
+        <a class="portal-nav-bar__link" href="{{ url_for('auth.account_settings') }}"{% if request.endpoint in ('auth.account_settings', 'auth.account_settings_password') %} aria-current="page"{% endif %}>Settings</a>
+        {% if current_user.role == 'moderator' %}
+        <a class="portal-nav-bar__link" href="{{ url_for('admin.moderator_profile') }}"{% if request.endpoint == 'admin.moderator_profile' %} aria-current="page"{% endif %}>Profile</a>
+        {% else %}
+        <a class="portal-nav-bar__link" href="{{ url_for('auth.profile') }}"{% if request.endpoint == 'auth.profile' %} aria-current="page"{% endif %}>Profile</a>
+        {% endif %}
+        {% endif %}
+
+        {% if current_user.role in ['admin','moderator'] %}
+        <span class="portal-nav-bar__section">Admin panel</span>
+        <a class="portal-nav-bar__link" href="{{ url_for('admin.moderation') }}"{% if request.endpoint == 'admin.moderation' %} aria-current="page"{% endif %}>Moderation</a>
+        <a class="portal-nav-bar__link" href="{{ url_for('admin.analytics') }}"{% if request.endpoint == 'admin.analytics' %} aria-current="page"{% endif %}>Analytics</a>
+        {% endif %}
+        {% if current_user.role == 'admin' %}
+        <div class="portal-nav-bar__anchor">
+          <details class="portal-nav-bar__details" data-portal-dropdown{% if request.endpoint in ('admin.users', 'admin.settings', 'admin.settings_password', 'admin.admin_profile') %} open{% endif %}>
+            <summary class="portal-nav-bar__summary">Settings</summary>
+            <div class="portal-nav-bar__menu">
+              <a class="portal-nav-bar__sublink" href="{{ url_for('admin.users') }}"{% if request.endpoint == 'admin.users' %} aria-current="page"{% endif %}>Users</a>
+              <a class="portal-nav-bar__sublink" href="{{ url_for('admin.settings_password') }}"{% if request.endpoint in ('admin.settings', 'admin.settings_password') %} aria-current="page"{% endif %}>Change Password</a>
+              <a class="portal-nav-bar__sublink" href="{{ url_for('admin.admin_profile') }}"{% if request.endpoint == 'admin.admin_profile' %} aria-current="page"{% endif %}>Profile</a>
+            </div>
+          </details>
+        </div>
+        {% endif %}
+      </div>
+    </nav>
+    </div>
+    {% endif %}
+    </div>
+
+    {% if current_user and not _is_landing %}
+    <div class="nav-drawer-backdrop" id="nav-drawer-backdrop" aria-hidden="true"></div>
+    <aside class="sidebar sidebar--mobile-drawer" id="portal-sidebar" aria-label="Primary navigation">
+      <div class="nav-section">Portal</div>
+      <a class="nav-link" href="{{ url_for('main.welcome') }}"{% if request.endpoint == 'main.welcome' %} aria-current="page"{% endif %}>Platform overview</a>
+      <a class="nav-link" href="{{ url_for('main.dashboard') }}"{% if request.endpoint == 'main.dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
+      <a class="nav-link" href="{{ url_for('main.journey') }}"{% if request.endpoint == 'main.journey' %} aria-current="page"{% endif %}>Freeport–Hexaware Journey</a>
+      <a class="nav-link" href="{{ url_for('main.open_pit_copper_domain') }}"{% if request.endpoint == 'main.open_pit_copper_domain' %} aria-current="page"{% endif %}>Domain Knowledge</a>
+
+      <details class="nav-details"{% if request.endpoint == 'reference.fmi_kyc' or request.blueprint == 'projects' or request.endpoint in ('main.onboarding', 'main.innovation', 'main.training', 'main.hall_of_fame') %} open{% endif %}>
+        <summary class="nav-details-summary">Program map</summary>
+        <a class="nav-link nav-sublink" href="{{ url_for('reference.fmi_kyc') }}"{% if request.endpoint == 'reference.fmi_kyc' %} aria-current="page"{% endif %}>Know your Customer - Freeport</a>
+        <a class="nav-link nav-sublink" href="{{ url_for('projects.project_list') }}"{% if request.blueprint == 'projects' %} aria-current="page"{% endif %}>Programs &amp; Projects</a>
+        <a class="nav-link nav-sublink" href="{{ url_for('main.onboarding') }}"{% if request.endpoint == 'main.onboarding' %} aria-current="page"{% endif %}>Onboarding Kit</a>
+        <a class="nav-link nav-sublink" href="{{ url_for('main.innovation') }}"{% if request.endpoint == 'main.innovation' %} aria-current="page"{% endif %}>Innovation Center</a>
+        <a class="nav-link nav-sublink" href="{{ url_for('main.training') }}"{% if request.endpoint == 'main.training' %} aria-current="page"{% endif %}>Training Corner</a>
+        <a class="nav-link nav-sublink" href="{{ url_for('main.hall_of_fame') }}"{% if request.endpoint == 'main.hall_of_fame' %} aria-current="page"{% endif %}>Hall of Fame</a>
+      </details>
+
+      <details class="nav-details"{% if request.endpoint == 'main.knowledge' %} open{% endif %}>
+        <summary class="nav-details-summary">Knowledge</summary>
+        <a class="nav-link nav-sublink" href="{{ url_for('main.knowledge') }}"{% if request.endpoint == 'main.knowledge' and not request.args.get('module') %} aria-current="page"{% endif %}>Repository overview</a>
+        <a class="nav-link nav-sublink" href="{{ url_for('main.knowledge', module='kyc') }}"{% if request.endpoint == 'main.knowledge' and request.args.get('module')=='kyc' %} aria-current="page"{% endif %}>KYC</a>
+        <a class="nav-link nav-sublink" href="{{ url_for('main.knowledge', module='kya') }}"{% if request.endpoint == 'main.knowledge' and request.args.get('module')=='kya' %} aria-current="page"{% endif %}>KYA</a>
+        <a class="nav-link nav-sublink" href="{{ url_for('main.knowledge', module='domain_term') }}"{% if request.endpoint == 'main.knowledge' and request.args.get('module')=='domain_term' %} aria-current="page"{% endif %}>Term of the week</a>
+        <a class="nav-link nav-sublink" href="{{ url_for('main.knowledge', module='newsletter') }}"{% if request.endpoint == 'main.knowledge' and request.args.get('module')=='newsletter' %} aria-current="page"{% endif %}>Newsletters</a>
+        <a class="nav-link nav-sublink" href="{{ url_for('main.knowledge', module='case_study') }}"{% if request.endpoint == 'main.knowledge' and request.args.get('module')=='case_study' %} aria-current="page"{% endif %}>Case studies</a>
+        <a class="nav-link nav-sublink" href="{{ url_for('main.knowledge', module='rfp_snippet') }}"{% if request.endpoint == 'main.knowledge' and request.args.get('module')=='rfp_snippet' %} aria-current="page"{% endif %}>RFP snippets</a>
+        <a class="nav-link nav-sublink" href="{{ url_for('main.knowledge', module='blog') }}"{% if request.endpoint == 'main.knowledge' and request.args.get('module')=='blog' %} aria-current="page"{% endif %}>Blogs &amp; whitepapers</a>
+      </details>
+
+      {% if current_user.role in ['admin','moderator'] %}
+      <a class="nav-link" href="{{ url_for('main.my_submissions') }}"{% if request.endpoint == 'main.my_submissions' %} aria-current="page"{% endif %}>My Submissions</a>
+      {% endif %}
+      <a class="nav-link" href="{{ url_for('content.content_list') }}"{% if request.blueprint == 'content' %} aria-current="page"{% endif %}>Content</a>
+      {% if current_user and current_user.role != 'admin' %}
+      <div class="nav-section">Account</div>
+      <a class="nav-link" href="{{ url_for('auth.account_settings') }}"{% if request.endpoint in ('auth.account_settings', 'auth.account_settings_password') %} aria-current="page"{% endif %}>Settings</a>
+      {% if current_user.role == 'moderator' %}
+      <a class="nav-link" href="{{ url_for('admin.moderator_profile') }}"{% if request.endpoint == 'admin.moderator_profile' %} aria-current="page"{% endif %}>Profile</a>
+      {% else %}
+      <a class="nav-link" href="{{ url_for('auth.profile') }}"{% if request.endpoint == 'auth.profile' %} aria-current="page"{% endif %}>Profile</a>
+      {% endif %}
+      {% endif %}
+      {% if current_user and current_user.role in ['admin','moderator'] %}
+      <div class="nav-section">Admin panel</div>
+      <a class="nav-link" href="{{ url_for('admin.moderation') }}"{% if request.endpoint == 'admin.moderation' %} aria-current="page"{% endif %}>Moderation</a>
+      <a class="nav-link" href="{{ url_for('admin.analytics') }}"{% if request.endpoint == 'admin.analytics' %} aria-current="page"{% endif %}>Analytics</a>
+      {% endif %}
+      {% if current_user and current_user.role == 'admin' %}
+      <details class="nav-details"{% if request.endpoint in ('admin.users', 'admin.settings', 'admin.settings_password', 'admin.admin_profile') %} open{% endif %}>
+        <summary class="nav-details-summary">Settings</summary>
+        <a class="nav-link nav-sublink" href="{{ url_for('admin.users') }}"{% if request.endpoint == 'admin.users' %} aria-current="page"{% endif %}>Users</a>
+        <a class="nav-link nav-sublink" href="{{ url_for('admin.settings_password') }}"{% if request.endpoint in ('admin.settings', 'admin.settings_password') %} aria-current="page"{% endif %}>Change Password</a>
+        <a class="nav-link nav-sublink" href="{{ url_for('admin.admin_profile') }}"{% if request.endpoint == 'admin.admin_profile' %} aria-current="page"{% endif %}>Profile</a>
+      </details>
+      {% endif %}
+    </aside>
+    {% endif %}
+
+    <main id="main" class="main" tabindex="-1">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}" role="status">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      {% block page_header %}{% endblock %}
+      {% block content %}{% endblock %}
+    </main>
+
+    {% include "includes/site_footer.html" %}
+
+    <script src="{{ url_for('static', filename='vendor/aos/aos.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/ambient-network.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/motion-init.js') }}" defer></script>
+    {% if request.endpoint not in ('main.landing', 'main.welcome') and request.endpoint != 'reference.fmi_kyc' and request.endpoint != 'main.open_pit_copper_domain' %}
+    <script src="{{ url_for('static', filename='js/site-motion.bundle.js') }}" defer></script>
+    {% endif %}
+    <script src="{{ url_for('static', filename='js/navbar.js') }}" defer></script>
+  </body>
+</html>

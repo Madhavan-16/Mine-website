@@ -1,0 +1,1 @@
+# Keeps logs/ in git; outbound dev mail is written to mail-outbox.log (gitignored).

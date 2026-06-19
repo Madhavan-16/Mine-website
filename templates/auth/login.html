@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block content %}
+  <div class="card auth-card" data-aos="fade-up" data-aos-duration="480" data-aos-offset="12">
+    <h1>Sign in</h1>
+    <p class="meta">Use your MiNe account credentials.</p>
+    <form method="post" class="form" action="{{ url_for('auth.login') }}">
+      {{ form.hidden_tag() }}
+      {% if form.errors %}
+        <ul class="form-errors" style="margin-bottom:12px;">
+          {% for field, errs in form.errors.items() %}
+            {% for err in errs %}<li><strong>{{ field }}</strong>: {{ err }}</li>{% endfor %}
+          {% endfor %}
+        </ul>
+      {% endif %}
+      <label for="username">Username</label>
+      {{ form.username(class="") }}
+      <label for="password">Password</label>
+      {{ form.password(class="") }}
+      <div class="toolbar" style="margin-top: 14px;">
+        <button class="btn btn-primary" type="submit">Sign in</button>
+        <a class="btn btn-secondary" href="{{ url_for('main.landing') }}">Back</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

@@ -1,0 +1,147 @@
+/*
+ * Interaction timing — smooth, restrained, GPU-friendly (Flaire-style micro-interactions).
+ * Tokens live in variables.css (--ease-standard, --duration-medium, …).
+ */
+
+:root {
+  /* Aliases for older rules that reference --ease-ui / --duration-ui */
+  --ease-ui: var(--ease-standard);
+  --duration-ui: var(--duration-medium);
+  --transition-ui-card:
+    box-shadow var(--transition-ui), border-color var(--transition-ui), transform var(--transition-ui),
+    background-color var(--transition-ui);
+}
+
+/* Site-wide scroll / enter prep (see site-motion.bundle.js) — opacity only, no color changes */
+@media (prefers-reduced-motion: no-preference) {
+  html.site-motion-prep #main {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  html.site-motion-prep #main .card:not([data-aos]):not([data-motion-skip]),
+  html.site-motion-prep #main section.card:not([data-aos]),
+  html.site-motion-prep #main .page-head {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  html.site-motion-prep #main h1.page-title,
+  html.site-motion-prep #main .page-head h1,
+  html.site-motion-prep #main > h1:first-of-type {
+    opacity: 0;
+  }
+
+  html.site-motion-prep #main h2:not([data-aos]),
+  html.site-motion-prep #main .page-lede {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  html.site-motion-prep .motion-word {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(1.1em);
+  }
+
+  html.site-motion-prep .motion-word-gap {
+    display: inline-block;
+    width: 0.28em;
+  }
+}
+
+/* Smooth page / link transitions (no palette changes) */
+@media (prefers-reduced-motion: no-preference) {
+  #main {
+    transition: opacity 0.35s var(--ease-standard);
+  }
+
+  a:not(.btn):not(.nav-link):not(.skip-link) {
+    transition: color var(--transition-ui), opacity var(--duration-instant) var(--ease-standard);
+  }
+
+  a:not(.btn):not(.nav-link):not(.skip-link):hover {
+    opacity: 0.88;
+  }
+}
+
+.btn {
+  transition:
+    background-color var(--transition-ui), border-color var(--transition-ui), color var(--transition-ui),
+    box-shadow var(--transition-ui), transform var(--duration-instant) var(--ease-standard),
+    opacity var(--transition-ui);
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.card {
+  transition: var(--transition-ui-card);
+  transform-origin: center center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.site-motion-prep) .card:not(.landing-role-card):not(.landing-quick-tile):not(.dashboard-timeline-card):not(
+      .enterprise-search-xp__asset
+    ):hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  html:not(.site-motion-prep) .card:not(.landing-role-card):not(.landing-quick-tile):not(.dashboard-timeline-card):not(
+      .enterprise-search-xp__asset
+    ):focus-within {
+    transform: translateY(-1px);
+  }
+
+  .btn:hover:not(:disabled) {
+    box-shadow: var(--shadow-sm);
+  }
+
+  .btn:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  .nav-link,
+  .nav-details-summary {
+    transition: background-color var(--transition-ui), color var(--transition-ui), box-shadow var(--transition-ui);
+  }
+
+  .search-form input[type="search"],
+  .search-form select {
+    transition: border-color var(--transition-ui), box-shadow var(--transition-ui), background-color var(--transition-ui);
+  }
+
+  .domain-knowledge-page .card:hover,
+  .domain-knowledge-page .card:focus-within {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .nav-link {
+    transition-duration: 0.01ms !important;
+  }
+
+  .card:not(.landing-role-card):not(.landing-quick-tile):not(.dashboard-timeline-card):not(
+      .enterprise-search-xp__asset
+    ):hover,
+  .card:not(.landing-role-card):not(.landing-quick-tile):not(.dashboard-timeline-card):not(
+      .enterprise-search-xp__asset
+    ):focus-within {
+    transform: none;
+  }
+
+  [data-aos],
+  html.site-motion-prep #main,
+  html.site-motion-prep #main .card,
+  html.site-motion-prep #main h1,
+  html.site-motion-prep #main h2,
+  html.site-motion-prep .motion-word {
+    opacity: 1 !important;
+    transform: none !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

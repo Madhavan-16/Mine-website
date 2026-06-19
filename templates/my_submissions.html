@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}My Submissions{% endblock %}
+{% block content %}
+  <div class="toolbar">
+    <h1 style="margin:0;">My submissions</h1>
+    <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">New knowledge submission</a>
+  </div>
+  <table class="table" style="margin-top: 12px;">
+    <thead>
+      <tr>
+        <th scope="col">Title</th>
+        <th scope="col">Module</th>
+        <th scope="col">Status</th>
+        <th scope="col">Updated</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in rows %}
+        <tr>
+          <td><a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a></td>
+          <td><span class="badge">{{ item.module }}</span></td>
+          <td>
+            {% if item.status == 'approved' %}<span class="badge badge-success">approved</span>
+            {% elif item.status == 'pending' %}<span class="badge badge-warning">pending</span>
+            {% elif item.status == 'rejected' %}<span class="badge badge-danger">rejected</span>
+            {% else %}<span class="badge badge-info">{{ item.status }}</span>{% endif %}
+          </td>
+          <td class="meta">{{ item.updated_at }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
