@@ -553,6 +553,14 @@
   margin-top: var(--space-2);
 }
 
+.knowledge-repo-categories .knowledge-cat-grid {
+  margin-top: 0;
+}
+
+.knowledge-repo-categories + .enterprise-search-xp {
+  margin-top: clamp(1rem, 2vw, 1.35rem);
+}
+
 .knowledge-cat-card {
   display: flex;
   flex-direction: column;

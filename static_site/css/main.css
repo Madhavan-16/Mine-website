@@ -261,10 +261,9 @@ h3 {
 
 .brand-fmi-img {
   display: block;
-  height: 30px;
+  height: 44px;
   width: auto;
-  max-width: min(180px, 28vw);
-  max-height: calc(var(--nav-height) - 20px);
+  max-height: calc(var(--nav-height) - 16px);
   object-fit: contain;
   object-position: left center;
   image-rendering: auto;
@@ -312,9 +311,9 @@ h3 {
 .layout-portal .brand-fmi-img,
 .layout-reference .brand-fmi-img,
 .layout-public .brand-fmi-img {
-  height: 42px;
-  max-width: min(300px, 38vw);
-  max-height: calc(var(--nav-height) - 20px);
+  height: 50px;
+  width: auto;
+  max-height: calc(var(--nav-height) - 12px);
 }
 
 .layout-portal .search-form,
@@ -567,10 +566,9 @@ h3 {
 
 .layout-landing .brand-fmi-img {
   display: block;
-  height: 38px;
+  height: 52px;
   width: auto;
-  max-width: min(280px, 36vw);
-  max-height: calc(var(--nav-height) - 20px);
+  max-height: calc(var(--nav-height) - 8px);
   object-fit: contain;
   object-position: left center;
 }
@@ -590,6 +588,7 @@ h3 {
   max-width: none;
   width: 100%;
   box-sizing: border-box;
+  overflow-x: clip;
   padding: clamp(var(--space-6), 3vw, var(--space-8)) clamp(var(--space-4), 4vw, var(--space-8))
     clamp(var(--space-10), 5vw, var(--space-12));
   padding-left: max(var(--space-6), env(safe-area-inset-left));
@@ -964,9 +963,9 @@ main > h1:first-child {
   }
 
   .layout-landing .brand-fmi-img {
-    height: 30px;
-    max-width: min(220px, 48vw);
-    max-height: calc(var(--nav-height) - 16px);
+    height: 44px;
+    width: auto;
+    max-height: calc(var(--nav-height) - 12px);
   }
 
   .topbar-actions {

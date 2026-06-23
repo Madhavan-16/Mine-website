@@ -7,6 +7,11 @@
     transform: translate3d(0, 16px, 0);
   }
 
+  html.landing-motion-prep body.layout-landing section[data-landing-motion]:not(.landing-hero):has([data-landing-stagger]) {
+    opacity: 1;
+    transform: none;
+  }
+
   html.landing-motion-prep body.layout-landing [data-landing-stagger] [data-landing-item] {
     opacity: 0;
     transform: translate3d(0, 20px, 0);
@@ -254,6 +259,12 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(10px, 1.8vw, 14px);
+}
+
+@media (min-width: 960px) {
+  .landing-knowledge-problem-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .landing-problem-card {
@@ -1233,6 +1244,12 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 
 .landing-card-summary {
   margin: 0.5rem 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.5;
+  color: var(--hex-grey-700);
 }
 
 .landing-hero--fresh {
@@ -1351,7 +1368,7 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 
 .landing-hero-motif-bento {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: clamp(8px, 1.1vw, 10px);
   margin: 0;
   padding: 0;
@@ -1359,6 +1376,10 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 }
 
 .landing-hero-motif-bento__cell--featured {
+  grid-column: span 3;
+}
+
+.landing-hero-motif-bento__cell:not(.landing-hero-motif-bento__cell--featured) {
   grid-column: span 2;
 }
 
@@ -1533,6 +1554,10 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
   }
 
   .landing-hero-motif-bento__cell--featured {
+    grid-column: span 1;
+  }
+
+  .landing-hero-motif-bento__cell:not(.landing-hero-motif-bento__cell--featured) {
     grid-column: span 1;
   }
 }

@@ -1,8 +1,4 @@
 {% extends "program/_spec_shell.html" %}
-{% block head_extra %}
-  {{ super() }}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/journey-timeline.css') }}" />
-{% endblock %}
 {% block title %}Know your Customer - Freeport{% endblock %}
 {% block spec_article %}
   <section class="kyc-hero" aria-labelledby="kyc-about-title">
@@ -32,67 +28,40 @@
   <h2 id="kyc-evolution-h2">2.2 Evolution timeline</h2>
   <section class="card kyc-evolution" aria-labelledby="kyc-evolution-h2" style="margin-top: 10px;">
     <p class="kyc-evolution__lede">
-      Historical arc from sulfur origins to copper-first strategy and today’s technology-enabler positioning — interactive milestones
-      with the same narrative beats used across MiNe.
+      From sulfur origins on the Gulf Coast to a copper-first global miner — follow the spine through eight pivotal eras in Freeport&apos;s history.
     </p>
-    <p id="kyc-evolution-figcap" class="meta visually-hidden">
-      Horizontal timeline: select a card or scroll to highlight the active era; keyboard users can move focus with arrow keys.
-    </p>
-    <div
-      id="kyc-evolution-timeline"
-      class="journey-ht"
-      role="region"
-      aria-labelledby="kyc-evolution-h2"
-      aria-describedby="kyc-evolution-figcap"
-      data-journey-timeline
-    >
-      <p class="journey-ht__hint" aria-hidden="true">Scroll horizontally · focus a card and use arrow keys · copper marks the active era</p>
-      <div class="journey-ht__viewport" data-journey-scroll tabindex="0">
-        <div class="journey-ht__stage">
-          <div class="journey-ht__track" aria-hidden="true">
-            <span class="journey-ht__rail-bg"></span>
-            <span class="journey-ht__rail-fill" data-journey-rail-fill></span>
-          </div>
-          <div class="journey-ht__row" role="list">
-          {% for beat in freeport_story %}
-            <article
-              class="journey-ht__milestone journey-ht__milestone--{% if loop.index0 % 2 == 0 %}up{% else %}down{% endif %}"
-              role="listitem"
-              style="--node-accent: {{ beat.c }};"
-              data-journey-milestone
-            >
-              <button type="button" class="journey-ht__card">
-                <span class="journey-ht__year">{{ beat.y }}</span>
-                <span class="journey-ht__title">{{ beat.t }}</span>
-                <p class="journey-ht__body">{{ beat.b }}</p>
-              </button>
-              <span class="journey-ht__node" aria-hidden="true"></span>
-            </article>
-            {% if not loop.last %}
-              <div class="journey-ht__connector" data-journey-connector aria-hidden="true">
-                <span class="journey-ht__connector-glow"></span>
-                <span class="journey-ht__connector-core"></span>
-              </div>
-            {% endif %}
-          {% endfor %}
-        </div>
-        </div>
+    <div class="kyc-evo-spine" id="kyc-evolution-timeline" role="region" aria-labelledby="kyc-evolution-h2">
+      <div class="kyc-evo-spine__axis" aria-hidden="true">
+        <span class="kyc-evo-spine__line-bg"></span>
+        <span class="kyc-evo-spine__line-fill"></span>
+        <span class="kyc-evo-spine__glow"></span>
       </div>
+      <ol class="kyc-evo-spine__list">
+        {% for beat in freeport_story %}
+        <li
+          class="kyc-evo-spine__milestone kyc-evo-spine__milestone--{% if loop.index0 % 2 == 0 %}left{% else %}right{% endif %}"
+          style="--era-accent: {{ beat.c }}; --era-i: {{ loop.index }};"
+        >
+          <div class="kyc-evo-spine__node" aria-hidden="true">
+            <span class="kyc-evo-spine__ring"></span>
+            <span class="kyc-evo-spine__dot"></span>
+            <span class="kyc-evo-spine__year">{{ beat.y }}</span>
+          </div>
+          <article class="kyc-evo-spine__card">
+            <span class="kyc-evo-spine__era">Era {{ "%02d"|format(loop.index) }}</span>
+            <h3 class="kyc-evo-spine__title">{{ beat.t }}</h3>
+            <p class="kyc-evo-spine__body">{{ beat.b }}</p>
+          </article>
+        </li>
+        {% endfor %}
+      </ol>
+      <p class="kyc-evo-spine__foot" aria-hidden="true">
+        <span>1912</span>
+        <span class="kyc-evo-spine__foot-line"></span>
+        <span>Copper today</span>
+      </p>
     </div>
   </section>
-
-  <script>
-    (function () {
-      try {
-        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-        if (!document.getElementById("kyc-evolution-timeline")) return;
-        document.documentElement.classList.add("journey-motion-prep");
-        window.setTimeout(function () {
-          document.documentElement.classList.remove("journey-motion-prep");
-        }, 5000);
-      } catch (_) {}
-    })();
-  </script>
 
   <h2 id="kyc-leadership-heading">2.3 Current management</h2>
   <section class="kyc-leadership" aria-labelledby="kyc-leadership-heading">
@@ -174,5 +143,4 @@
       </article>
     </div>
   </section>
-  <script src="{{ url_for('static', filename='js/journey-motion.bundle.js') }}" defer></script>
 {% endblock %}

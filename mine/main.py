@@ -612,7 +612,6 @@ def knowledge():
             search_xp_placeholders=SEARCH_XP_PLACEHOLDERS,
             search_xp_categories=SEARCH_XP_CATEGORIES,
             search_xp_filter_tags=SEARCH_XP_FILTER_TAGS,
-            search_spotlight=_repo_search_spotlight(db, 6),
         )
 
     sql = """

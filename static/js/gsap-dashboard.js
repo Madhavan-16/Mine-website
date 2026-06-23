@@ -1,7 +1,7 @@
 /**
  * Dashboard motion stack:
  * — AOS (global): section-level scroll reveals via data-aos.*
- * — GSAP + ScrollTrigger (this file): glowing timeline spine, staged nodes, analytic cards & project tiles.
+ * — GSAP + ScrollTrigger (this file): horizontal era runway, staged nodes, analytic cards & project tiles.
  *
  * Framer Motion is React-only; GSAP fills the same choreography role here.
  */
@@ -19,19 +19,18 @@
 
     var root = document.getElementById("dash-timeline-motion");
     if (root) {
-      var glow = root.querySelector(".dashboard-timeline-glow-fill");
-      var track = root.querySelector(".dashboard-timeline-track-line");
+      var glow = root.querySelector(".dash-strategic-timeline__glow");
+      var track = root.querySelector(".dash-strategic-timeline__rail-fill");
       var nodes = root.querySelectorAll("[data-timeline-node]");
 
       if (glow && track && nodes.length) {
         g.set([glow, track], {
-          scaleY: 0,
-          transformOrigin: "top center",
+          scaleX: 0,
+          transformOrigin: "left center",
         });
         g.set(nodes, {
-          opacity: 0,
-          y: 40,
-          willChange: "transform,opacity",
+          x: 36,
+          willChange: "transform",
         });
 
         var tl = g.timeline({
@@ -45,14 +44,14 @@
         });
 
         tl.to(glow, {
-          scaleY: 1,
+          scaleX: 1,
           duration: 1.15,
           ease: "power2.out",
           force3D: true,
         }).to(
           track,
           {
-            scaleY: 1,
+            scaleX: 1,
             duration: 1.05,
             ease: "power2.inOut",
             force3D: true,
@@ -62,10 +61,9 @@
 
         tl.fromTo(
           nodes,
-          { opacity: 0, y: 44 },
+          { x: 40 },
           {
-            opacity: 1,
-            y: 0,
+            x: 0,
             duration: 0.7,
             ease: "power2.out",
             stagger: 0.08,

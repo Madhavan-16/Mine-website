@@ -1,4 +1,4 @@
-{# Intelligence search UX — expects: search_xp_placeholders, search_xp_categories, search_xp_filter_tags, search_spotlight #}
+{# Intelligence search UX — expects: search_xp_placeholders, search_xp_categories, search_xp_filter_tags, recent_rows #}
 <section
   id="enterprise-search"
   class="enterprise-search-xp"
@@ -94,27 +94,41 @@
       </p>
     </form>
 
-    <div class="enterprise-search-xp__split">
+    <div class="enterprise-search-xp__split enterprise-search-xp__split--queries">
       <div class="enterprise-search-xp__col">
-        <h3 class="enterprise-search-xp__col-title">Recent</h3>
+        <h3 class="enterprise-search-xp__col-title">Recent searches</h3>
         <p class="enterprise-search-xp__col-note">Synced on this browser after you run a search.</p>
         <ul class="enterprise-search-xp__chips-list" data-recent-search-list></ul>
         <p class="enterprise-search-xp__empty-msg" data-recent-empty>Your recent queries appear here.</p>
       </div>
-      <div class="enterprise-search-xp__col">
-        <h3 class="enterprise-search-xp__col-title">Suggested knowledge</h3>
+    </div>
+
+    <div class="enterprise-search-xp__catalog" aria-labelledby="search-xp-recent-added">
+      <header class="enterprise-search-xp__catalog-head">
+        <h3 id="search-xp-recent-added" class="enterprise-search-xp__col-title">Recently added</h3>
         <p class="enterprise-search-xp__col-note">Latest approved artefacts from the catalogue.</p>
-        <div class="enterprise-search-xp__assets">
-          {% for item in search_spotlight %}
-            <a class="enterprise-search-xp__asset" href="{{ url_for('content.content_view', cid=item.id) }}">
-              <span class="enterprise-search-xp__asset-pill">{{ item.module_label }}</span>
-              <span class="enterprise-search-xp__asset-title">{{ item.title }}</span>
-            </a>
-          {% else %}
-            <p class="enterprise-search-xp__empty-msg">Approved content will populate this rail as authors publish.</p>
+      </header>
+      {% if recent_rows and recent_rows|length > 0 %}
+        <div class="knowledge-recent-row enterprise-search-xp__recent-grid">
+          {% for item in recent_rows %}
+            <article class="knowledge-recent-card">
+              <a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a>
+              <p class="meta" style="margin:6px 0 0;">{{ item.module }} · {{ item.author_name }}</p>
+              {% if item.summary and item.summary.strip() %}
+                <p class="knowledge-recent-excerpt">{{ item.summary|truncate(220)|e }}</p>
+              {% endif %}
+            </article>
           {% endfor %}
         </div>
-      </div>
+      {% else %}
+        <p class="enterprise-search-xp__empty-msg">No approved items yet.</p>
+      {% endif %}
+
+      {% if current_user and current_user.role in ['admin', 'moderator'] %}
+        <div class="enterprise-search-xp__catalog-cta">
+          <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create knowledge content</a>
+        </div>
+      {% endif %}
     </div>
   </div>
 </section>

@@ -322,10 +322,15 @@
             <h3 class="landing-problem-card__title">Inconsistent delivery</h3>
             <p class="landing-problem-card__desc">Lack of standardized references.</p>
           </article>
-          <article class="landing-problem-card landing-problem-card--solution" data-knowledge-row data-landing-item tabindex="0">
+          <article class="landing-problem-card" data-knowledge-row data-landing-item tabindex="0">
             <div class="landing-problem-card__icon" aria-hidden="true">🤝</div>
             <h3 class="landing-problem-card__title">Poor cross-team visibility</h3>
             <p class="landing-problem-card__desc">Limited knowledge sharing.</p>
+          </article>
+          <article class="landing-problem-card" data-knowledge-row data-landing-item tabindex="0">
+            <div class="landing-problem-card__icon" aria-hidden="true">🔄</div>
+            <h3 class="landing-problem-card__title">Knowledge attrition</h3>
+            <p class="landing-problem-card__desc">Expertise leaves when people rotate off the account.</p>
           </article>
         </div>
       </div>
@@ -352,7 +357,11 @@
               </h3>
               <span class="badge">{{ item.module }}</span>
             </div>
-            <p class="meta landing-card-summary">{{ item.summary or "No summary provided." }}</p>
+            {% if item.summary and item.summary.strip() %}
+              <p class="meta landing-card-summary">{{ item.summary|replace('\n', ' ')|truncate(180, True)|e }}</p>
+            {% else %}
+              <p class="meta landing-card-summary">No summary provided.</p>
+            {% endif %}
           </article>
         {% endfor %}
       </div>

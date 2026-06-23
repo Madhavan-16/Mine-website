@@ -7,6 +7,11 @@
     transform: translate3d(0, 16px, 0);
   }
 
+  html.landing-motion-prep body.layout-landing section[data-landing-motion]:not(.landing-hero):has([data-landing-stagger]) {
+    opacity: 1;
+    transform: none;
+  }
+
   html.landing-motion-prep body.layout-landing [data-landing-stagger] [data-landing-item] {
     opacity: 0;
     transform: translate3d(0, 20px, 0);
@@ -199,6 +204,13 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
   position: relative;
 }
 
+body.layout-landing #portal-stats,
+body.layout-landing #explore-mine,
+body.layout-landing #problem-title,
+body.layout-landing #value-title {
+  scroll-margin-top: calc(var(--portal-header-offset, 72px) + 14px);
+}
+
 @media (max-width: 520px) {
   .landing-hero-main {
     padding: clamp(14px, 4vw, 22px) clamp(14px, 3.8vw, 22px);
@@ -254,6 +266,12 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(10px, 1.8vw, 14px);
+}
+
+@media (min-width: 960px) {
+  .landing-knowledge-problem-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .landing-problem-card {
@@ -432,8 +450,10 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 .landing-role-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(16px, 2.2vw, 24px);
+  gap: clamp(18px, 2.4vw, 28px);
   align-items: stretch;
+  padding: 8px 0 10px;
+  isolation: isolate;
 }
 
 @media (max-width: 992px) {
@@ -605,7 +625,7 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 
 .landing-role-card:hover,
 .landing-role-card:focus-within {
-  transform: translateY(-8px) scale(1.01);
+  transform: translateY(-4px) scale(1.005);
   border-color: color-mix(in srgb, var(--role-accent) 38%, white);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.88) inset,
@@ -625,7 +645,7 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 
 .landing-role-card[open]:hover,
 .landing-role-card[open]:focus-within {
-  transform: translateY(-7px) scale(1.01);
+  transform: translateY(-3px) scale(1.005);
   border-color: color-mix(in srgb, var(--role-accent) 52%, rgba(255, 255, 255, 0.65));
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.92) inset,
@@ -1051,6 +1071,8 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
   width: 56px;
   height: 56px;
   flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 16px;
 }
 
 .landing-kpi-icon-wrap::before {
@@ -1064,11 +1086,12 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 
 .landing-kpi-pulse {
   position: absolute;
-  inset: -4px;
-  border-radius: 20px;
+  inset: 0;
+  border-radius: 16px;
   border: 1px solid rgba(0, 174, 240, 0.35);
   opacity: 0.55;
   animation: landing-kpi-pulse-ring 2.6s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .landing-kpi-icon {
@@ -1213,6 +1236,12 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
   margin-top: 0.75rem;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  body.layout-landing #main .landing-featured .card-grid .card:hover {
+    transform: translateY(-2px);
+  }
+}
+
 .landing-card-title-row {
   display: flex;
   align-items: flex-start;
@@ -1233,6 +1262,12 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 
 .landing-card-summary {
   margin: 0.5rem 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.5;
+  color: var(--hex-grey-700);
 }
 
 .landing-hero--fresh {
@@ -1240,6 +1275,7 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
   margin-left: calc(-1 * var(--landing-bleed-x));
   margin-right: calc(-1 * var(--landing-bleed-x));
   margin-top: calc(-1 * clamp(var(--space-6), 3vw, var(--space-8)));
+  margin-bottom: 2px;
   width: calc(100% + 2 * var(--landing-bleed-x));
   max-width: none;
   border-radius: 0;
@@ -1351,7 +1387,7 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 
 .landing-hero-motif-bento {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: clamp(8px, 1.1vw, 10px);
   margin: 0;
   padding: 0;
@@ -1359,6 +1395,10 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 }
 
 .landing-hero-motif-bento__cell--featured {
+  grid-column: span 3;
+}
+
+.landing-hero-motif-bento__cell:not(.landing-hero-motif-bento__cell--featured) {
   grid-column: span 2;
 }
 
@@ -1535,6 +1575,10 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
   .landing-hero-motif-bento__cell--featured {
     grid-column: span 1;
   }
+
+  .landing-hero-motif-bento__cell:not(.landing-hero-motif-bento__cell--featured) {
+    grid-column: span 1;
+  }
 }
 
 @media (max-width: 520px) {
@@ -1623,7 +1667,7 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 
 .landing-hero-showcase__play-link {
   position: absolute;
-  inset: 0;
+  inset: 0 0 4.25rem 0;
   z-index: 2;
   display: flex;
   flex-direction: column;
@@ -1722,7 +1766,7 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 .landing-hero-showcase__scrim {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 1;
   background: linear-gradient(
     180deg,
     rgba(2, 20, 32, 0.08) 0%,
@@ -1855,7 +1899,9 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: clamp(12px, 2vw, 18px) 0 clamp(8px, 1.2vw, 10px);
+  position: relative;
+  z-index: 1;
+  margin: clamp(14px, 2.2vw, 20px) 0 clamp(10px, 1.4vw, 14px);
   padding: 0;
 }
 

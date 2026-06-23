@@ -196,6 +196,342 @@
   line-height: 1.58;
 }
 
+/* KYC §2.2 — alternating vertical copper spine timeline */
+.kyc-evo-spine {
+  --kyc-spine-x: 50%;
+  position: relative;
+  margin: 8px 0 4px;
+  padding: 12px 0 8px;
+  view-timeline-name: --kyc-evo;
+  view-timeline-axis: block;
+}
+
+.kyc-evo-spine__axis {
+  position: absolute;
+  left: var(--kyc-spine-x);
+  top: 0;
+  bottom: 36px;
+  width: 4px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.kyc-evo-spine__line-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    rgba(16, 63, 90, 0.12) 0%,
+    rgba(0, 174, 240, 0.22) 45%,
+    rgba(179, 119, 67, 0.35) 100%
+  );
+}
+
+.kyc-evo-spine__line-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  transform-origin: top center;
+  transform: scaleY(1);
+  background: linear-gradient(
+    180deg,
+    var(--hex-blue) 0%,
+    var(--hex-teal) 38%,
+    var(--hex-copper) 72%,
+    var(--hex-blue-dark) 100%
+  );
+  box-shadow: 0 0 12px rgba(0, 174, 240, 0.45);
+}
+
+.kyc-evo-spine__glow {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 28px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 174, 240, 0.05),
+    rgba(179, 119, 67, 0.14)
+  );
+  filter: blur(10px);
+  opacity: 0.75;
+}
+
+.kyc-evo-spine__list {
+  position: relative;
+  z-index: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.kyc-evo-spine__milestone {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0 clamp(14px, 2.5vw, 28px);
+  align-items: center;
+  margin-bottom: clamp(1.25rem, 3vw, 2rem);
+}
+
+.kyc-evo-spine__milestone:last-child {
+  margin-bottom: 0;
+}
+
+.kyc-evo-spine__node {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 88px;
+  min-height: 88px;
+  z-index: 2;
+}
+
+.kyc-evo-spine__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--era-accent, var(--hex-blue)) 55%, transparent);
+  background: radial-gradient(
+    circle at 35% 30%,
+    rgba(255, 255, 255, 0.95),
+    rgba(247, 250, 252, 0.88) 55%,
+    rgba(0, 174, 240, 0.06) 100%
+  );
+  box-shadow:
+    0 0 0 6px rgba(255, 255, 255, 0.9),
+    0 8px 22px rgba(16, 63, 90, 0.12);
+}
+
+.kyc-evo-spine__dot {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--era-accent, var(--hex-blue));
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--era-accent, var(--hex-blue)) 22%, transparent),
+    0 0 16px color-mix(in srgb, var(--era-accent, var(--hex-blue)) 45%, transparent);
+}
+
+.kyc-evo-spine__year {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--hex-blue-dark);
+  background: #fff;
+  border: 1px solid rgba(16, 63, 90, 0.14);
+  box-shadow: 0 4px 10px rgba(16, 63, 90, 0.08);
+}
+
+.kyc-evo-spine__card {
+  position: relative;
+  padding: 16px 18px 18px;
+  border-radius: calc(var(--radius-md) + 2px);
+  border: 1px solid rgba(16, 63, 90, 0.12);
+  background: linear-gradient(155deg, #fff 0%, rgba(250, 252, 253, 0.98) 100%);
+  box-shadow:
+    0 4px 18px rgba(16, 63, 90, 0.07),
+    inset 3px 0 0 var(--era-accent, var(--hex-blue));
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
+}
+
+.kyc-evo-spine__card::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: clamp(12px, 2vw, 22px);
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--era-accent, var(--hex-blue)),
+    color-mix(in srgb, var(--era-accent, var(--hex-blue)) 25%, transparent)
+  );
+  opacity: 0.85;
+}
+
+.kyc-evo-spine__milestone--left .kyc-evo-spine__card {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: end;
+  max-width: min(100%, 340px);
+}
+
+.kyc-evo-spine__milestone--left .kyc-evo-spine__card::after {
+  right: calc(-1 * clamp(12px, 2vw, 22px));
+}
+
+.kyc-evo-spine__milestone--right .kyc-evo-spine__card {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: start;
+  max-width: min(100%, 340px);
+}
+
+.kyc-evo-spine__milestone--right .kyc-evo-spine__card::after {
+  left: calc(-1 * clamp(12px, 2vw, 22px));
+}
+
+.kyc-evo-spine__card:hover {
+  border-color: rgba(0, 174, 240, 0.28);
+  box-shadow:
+    0 14px 32px rgba(16, 63, 90, 0.11),
+    inset 3px 0 0 var(--era-accent, var(--hex-blue));
+  transform: translateY(-2px);
+}
+
+.kyc-evo-spine__era {
+  display: inline-block;
+  margin-bottom: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--era-accent, var(--hex-blue));
+}
+
+.kyc-evo-spine__title {
+  margin: 0 0 8px;
+  font-size: clamp(15px, 1rem + 0.25vw, 17px);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--hex-blue-dark);
+}
+
+.kyc-evo-spine__body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--hex-grey-800);
+}
+
+.kyc-evo-spine__foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 22px 0 0;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(16, 63, 90, 0.14);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--hex-grey-600);
+}
+
+.kyc-evo-spine__foot-line {
+  flex: 0 1 48px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--hex-teal), var(--hex-copper));
+}
+
+@supports (animation-timeline: view()) {
+  .kyc-evo-spine__line-fill {
+    transform: scaleY(0);
+    animation: kyc-evo-spine-fill linear both;
+    animation-timeline: --kyc-evo;
+    animation-range: entry 5% cover 90%;
+  }
+
+  .kyc-evo-spine__milestone {
+    opacity: 0.35;
+    transform: translateY(18px);
+    animation: kyc-evo-milestone-in linear both;
+    animation-timeline: view();
+    animation-range: entry 8% cover 40%;
+  }
+}
+
+@keyframes kyc-evo-spine-fill {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+@keyframes kyc-evo-milestone-in {
+  from {
+    opacity: 0.35;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .kyc-evo-spine {
+    --kyc-spine-x: 28px;
+    padding-left: 4px;
+  }
+
+  .kyc-evo-spine__milestone {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0 16px;
+  }
+
+  .kyc-evo-spine__node {
+    grid-column: 1;
+    width: 56px;
+    min-height: 56px;
+  }
+
+  .kyc-evo-spine__ring {
+    inset: 4px;
+  }
+
+  .kyc-evo-spine__year {
+    font-size: 8px;
+    padding: 2px 6px;
+    bottom: -4px;
+  }
+
+  .kyc-evo-spine__milestone--left .kyc-evo-spine__card,
+  .kyc-evo-spine__milestone--right .kyc-evo-spine__card {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: stretch;
+    max-width: none;
+  }
+
+  .kyc-evo-spine__milestone--left .kyc-evo-spine__card::after,
+  .kyc-evo-spine__milestone--right .kyc-evo-spine__card::after {
+    left: -16px;
+    right: auto;
+    width: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kyc-evo-spine__milestone {
+    opacity: 1;
+    transform: none;
+    animation: none !important;
+  }
+
+  .kyc-evo-spine__line-fill {
+    transform: scaleY(1);
+    animation: none !important;
+  }
+
+  .kyc-evo-spine__card:hover {
+    transform: none;
+  }
+}
+
 /* Freeport KYC: About + company snapshot cards */
 .kyc-hero {
   text-align: center;

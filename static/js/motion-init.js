@@ -14,6 +14,8 @@
       delay: 0,
       anchorPlacement: "top-bottom",
       disable: function () {
+        var body = document.body;
+        if (body && body.classList.contains("layout-landing")) return true;
         return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       },
     });

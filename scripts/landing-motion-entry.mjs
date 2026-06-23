@@ -58,6 +58,8 @@ function initScrollReveals() {
   inView(
     "section[data-landing-motion]:not(.landing-hero)",
     ({ target }) => {
+      /* Stagger groups animate their own children — skip section-level move to avoid double shift / overlap. */
+      if (target.querySelector("[data-landing-stagger]")) return;
       animate(
         target,
         { opacity: [0, 1], y: [MOTION.sectionY, 0] },
@@ -96,12 +98,8 @@ function init() {
   initScrollReveals();
   initStaggerGroups();
 
-  /* Hero CTAs: hover lift + glow live in landing.css (avoids fighting CSS transform). */
+  /* Hover lift for controls only — tiles/cards/KPIs use landing.css (avoids transform fights / overlap). */
   bindHoverLift(".landing-featured .btn", { scale: 1.01, y: -1.5, durationIn: 0.18, durationOut: 0.24 });
-  bindHoverLift("a.landing-quick-tile", { scale: 1.014, y: -3.5 });
-  bindHoverLift(".landing-why-mine-card", { scale: 1.006, y: -2 });
-  bindHoverLift(".landing-kpi-card", { scale: 1.009, y: -2 });
-  bindHoverLift(".landing-featured .card-grid .card", { scale: 1.006, y: -2 });
 }
 
 if (document.readyState === "loading") {

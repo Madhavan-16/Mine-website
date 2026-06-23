@@ -31,45 +31,21 @@
   <div class="page-head">
     <nav class="breadcrumb" aria-label="Breadcrumb"><span>Home</span><span class="breadcrumb-sep" aria-hidden="true">›</span><span>Knowledge repository</span></nav>
     <h1 class="page-title">Knowledge repository</h1>
-    <p class="page-lede">Browse categories and recent additions, or launch full-text search below.</p>
+    <p class="page-lede">Browse catalogue categories, then search and review recent additions in MiNe intelligence.</p>
   </div>
 
-  {% include "includes/enterprise_search_xp.html" %}
-
-  <div class="card knowledge-repo-browse-card" style="margin-top: clamp(1rem, 2vw, 1.5rem);">
-
-    <div class="knowledge-cat-grid">
+  <div class="card knowledge-repo-browse-card knowledge-repo-categories">
+    <div class="knowledge-cat-grid" role="list" aria-label="Knowledge catalogue categories">
       {% for key, label in modules_meta %}
-        <a class="knowledge-cat-card" href="{{ url_for('main.knowledge', module=key) }}">
+        <a class="knowledge-cat-card" href="{{ url_for('main.knowledge', module=key) }}" role="listitem">
           <span class="name">{{ label }}</span>
           <span class="count">({{ module_counts.get(key, 0) }})</span>
         </a>
       {% endfor %}
     </div>
-
-    <div class="section-rule">Recently added</div>
-    {% if recent_rows and recent_rows|length > 0 %}
-      <div class="knowledge-recent-row">
-        {% for item in recent_rows %}
-          <article class="knowledge-recent-card">
-            <a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a>
-            <p class="meta" style="margin:6px 0 0;">{{ item.module }} · {{ item.author_name }}</p>
-            {% if item.summary and item.summary.strip() %}
-              <p class="knowledge-recent-excerpt">{{ item.summary|truncate(220)|e }}</p>
-            {% endif %}
-          </article>
-        {% endfor %}
-      </div>
-    {% else %}
-      <p class="meta">No approved items yet.</p>
-    {% endif %}
-
-    {% if current_user.role in ['admin','moderator'] %}
-    <div class="knowledge-cta-row">
-      <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create knowledge content</a>
-    </div>
-    {% endif %}
   </div>
+
+  {% include "includes/enterprise_search_xp.html" %}
   <script src="{{ url_for('static', filename='js/enterprise-search-xp.js') }}" defer></script>
   {% else %}
 

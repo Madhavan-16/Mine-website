@@ -499,6 +499,35 @@
   display: none;
 }
 
+.enterprise-search-xp__split--queries {
+  grid-template-columns: 1fr;
+}
+
+.enterprise-search-xp__catalog {
+  margin-top: clamp(1rem, 2.5vw, 1.35rem);
+  padding-top: clamp(1rem, 2.5vw, 1.35rem);
+  border-top: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+.enterprise-search-xp__catalog-head {
+  margin-bottom: 10px;
+}
+
+.enterprise-search-xp__recent-grid {
+  margin-top: 2px;
+}
+
+.enterprise-search-xp__catalog .knowledge-recent-card {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.72) 0%, rgba(248, 251, 254, 0.45) 100%);
+  border-color: rgba(255, 255, 255, 0.78);
+}
+
+.enterprise-search-xp__catalog-cta {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
 .enterprise-search-xp__assets {
   display: flex;
   flex-direction: column;

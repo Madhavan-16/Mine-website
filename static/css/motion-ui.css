@@ -80,14 +80,14 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  html:not(.site-motion-prep) .card:not(.landing-role-card):not(.landing-quick-tile):not(.dashboard-timeline-card):not(
+  html:not(.site-motion-prep) .card:not(.landing-role-card):not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):not(
       .enterprise-search-xp__asset
     ):hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
   }
 
-  html:not(.site-motion-prep) .card:not(.landing-role-card):not(.landing-quick-tile):not(.dashboard-timeline-card):not(
+  html:not(.site-motion-prep) .card:not(.landing-role-card):not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):not(
       .enterprise-search-xp__asset
     ):focus-within {
     transform: translateY(-1px);
@@ -123,10 +123,10 @@
     transition-duration: 0.01ms !important;
   }
 
-  .card:not(.landing-role-card):not(.landing-quick-tile):not(.dashboard-timeline-card):not(
+  .card:not(.landing-role-card):not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):not(
       .enterprise-search-xp__asset
     ):hover,
-  .card:not(.landing-role-card):not(.landing-quick-tile):not(.dashboard-timeline-card):not(
+  .card:not(.landing-role-card):not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):not(
       .enterprise-search-xp__asset
     ):focus-within {
     transform: none;

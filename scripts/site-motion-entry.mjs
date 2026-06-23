@@ -305,12 +305,7 @@ function init() {
     durationIn: 0.18,
     durationOut: 0.24,
   });
-  bindHoverLift(".card:not(.landing-role-card):not(.dashboard-timeline-card)", {
-    scale: profile.cardHoverScale,
-    y: profile.cardHoverY,
-    durationIn: 0.22,
-    durationOut: 0.28,
-  });
+  /* Card hover lift lives in motion-ui.css — JS scale+y here caused double transforms and layout jump. */
   bindHoverLift(".nav-link, .enterprise-nav-primary__link", {
     scale: profile.navHoverScale,
     y: 0,

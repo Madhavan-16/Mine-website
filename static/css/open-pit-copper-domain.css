@@ -361,46 +361,6 @@
 .domain-knowledge-page .reveal {opacity:0;transform:translateY(14px);transition:opacity 0.62s var(--ease-smooth),transform 0.62s var(--ease-smooth)}
 .domain-knowledge-page .reveal.in {opacity:1;transform:none}
 
-/* PA-specific infographic widgets */
-.domain-knowledge-page .pa-infographic {margin:22px 0 26px;background:#fff;border:1px solid var(--fcx-gray-light);border-radius:6px;padding:16px 16px 14px;box-shadow:0 8px 18px rgba(10,22,40,0.06);transition:transform 0.28s ease,box-shadow 0.28s ease,border-color 0.28s ease}
-.domain-knowledge-page .pa-infographic:hover {transform:translateY(-2px);box-shadow:0 14px 30px rgba(10,22,40,0.11);border-color:rgba(10,22,40,0.2)}
-.domain-knowledge-page .pa-infographic h4 {margin:0 0 12px;font-size:12px;color:var(--fcx-navy);text-transform:uppercase;letter-spacing:0.65px}
-.domain-knowledge-page .pa-kpi-intensity {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.domain-knowledge-page .pa-kpi-card {border:1px solid rgba(10,22,40,0.12);border-radius:6px;padding:12px;background:linear-gradient(180deg,#fff,#f8fbfd);transition:box-shadow 0.25s ease,border-color 0.25s ease}
-.domain-knowledge-page .pa-kpi-card:hover {box-shadow:0 10px 22px rgba(10,22,40,0.1);border-color:rgba(10,22,40,0.2)}
-.domain-knowledge-page .pa-kpi-card h5 {margin:0 0 9px;font-size:11px;color:var(--fcx-navy);text-transform:uppercase;letter-spacing:0.45px}
-.domain-knowledge-page .pa-kpi-bars {display:grid;gap:7px}
-.domain-knowledge-page .pa-kpi-note {margin-top:12px;font-size:10.5px;line-height:1.5;color:#6a7886}
-.domain-knowledge-page .pa-kpi-bars .signal-row {grid-template-columns:96px 1fr auto;font-size:11px;margin:7px 0}
-.domain-knowledge-page .pa-kpi-bars .signal-row strong {font-size:11px;color:var(--fcx-navy);font-variant-numeric:tabular-nums}
-.domain-knowledge-page .pa-kpi-bars .signal-row {opacity:0.92;transition:opacity 0.22s ease}
-.domain-knowledge-page .pa-kpi-bars .signal-row:hover {opacity:1}
-
-/* KPI by process area flow map */
-.domain-knowledge-page .pa-kpi-flow {margin:12px 0 16px;padding:12px;border:1px solid var(--fcx-gray-light);border-radius:8px;background:linear-gradient(180deg,#fff,#f8fbfd)}
-.domain-knowledge-page .pa-kpi-flow-track {display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;position:relative}
-.domain-knowledge-page .pa-kpi-flow-track::before {content:"";position:absolute;left:6%;right:6%;top:23px;height:2px;background:linear-gradient(90deg,rgba(0,174,240,0.38),rgba(2,159,215,0.42));z-index:0}
-.domain-knowledge-page .pa-kpi-step {position:relative;z-index:1;border:1px solid rgba(16,63,90,0.14);border-radius:8px;background:#fff;padding:8px 8px 7px;display:grid;gap:5px;justify-items:start;opacity:0;transform:translateY(10px);transition:opacity .42s ease,transform .42s ease,box-shadow .22s ease,border-color .22s ease}
-.domain-knowledge-page .reveal.in .pa-kpi-step {opacity:1;transform:none}
-.domain-knowledge-page .reveal.in .pa-kpi-step:nth-child(1) {transition-delay:35ms}
-.domain-knowledge-page .reveal.in .pa-kpi-step:nth-child(2) {transition-delay:85ms}
-.domain-knowledge-page .reveal.in .pa-kpi-step:nth-child(3) {transition-delay:135ms}
-.domain-knowledge-page .reveal.in .pa-kpi-step:nth-child(4) {transition-delay:185ms}
-.domain-knowledge-page .reveal.in .pa-kpi-step:nth-child(5) {transition-delay:235ms}
-.domain-knowledge-page .pa-kpi-step:hover {box-shadow:0 10px 20px rgba(16,63,90,.1);border-color:rgba(0,174,240,.42)}
-.domain-knowledge-page .pa-kpi-dot {width:14px;height:14px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,var(--fcx-blue),var(--fcx-teal));box-shadow:0 0 0 4px rgba(0,174,240,.12)}
-.domain-knowledge-page .pa-kpi-step h6 {margin:0;font-size:10.5px;color:var(--fcx-navy);text-transform:uppercase;letter-spacing:.4px;line-height:1.2}
-.domain-knowledge-page .pa-kpi-step .kpi-count {font-size:14px;font-weight:700;color:var(--fcx-copper);line-height:1}
-.domain-knowledge-page .pa-kpi-step .kpi-sub {font-size:10px;color:#61707f;line-height:1.25}
-
-/* Staggered entry for PA KPI infographics */
-.domain-knowledge-page #pa-kpi-intensity.reveal.in .pa-kpi-card:nth-child(1) .signal-row:nth-child(1) .signal-fill {transition-delay:40ms}
-.domain-knowledge-page #pa-kpi-intensity.reveal.in .pa-kpi-card:nth-child(1) .signal-row:nth-child(2) .signal-fill {transition-delay:90ms}
-.domain-knowledge-page #pa-kpi-intensity.reveal.in .pa-kpi-card:nth-child(1) .signal-row:nth-child(3) .signal-fill {transition-delay:140ms}
-.domain-knowledge-page #pa-kpi-intensity.reveal.in .pa-kpi-card:nth-child(2) .signal-row:nth-child(1) .signal-fill {transition-delay:190ms}
-.domain-knowledge-page #pa-kpi-intensity.reveal.in .pa-kpi-card:nth-child(2) .signal-row:nth-child(2) .signal-fill {transition-delay:240ms}
-.domain-knowledge-page #pa-kpi-intensity.reveal.in .pa-kpi-card:nth-child(2) .signal-row:nth-child(3) .signal-fill {transition-delay:290ms}
-
 @media(max-width:900px){
 .domain-knowledge-page .lifecycle-track {grid-template-columns:1fr 1fr}
 .domain-knowledge-page .lc-stage:nth-child(2)::after {display:none}
@@ -409,18 +369,14 @@
 .domain-knowledge-page .digital-stage {grid-template-columns:1fr 1fr}
 .domain-knowledge-page .digital-stage::before {display:none}
 .domain-knowledge-page .opx-grid {grid-template-columns:1fr 1fr}
-.domain-knowledge-page .pa-kpi-flow-track {grid-template-columns:1fr 1fr}
-.domain-knowledge-page .pa-kpi-flow-track::before {display:none}
 }
 @media(max-width:640px){
-.domain-knowledge-page .pa-kpi-intensity {grid-template-columns:1fr}
 .domain-knowledge-page .lifecycle-track {grid-template-columns:1fr}
 .domain-knowledge-page .lc-stage::after {display:none}
 .domain-knowledge-page .driver-grid {grid-template-columns:1fr}
 .domain-knowledge-page .digital-stage {grid-template-columns:1fr}
 .domain-knowledge-page .opx-grid {grid-template-columns:1fr}
 .domain-knowledge-page .img-zoom-dialog {inset:8px}
-.domain-knowledge-page .pa-kpi-flow-track {grid-template-columns:1fr}
 }
 
 /* ═══════ FLOW ═══════ */
@@ -483,14 +439,11 @@
 @media(prefers-reduced-motion:reduce){
 .domain-knowledge-page .reveal {opacity:1 !important;transform:none !important;transition:none !important}
 .domain-knowledge-page .signal-fill {transition:none !important}
-.domain-knowledge-page .pa-infographic, .domain-knowledge-page .pa-kpi-card {transition:none !important}
-.domain-knowledge-page .pa-infographic:hover {transform:none !important}
 .domain-knowledge-page .lc-stage {opacity:1 !important;transform:none !important;transition:none !important}
 .domain-knowledge-page .driver-card, .domain-knowledge-page .digital-card {opacity:1 !important;transform:none !important;transition:none !important}
 .domain-knowledge-page .opx-card {opacity:1 !important;transform:none !important;transition:none !important}
 .domain-knowledge-page .usage-lens-card {opacity:1 !important;transform:none !important;transition:none !important}
 .domain-knowledge-page .cpm-panel {opacity:1 !important;transform:none !important;transition:none !important}
-.domain-knowledge-page .pa-kpi-step {opacity:1 !important;transform:none !important;transition:none !important}
 .domain-knowledge-page .img-zoom-modal {transition:none !important}
 }
 
@@ -654,18 +607,6 @@
 .domain-knowledge-page .digital-card:nth-child(2) .digital-icon { background: linear-gradient(145deg, #6f42c1, #9b59b6); }
 .domain-knowledge-page .digital-card:nth-child(3) .digital-icon { background: linear-gradient(145deg, #28a745, #5cb85c); }
 .domain-knowledge-page .digital-card:nth-child(4) .digital-icon { background: linear-gradient(145deg, #f5a623, #e67e22); }
-
-.domain-knowledge-page .pa-kpi-step:nth-child(1) .pa-kpi-dot { background: linear-gradient(145deg, #f5a623, #ffc857); }
-.domain-knowledge-page .pa-kpi-step:nth-child(2) .pa-kpi-dot { background: linear-gradient(145deg, #00aef0, #4dc4f5); }
-.domain-knowledge-page .pa-kpi-step:nth-child(3) .pa-kpi-dot { background: linear-gradient(145deg, #6f42c1, #9b59b6); }
-.domain-knowledge-page .pa-kpi-step:nth-child(4) .pa-kpi-dot { background: linear-gradient(145deg, #28a745, #5cb85c); }
-.domain-knowledge-page .pa-kpi-step:nth-child(5) .pa-kpi-dot { background: linear-gradient(145deg, #029fd7, #004157); }
-
-.domain-knowledge-page .pa-kpi-step:nth-child(1) .kpi-count { color: #e67e22; }
-.domain-knowledge-page .pa-kpi-step:nth-child(2) .kpi-count { color: #00aef0; }
-.domain-knowledge-page .pa-kpi-step:nth-child(3) .kpi-count { color: #6f42c1; }
-.domain-knowledge-page .pa-kpi-step:nth-child(4) .kpi-count { color: #28a745; }
-.domain-knowledge-page .pa-kpi-step:nth-child(5) .kpi-count { color: #029fd7; }
 
 .domain-knowledge-page .ore-grade-ring {
   background: conic-gradient(var(--hex-blue) 0 68%, rgba(16, 63, 90, 0.1) 68% 100%);
@@ -861,7 +802,7 @@
   color: var(--hex-teal-light);
 }
 
-/* ——— Cross-Process Measures atlas ——— */
+/* ——— Cross-Process Measures atlas — 2×2 horizontal matrix ——— */
 .domain-knowledge-page .cpm-atlas {
   margin: 18px 0 24px;
   padding: 18px;
@@ -874,12 +815,12 @@
 .domain-knowledge-page .cpm-atlas__rail {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 20px;
   padding-bottom: 4px;
-  max-width: 900px;
+  max-width: none;
 }
 
 .domain-knowledge-page .cpm-atlas__node {
@@ -905,14 +846,13 @@
 }
 
 .domain-knowledge-page .cpm-atlas__flow {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0;
-  max-width: 900px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  max-width: none;
   margin: 0;
-  padding-left: 28px;
-  border-left: 2px solid rgba(0, 174, 240, 0.22);
+  padding: 0;
+  border-left: none;
 }
 
 .domain-knowledge-page .cpm-panel {
@@ -923,26 +863,14 @@
   background: #fff;
   position: relative;
   overflow: visible;
+  height: 100%;
   opacity: 0;
   transform: translateY(10px);
   transition: opacity 0.45s ease, transform 0.45s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
-.domain-knowledge-page .cpm-panel + .cpm-panel {
-  margin-top: 14px;
-}
-
 .domain-knowledge-page .cpm-panel::before {
-  content: "";
-  position: absolute;
-  left: -35px;
-  top: 22px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 2px solid #fff;
-  box-shadow: 0 0 0 2px var(--cpm-ring);
-  background: var(--cpm-accent);
+  display: none;
 }
 
 .domain-knowledge-page .reveal.in .cpm-panel {
@@ -1139,27 +1067,16 @@
 }
 
 @media (max-width: 768px) {
-  .domain-knowledge-page .cpm-atlas__rail {
-    max-width: none;
-  }
-
   .domain-knowledge-page .cpm-atlas__line {
     display: none;
   }
 
   .domain-knowledge-page .cpm-atlas__flow {
-    padding-left: 22px;
-    max-width: none;
-  }
-
-  .domain-knowledge-page .cpm-panel::before {
-    left: -30px;
-    width: 10px;
-    height: 10px;
+    grid-template-columns: 1fr;
   }
 }
 
-/* ——— Practical Usage Guide — audience lens cards ——— */
+/* ——— Practical Usage Guide — 2×2 audience lens matrix ——— */
 .domain-knowledge-page .usage-lens {
   margin: 20px 0 24px;
   padding: 18px;
@@ -1170,19 +1087,19 @@
 }
 
 .domain-knowledge-page .usage-lens__flow {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0;
-  max-width: 760px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  max-width: none;
   margin: 0;
-  padding-left: 28px;
-  border-left: 2px solid rgba(0, 174, 240, 0.22);
+  padding: 0;
+  border-left: none;
 }
 
 .domain-knowledge-page .usage-lens-card {
   display: grid;
   gap: 12px;
+  height: 100%;
   padding: 16px;
   border: 1px solid rgba(16, 63, 90, 0.12);
   border-left-width: 4px;
@@ -1195,21 +1112,8 @@
   transition: opacity 0.45s ease, transform 0.45s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
-.domain-knowledge-page .usage-lens-card + .usage-lens-card {
-  margin-top: 14px;
-}
-
 .domain-knowledge-page .usage-lens-card::before {
-  content: "";
-  position: absolute;
-  left: -35px;
-  top: 22px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 2px solid #fff;
-  box-shadow: 0 0 0 2px rgba(0, 174, 240, 0.35);
-  background: var(--hex-teal);
+  display: none;
 }
 
 .domain-knowledge-page .reveal.in .usage-lens-card {
@@ -1312,38 +1216,27 @@
 }
 
 .domain-knowledge-page .usage-lens-card--exec { border-left-color: #103f5a; }
-.domain-knowledge-page .usage-lens-card--exec::before { background: #103f5a; box-shadow: 0 0 0 2px rgba(16, 63, 90, 0.35); }
 .domain-knowledge-page .usage-lens-card--exec .usage-lens-icon { background: linear-gradient(145deg, #103f5a, #029fd7); box-shadow: 0 0 0 4px rgba(16, 63, 90, 0.12); }
 .domain-knowledge-page .usage-lens-card--exec .usage-lens-tag { background: rgba(16, 63, 90, 0.08); border-color: rgba(16, 63, 90, 0.14); }
 .domain-knowledge-page .usage-lens-card--exec .usage-lens-block--speak { border-left-color: #103f5a; background: rgba(16, 63, 90, 0.05); }
 
 .domain-knowledge-page .usage-lens-card--mine { border-left-color: #f5a623; }
-.domain-knowledge-page .usage-lens-card--mine::before { background: #f5a623; box-shadow: 0 0 0 2px rgba(245, 166, 35, 0.35); }
 .domain-knowledge-page .usage-lens-card--mine .usage-lens-icon { background: linear-gradient(145deg, #f5a623, #ffc857); box-shadow: 0 0 0 4px rgba(245, 166, 35, 0.14); }
 .domain-knowledge-page .usage-lens-card--mine .usage-lens-tag { background: rgba(245, 166, 35, 0.1); border-color: rgba(245, 166, 35, 0.22); color: #7a5510; }
 .domain-knowledge-page .usage-lens-card--mine .usage-lens-block--speak { border-left-color: #f5a623; background: rgba(245, 166, 35, 0.06); }
 
 .domain-knowledge-page .usage-lens-card--plant { border-left-color: #28a745; }
-.domain-knowledge-page .usage-lens-card--plant::before { background: #28a745; box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.35); }
 .domain-knowledge-page .usage-lens-card--plant .usage-lens-icon { background: linear-gradient(145deg, #28a745, #5cb85c); box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.14); }
 .domain-knowledge-page .usage-lens-card--plant .usage-lens-tag { background: rgba(40, 167, 69, 0.1); border-color: rgba(40, 167, 69, 0.22); color: #1e6b32; }
 .domain-knowledge-page .usage-lens-card--plant .usage-lens-block--speak { border-left-color: #28a745; background: rgba(40, 167, 69, 0.06); }
 
 .domain-knowledge-page .usage-lens-card--digital { border-left-color: #6f42c1; }
-.domain-knowledge-page .usage-lens-card--digital::before { background: #6f42c1; box-shadow: 0 0 0 2px rgba(111, 66, 193, 0.35); }
 .domain-knowledge-page .usage-lens-card--digital .usage-lens-icon { background: linear-gradient(145deg, #6f42c1, #9b59b6); box-shadow: 0 0 0 4px rgba(111, 66, 193, 0.14); }
 .domain-knowledge-page .usage-lens-card--digital .usage-lens-tag { background: rgba(111, 66, 193, 0.1); border-color: rgba(111, 66, 193, 0.22); color: #4e2d8a; }
 .domain-knowledge-page .usage-lens-card--digital .usage-lens-block--speak { border-left-color: #6f42c1; background: rgba(111, 66, 193, 0.06); }
 
 @media (max-width: 768px) {
   .domain-knowledge-page .usage-lens__flow {
-    padding-left: 22px;
-    max-width: none;
-  }
-
-  .domain-knowledge-page .usage-lens-card::before {
-    left: -30px;
-    width: 10px;
-    height: 10px;
+    grid-template-columns: 1fr;
   }
 }

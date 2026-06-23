@@ -57,28 +57,77 @@
     <p class="dashboard-section-lead" data-motion-skip>
       Highlights from Freeport legacy through today — anchored for stakeholder conversations without leaving MiNe.
     </p>
-    <div id="dash-timeline-motion" class="dashboard-timeline-shell">
-      <div class="dashboard-timeline-rail" aria-hidden="true">
-        <span class="dashboard-timeline-glow-hub">
-          <span class="dashboard-timeline-glow-fill"></span>
-        </span>
-        <span class="dashboard-timeline-track-hub">
-          <span class="dashboard-timeline-track-line"></span>
-        </span>
+    <div id="dash-timeline-motion" class="dash-strategic-timeline">
+      <div class="dash-strategic-timeline__command" data-timeline-command>
+        <div class="dash-strategic-timeline__live" aria-live="polite" aria-atomic="true">
+          <span class="dash-strategic-timeline__live-kicker">Now exploring</span>
+          <span class="dash-strategic-timeline__live-year" data-timeline-live-year>{{ timeline[0].y }}</span>
+          <h3 class="dash-strategic-timeline__live-title" data-timeline-live-title>{{ timeline[0].t }}</h3>
+          <p class="dash-strategic-timeline__live-desc" data-timeline-live-desc>{{ timeline[0].b }}</p>
+        </div>
+        <nav class="dash-strategic-timeline__nav" aria-label="Jump to strategic era">
+          {% for beat in timeline %}
+            <button
+              type="button"
+              class="dash-strategic-timeline__nav-btn{% if loop.first %} is-active{% endif %}"
+              data-timeline-jump="{{ loop.index0 }}"
+              style="--era-accent: {{ beat.c }};"
+              aria-label="{{ beat.y }} — {{ beat.t }}"
+            >{{ beat.y }}</button>
+          {% endfor %}
+        </nav>
       </div>
-      <div class="dashboard-timeline-list" role="list">
-        {% for beat in timeline %}
-          <article class="dashboard-timeline-node" role="listitem" data-timeline-node>
-            <div class="dashboard-timeline-axis">
-              <span class="dashboard-timeline-dot" style="--accent: {{ beat.c }}" aria-hidden="true"></span>
-            </div>
-            <div class="dashboard-timeline-card card">
-              <span class="dashboard-timeline-y">{{ beat.y }}</span>
-              <h3 class="dashboard-timeline-title">{{ beat.t }}</h3>
-              <p class="dashboard-timeline-desc">{{ beat.b }}</p>
-            </div>
-          </article>
-        {% endfor %}
+      <p class="dash-strategic-timeline__hint" aria-hidden="true">Drag or scroll the runway · tap an era above · copper marks today</p>
+      <div class="dash-strategic-timeline__viewport" data-timeline-viewport tabindex="0" aria-label="Freeport strategic timeline by era">
+        <div class="dash-strategic-timeline__stage" data-timeline-stage>
+          <svg class="dash-strategic-timeline__wave" viewBox="0 0 1200 48" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="dash-timeline-wave-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#00aef0" />
+                <stop offset="45%" stop-color="#029fd7" />
+                <stop offset="78%" stop-color="#b37743" />
+                <stop offset="100%" stop-color="#103f5a" />
+              </linearGradient>
+            </defs>
+            <path class="dash-strategic-timeline__wave-bg" d="M0,24 C150,8 300,40 450,24 S750,8 900,24 1050,40 1200,24" />
+            <path class="dash-strategic-timeline__wave-fill" data-timeline-wave-fill d="M0,24 C150,8 300,40 450,24 S750,8 900,24 1050,40 1200,24" />
+          </svg>
+          <div class="dash-strategic-timeline__track" aria-hidden="true">
+            <span class="dash-strategic-timeline__glow dashboard-timeline-glow-fill"></span>
+            <span class="dash-strategic-timeline__rail-bg"></span>
+            <span class="dash-strategic-timeline__rail-fill dashboard-timeline-track-line" data-timeline-rail-fill></span>
+            <span class="dash-strategic-timeline__runner" data-timeline-runner aria-hidden="true"></span>
+          </div>
+          <div class="dash-strategic-timeline__row" role="list">
+            {% for beat in timeline %}
+              <article
+                class="dash-strategic-timeline__era{% if loop.index0 % 2 == 1 %} dash-strategic-timeline__era--alt{% endif %}{% if loop.last %} dash-strategic-timeline__era--today{% endif %}{% if loop.first %} is-active{% endif %}"
+                role="listitem"
+                data-timeline-node
+                data-timeline-era
+                data-era-index="{{ loop.index0 }}"
+                data-era-year="{{ beat.y }}"
+                data-era-title="{{ beat.t }}"
+                data-era-body="{{ beat.b }}"
+                style="--era-accent: {{ beat.c }}; --era-i: {{ loop.index }};"
+              >
+                <button type="button" class="dash-strategic-timeline__card dashboard-timeline-card card" data-timeline-card>
+                  <span class="dash-strategic-timeline__index">Era {{ "%02d"|format(loop.index) }}</span>
+                  <span class="dashboard-timeline-y dash-strategic-timeline__year">{{ beat.y }}</span>
+                  <h3 class="dashboard-timeline-title">{{ beat.t }}</h3>
+                  <p class="dashboard-timeline-desc">{{ beat.b }}</p>
+                </button>
+                <span class="dash-strategic-timeline__node" aria-hidden="true">
+                  <span class="dash-strategic-timeline__pulse"></span>
+                  <span class="dash-strategic-timeline__dot"></span>
+                </span>
+              </article>
+              {% if not loop.last %}
+                <div class="dash-strategic-timeline__connector" aria-hidden="true"></div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -234,5 +283,6 @@
 <script src="{{ url_for('static', filename='vendor/gsap/gsap.min.js') }}" defer></script>
 <script src="{{ url_for('static', filename='vendor/gsap/ScrollTrigger.min.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/dashboard-feed.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/dashboard-timeline.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/gsap-dashboard.js') }}" defer></script>
 {% endblock %}
