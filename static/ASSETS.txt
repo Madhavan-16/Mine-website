@@ -18,8 +18,7 @@ config/hero_showcase.json  Landing hero YouTube embeds (@freeportfcx)
 
 Landing hero videos
 -------------------
-Hero showcase uses YouTube thumbnails that open videos on youtube.com/@freeportfcx in a new tab.
-Edit config/hero_showcase.json to swap video IDs (youtube_id or youtube_url per slide).
+Hero showcase uses YouTube thumbnails; play opens an in-page lightbox with embed + audio (config/hero_showcase.json).
 
 Refresh bundled assets
 ----------------------

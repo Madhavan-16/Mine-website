@@ -6,5 +6,8 @@ venv/
 .env
 uploads/*
 !uploads/.gitkeep
+uploads/.slide_previews/
+tools/LibreOfficePortable/
+tools/downloads/
 node_modules/
 logs/mail-outbox.log

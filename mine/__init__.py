@@ -11,6 +11,7 @@ from flask_wtf.csrf import CSRFProtect, generate_csrf
 from mine.config import Config
 from mine.db import (
     ensure_attachment_preview_column,
+    ensure_attachment_slide_preview_column,
     ensure_user_mail_tokens_table,
     get_db,
     init_app as db_init_app,
@@ -82,6 +83,37 @@ def create_app():
         # Ensure default admin exists whenever the users table is empty (not only on first DB file creation).
         seed_if_empty()
         ensure_attachment_preview_column()
+        ensure_attachment_slide_preview_column()
         ensure_user_mail_tokens_table()
+        from mine.upload_paths import normalize_attachment_paths_in_db
+
+        try:
+            normalize_attachment_paths_in_db(get_db())
+        except Exception:
+            app.logger.exception("Attachment path normalization failed on startup")
+
+        if app.config.get("BACKFILL_ATTACHMENT_PREVIEWS", True):
+            try:
+                from mine.preview_backfill import (
+                    backfill_missing_pdf_previews,
+                    backfill_missing_slide_previews,
+                )
+
+                pdf_result = backfill_missing_pdf_previews(get_db(), app.config["UPLOAD_FOLDER"])
+                if pdf_result.get("converted"):
+                    app.logger.info("Attachment PDF preview backfill: %s", pdf_result)
+                if app.config.get("ENABLE_SLIDE_PREVIEW", True):
+                    from mine.slide_preview import slide_export_available
+
+                    if slide_export_available():
+                        slide_result = backfill_missing_slide_previews(
+                            get_db(),
+                            app.config["UPLOAD_FOLDER"],
+                            scale=float(app.config.get("SLIDE_PREVIEW_SCALE", 2.0)),
+                        )
+                        if slide_result.get("converted"):
+                            app.logger.info("Attachment slide preview backfill: %s", slide_result)
+            except Exception:
+                app.logger.exception("Attachment preview backfill failed on startup")
 
     return app

@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS attachments (
   file_name TEXT,
   file_path TEXT,
   preview_path TEXT,
+  slide_preview_dir TEXT,
   uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (content_id) REFERENCES content(id) ON DELETE CASCADE
 );

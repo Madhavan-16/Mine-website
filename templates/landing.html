@@ -53,16 +53,17 @@
                   loading="{% if loop.first %}eager{% else %}lazy{% endif %}"
                   decoding="async"
                 />
-                <a
+                <button
+                  type="button"
                   class="landing-hero-showcase__play-link"
-                  href="{{ slide.watch_url }}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Play on YouTube: {{ slide.caption }}"
+                  data-hero-play
+                  data-youtube-id="{{ slide.youtube_id }}"
+                  data-watch-url="{{ slide.watch_url }}"
+                  aria-label="Play video: {{ slide.caption }}"
                 >
                   <span class="landing-hero-showcase__play-icon" aria-hidden="true"></span>
-                  <span class="landing-hero-showcase__play-text">Watch on YouTube</span>
-                </a>
+                  <span class="landing-hero-showcase__play-text">Play video</span>
+                </button>
               </div>
             {% endfor %}
             <div class="landing-hero-showcase__scrim" aria-hidden="true"></div>
@@ -91,6 +92,34 @@
       </div>
     </div>
   </section>
+
+  {% if hero_showcase %}
+  <div class="landing-hero-video-modal" id="landing-hero-video-modal" aria-hidden="true" hidden>
+    <div class="landing-hero-video-modal__backdrop" data-hero-video-close tabindex="-1" aria-hidden="true"></div>
+    <div
+      class="landing-hero-video-modal__dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="landing-hero-video-title"
+      tabindex="-1"
+    >
+      <button type="button" class="landing-hero-video-modal__close" data-hero-video-close aria-label="Close video">×</button>
+      <h2 id="landing-hero-video-title" class="landing-hero-video-modal__title"></h2>
+      <div class="landing-hero-video-modal__player">
+        <iframe
+          class="landing-hero-video-modal__iframe"
+          data-hero-video-iframe
+          title=""
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+        ></iframe>
+      </div>
+      <p class="landing-hero-video-modal__foot">
+        <a href="#" class="landing-hero-video-modal__external" target="_blank" rel="noopener noreferrer" data-hero-video-external>Open on YouTube ↗</a>
+      </p>
+    </div>
+  </div>
+  {% endif %}
 
   <div class="landing-motif-modal" id="landing-motif-modal" aria-hidden="true" hidden>
     <div class="landing-motif-modal__backdrop" data-motif-close tabindex="-1" aria-hidden="true"></div>

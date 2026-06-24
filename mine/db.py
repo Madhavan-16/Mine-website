@@ -39,6 +39,15 @@ def ensure_attachment_preview_column():
         db.commit()
 
 
+def ensure_attachment_slide_preview_column():
+    """Existing DBs: add slide_preview_dir for rasterized slide PNG previews."""
+    db = get_db()
+    cols = [row[1] for row in db.execute("PRAGMA table_info(attachments)").fetchall()]
+    if "slide_preview_dir" not in cols:
+        db.execute("ALTER TABLE attachments ADD COLUMN slide_preview_dir TEXT")
+        db.commit()
+
+
 def ensure_user_mail_tokens_table():
     """Existing DBs: create/upgrade Graph OAuth token table."""
     db = get_db()

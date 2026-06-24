@@ -1674,6 +1674,11 @@ body.layout-landing #value-title {
   align-items: center;
   justify-content: center;
   gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  font: inherit;
+  cursor: pointer;
   text-decoration: none;
   color: #fff;
   background: rgba(2, 20, 32, 0.18);
@@ -2181,10 +2186,137 @@ body.layout-landing #value-title {
   margin-top: 0.75rem;
 }
 
-/* Value-chain insight modals (hero bento cards) */
+/* Hero YouTube lightbox — matches showcase stage proportions */
+body.landing-hero-video-open,
 body.landing-motif-modal-open {
   overflow: hidden;
 }
+
+.landing-hero-video-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1150;
+  display: grid;
+  place-items: center;
+  padding: clamp(12px, 3vw, 24px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+
+.landing-hero-video-modal.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.landing-hero-video-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 12, 22, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.landing-hero-video-modal__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 720px);
+  border-radius: calc(var(--radius-lg) + 6px);
+  overflow: hidden;
+  background: #0a1628;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 28px 72px rgba(2, 3, 5, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  transform: translateY(8px) scale(0.98);
+  transition: transform 0.24s ease;
+}
+
+.landing-hero-video-modal.is-open .landing-hero-video-modal__dialog {
+  transform: translateY(0) scale(1);
+}
+
+.landing-hero-video-modal__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.landing-hero-video-modal__close:hover {
+  background: rgba(0, 0, 0, 0.78);
+}
+
+.landing-hero-video-modal__close:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 2px;
+}
+
+.landing-hero-video-modal__title {
+  margin: 0;
+  padding: 14px 48px 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.landing-hero-video-modal__player {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #000;
+}
+
+.landing-hero-video-modal__iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.landing-hero-video-modal__foot {
+  margin: 0;
+  padding: 10px 16px 12px;
+  text-align: right;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.landing-hero-video-modal__external {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.78);
+  text-decoration: none;
+}
+
+.landing-hero-video-modal__external:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero-video-modal,
+  .landing-hero-video-modal__dialog {
+    transition: none;
+  }
+
+  .landing-hero-video-modal__dialog {
+    transform: none;
+  }
+}
+
+/* Value-chain insight modals (hero bento cards) */
 
 .landing-motif-modal {
   position: fixed;

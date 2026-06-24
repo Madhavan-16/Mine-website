@@ -1,12 +1,24 @@
 import os
 from pathlib import Path
 
+_BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def _resolve_path(env_key: str, default: Path) -> str:
+    raw = (os.environ.get(env_key) or "").strip()
+    p = Path(raw) if raw else default
+    if not p.is_absolute():
+        p = (_BASE_DIR / p).resolve()
+    else:
+        p = p.resolve()
+    return str(p)
+
 
 class Config:
-    BASE_DIR = Path(__file__).resolve().parent.parent
+    BASE_DIR = _BASE_DIR
     SECRET_KEY = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
-    DATABASE = os.environ.get("DATABASE_PATH", str(BASE_DIR / "mine.db"))
-    UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", str(BASE_DIR / "uploads"))
+    DATABASE = _resolve_path("DATABASE_PATH", BASE_DIR / "mine.db")
+    UPLOAD_FOLDER = _resolve_path("UPLOAD_FOLDER", BASE_DIR / "uploads")
     MAX_CONTENT_LENGTH = int(os.environ.get("MAX_CONTENT_LENGTH", 10 * 1024 * 1024))
     ALLOWED_EXTENSIONS = {"pdf", "docx", "xlsx", "png", "jpg", "jpeg", "ppt", "pptx"}
     # PowerPoint in-browser preview uses Microsoft Office Online; the signed file URL must be HTTPS and reachable from the internet.
@@ -22,6 +34,18 @@ class Config:
     # When LibreOffice is installed (soffice), convert Office uploads to PDF for in-browser preview.
     # Original files are always kept; downloads serve the uploaded file.
     ENABLE_OFFICE_PDF_PREVIEW = os.environ.get("ENABLE_OFFICE_PDF_PREVIEW", "1").lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+    ENABLE_SLIDE_PREVIEW = os.environ.get("ENABLE_SLIDE_PREVIEW", "1").lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+    SLIDE_PREVIEW_SCALE = float(os.environ.get("SLIDE_PREVIEW_SCALE", "2.0"))
+    # On startup, convert existing Office attachments to PDF when LibreOffice is available.
+    BACKFILL_ATTACHMENT_PREVIEWS = os.environ.get("BACKFILL_ATTACHMENT_PREVIEWS", "1").lower() not in (
         "0",
         "false",
         "no",

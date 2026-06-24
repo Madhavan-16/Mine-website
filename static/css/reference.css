@@ -722,6 +722,150 @@
   }
 }
 
+/* KYC §2.5 Site detail cards (under global ops map) */
+.kyc-site-cards {
+  margin-top: clamp(14px, 2vw, 22px);
+}
+
+.kyc-site-cards__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--hex-teal-dark);
+}
+
+.kyc-site-cards__lede {
+  margin: 8px 0 0;
+  max-width: 62ch;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--hex-grey-800);
+}
+
+.kyc-site-cards__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: clamp(12px, 1.6vw, 18px);
+}
+
+.kyc-site-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px 14px 13px;
+  border: 1px solid var(--hex-grey-200);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--hex-white), var(--hex-grey-50));
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.kyc-site-card::before {
+  content: "";
+  display: block;
+  height: 3px;
+  margin: -14px -14px 0;
+  width: calc(100% + 28px);
+  background: var(--site-accent, var(--hex-blue));
+}
+
+.kyc-site-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(16, 63, 90, 0.18);
+}
+
+.kyc-site-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 10px;
+}
+
+.kyc-site-card__name {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--site-title, var(--hex-teal-dark));
+  line-height: 1.2;
+}
+
+.kyc-site-card__region {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--hex-grey-800);
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--site-badge-bg, var(--hex-blue-light));
+  border: 1px solid var(--site-badge-border, rgba(16, 63, 90, 0.1));
+}
+
+.kyc-site-card__facts {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.kyc-site-card__row {
+  margin: 0;
+}
+
+.kyc-site-card__row dt {
+  margin: 0 0 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--hex-grey-800);
+}
+
+.kyc-site-card__row dd {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.48;
+  color: var(--hex-grey-900, var(--hex-grey-800));
+}
+
+.kyc-site-card__row--context {
+  padding-top: 10px;
+  border-top: 1px dashed var(--hex-grey-200);
+}
+
+.kyc-site-card__row--context dt {
+  color: var(--site-title, var(--hex-teal-dark));
+}
+
+.kyc-site-card--grasberg {
+  --site-accent: #029fd7;
+  --site-title: #016d8f;
+  --site-badge-bg: rgba(2, 159, 215, 0.12);
+  --site-badge-border: rgba(2, 159, 215, 0.22);
+}
+
+.kyc-site-card--americas {
+  --site-accent: #f5a623;
+  --site-title: #7a5510;
+  --site-badge-bg: rgba(245, 166, 35, 0.14);
+  --site-badge-border: rgba(245, 166, 35, 0.28);
+}
+
+.kyc-site-card--atlantic {
+  --site-accent: #103f5a;
+  --site-title: #103f5a;
+  --site-badge-bg: rgba(16, 63, 90, 0.1);
+  --site-badge-border: rgba(16, 63, 90, 0.18);
+}
+
+@media (max-width: 960px) {
+  .kyc-site-cards__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* KYC §2.6 Key insights / facts */
 .kyc-insights {
   margin: 12px 0 8px;

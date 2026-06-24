@@ -3,8 +3,7 @@
   id="enterprise-search"
   class="enterprise-search-xp"
   aria-labelledby="search-xp-heading"
-  data-aos="fade-up"
-  data-aos-duration="520"
+  data-motion-skip
   data-search-xp-root
   data-placeholders="{{ search_xp_placeholders|tojson }}"
 >
@@ -109,23 +108,24 @@
         <p class="enterprise-search-xp__col-note">Latest approved artefacts from the catalogue.</p>
       </header>
       {% if recent_rows and recent_rows|length > 0 %}
-        <div class="knowledge-recent-row enterprise-search-xp__recent-grid">
+        <div class="krepo-artifact-grid">
           {% for item in recent_rows %}
-            <article class="knowledge-recent-card">
-              <a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a>
-              <p class="meta" style="margin:6px 0 0;">{{ item.module }} · {{ item.author_name }}</p>
+            <a class="krepo-artifact" href="{{ url_for('content.content_view', cid=item.id) }}">
+              <span class="krepo-artifact__chip">{{ item.module }}</span>
+              <h4 class="krepo-artifact__title">{{ item.title }}</h4>
+              <p class="krepo-artifact__meta">{{ item.author_name }}</p>
               {% if item.summary and item.summary.strip() %}
-                <p class="knowledge-recent-excerpt">{{ item.summary|truncate(220)|e }}</p>
+                <p class="krepo-artifact__excerpt">{{ item.summary|truncate(180, True)|e }}</p>
               {% endif %}
-            </article>
+            </a>
           {% endfor %}
         </div>
       {% else %}
-        <p class="enterprise-search-xp__empty-msg">No approved items yet.</p>
+        <p class="krepo-empty">No approved items yet.</p>
       {% endif %}
 
       {% if current_user and current_user.role in ['admin', 'moderator'] %}
-        <div class="enterprise-search-xp__catalog-cta">
+        <div class="krepo-cta-row">
           <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create knowledge content</a>
         </div>
       {% endif %}

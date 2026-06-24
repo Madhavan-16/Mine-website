@@ -46,6 +46,7 @@ from mine.services import (
     set_tags,
 )
 from mine.upload_extract import suggest_from_upload
+from mine.upload_paths import resolve_stored_upload_path
 
 bp = Blueprint("content", __name__)
 
@@ -297,13 +298,15 @@ def _save_upload(file_storage, upload_folder: str) -> tuple[str, str]:
     orig = file_storage.filename or "file"
     safe = re.sub(r"[^A-Za-z0-9._-]", "_", orig)
     name = f"{uuid4().hex}_{safe}"
-    path = Path(upload_folder) / name
+    upload_root = Path(upload_folder).resolve()
+    upload_root.mkdir(parents=True, exist_ok=True)
+    path = upload_root / name
     file_storage.save(str(path))
-    return orig, str(path)
+    return orig, str(path.resolve())
 
 
 def _insert_attachment_from_upload(db, content_id: int, file_storage) -> None:
-    """Save uploaded file, optionally build PDF preview via LibreOffice, insert attachments row."""
+    """Save uploaded file, optionally build PDF + slide previews, insert attachments row."""
     upload_folder = current_app_upload_folder()
     orig, path = _save_upload(file_storage, upload_folder)
     preview_path = None
@@ -311,18 +314,111 @@ def _insert_attachment_from_upload(db, content_id: int, file_storage) -> None:
         from mine.preview_convert import convert_office_file_to_pdf
 
         preview_path = convert_office_file_to_pdf(path, upload_folder)
-    db.execute(
+    cur = db.execute(
         """
-        INSERT INTO attachments (content_id, file_name, file_path, preview_path)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO attachments (content_id, file_name, file_path, preview_path, slide_preview_dir)
+        VALUES (?, ?, ?, ?, ?)
         """,
-        (content_id, orig, path, preview_path),
+        (content_id, orig, path, preview_path, None),
     )
+    att_id = cur.lastrowid
+    slide_dir = _build_slide_preview_for_attachment(att_id, path, orig, upload_folder)
+    if slide_dir:
+        db.execute(
+            "UPDATE attachments SET slide_preview_dir = ? WHERE id = ?",
+            (slide_dir, att_id),
+        )
+
+
+def _build_slide_preview_for_attachment(
+    attachment_id: int, source_path: str, original_name: str, upload_folder: str
+) -> str | None:
+    if not current_app.config.get("ENABLE_SLIDE_PREVIEW", True):
+        return None
+    from mine.slide_preview import generate_slide_png_previews, is_slide_deck_path
+
+    if not is_slide_deck_path(original_name or source_path):
+        return None
+    scale = float(current_app.config.get("SLIDE_PREVIEW_SCALE", 2.0))
+    paths = generate_slide_png_previews(source_path, upload_folder, attachment_id, scale=scale)
+    if not paths:
+        return None
+    from pathlib import Path
+
+    return str(Path(paths[0]).parent)
 
 
 def _preview_download_name(original_file_name: str) -> str:
     stem = Path(original_file_name or "attachment").stem
     return f"{stem}.pdf"
+
+
+def _maybe_build_pdf_preview(db, att, source_path: str) -> str | None:
+    """Generate and persist a PDF preview on first view when LibreOffice is available."""
+    if not current_app.config.get("ENABLE_OFFICE_PDF_PREVIEW", True):
+        return None
+    from mine.preview_convert import convert_office_file_to_pdf
+
+    preview_path = convert_office_file_to_pdf(source_path, current_app_upload_folder())
+    if preview_path:
+        db.execute(
+            "UPDATE attachments SET preview_path = ? WHERE id = ?",
+            (preview_path, att["id"]),
+        )
+        db.commit()
+    return preview_path
+
+
+def _attachment_slide_preview_dir(att) -> str | None:
+    try:
+        raw = att["slide_preview_dir"]
+    except (TypeError, KeyError):
+        raw = getattr(att, "slide_preview_dir", None)
+    if not raw:
+        return None
+    from mine.slide_preview import list_slide_pngs
+
+    return raw if list_slide_pngs(raw) else None
+
+
+def _ensure_slide_preview_paths(db, att) -> list[str]:
+    from mine.slide_preview import generate_slide_png_previews, is_slide_deck_path, list_slide_pngs
+
+    existing_dir = _attachment_slide_preview_dir(att)
+    if existing_dir:
+        return list_slide_pngs(existing_dir)
+
+    if not current_app.config.get("ENABLE_SLIDE_PREVIEW", True):
+        return []
+
+    fname = att["file_name"] or ""
+    if not is_slide_deck_path(fname):
+        return []
+
+    source = resolve_stored_upload_path(att["file_path"])
+    if not source:
+        return []
+
+    scale = float(current_app.config.get("SLIDE_PREVIEW_SCALE", 2.0))
+    paths = generate_slide_png_previews(source, current_app_upload_folder(), att["id"], scale=scale)
+    if paths:
+        from pathlib import Path
+
+        slide_dir = str(Path(paths[0]).parent)
+        db.execute(
+            "UPDATE attachments SET slide_preview_dir = ? WHERE id = ?",
+            (slide_dir, att["id"]),
+        )
+        db.commit()
+        return paths
+    return []
+
+
+def _resolved_attachment_or_404(att, key: str = "file_path") -> str:
+    path = resolve_stored_upload_path(att[key])
+    if not path:
+        abort(404)
+    return path
 
 
 def _attachment_manage_href(user, row) -> str | None:
@@ -697,16 +793,23 @@ def content_delete(cid: int):
     if row["author_id"] != user["id"] and user["role"] != "admin":
         abort(403)
     files = db.execute(
-        "SELECT file_path, preview_path FROM attachments WHERE content_id = ?", (cid,)
+        "SELECT file_path, preview_path, slide_preview_dir FROM attachments WHERE content_id = ?", (cid,)
     ).fetchall()
     for f in files:
         for key in ("file_path", "preview_path"):
-            p = f[key]
+            p = resolve_stored_upload_path(f[key])
             try:
                 if p and os.path.isfile(p):
                     os.remove(p)
             except OSError:
                 pass
+        from mine.slide_preview import remove_slide_preview_dir
+
+        try:
+            slide_dir = f["slide_preview_dir"]
+        except (TypeError, KeyError):
+            slide_dir = None
+        remove_slide_preview_dir(slide_dir)
     db.execute("DELETE FROM content WHERE id = ?", (cid,))
     log_audit(user["id"], "content_delete", "content", cid, None)
     db.commit()
@@ -736,9 +839,7 @@ def office_attachment_source(aid: int):
     ext = fname.rsplit(".", 1)[-1].lower() if "." in fname else ""
     if ext not in ("ppt", "pptx", "xlsx", "xls"):
         abort(404)
-    path = att["file_path"]
-    if not path or not os.path.isfile(path):
-        abort(404)
+    path = _resolved_attachment_or_404(att)
     mime, _ = mimetypes.guess_type(fname)
     default_name = fname or ("workbook.xlsx" if ext == "xlsx" else "workbook.xls" if ext == "xls" else "presentation.pptx")
     return send_file(
@@ -766,6 +867,26 @@ def _register_office_embed_template_global(state):
                 return None
         return "https://view.officeapps.live.com/op/embed.aspx?src=" + quote(file_url, safe="")
 
+    @app.template_global()
+    def attachment_has_pdf_preview(att) -> bool:
+        try:
+            prev = att["preview_path"]
+        except (TypeError, KeyError):
+            prev = getattr(att, "preview_path", None)
+        if not prev:
+            return False
+        return resolve_stored_upload_path(prev) is not None
+
+    @app.template_global()
+    def attachment_has_slide_preview(att) -> bool:
+        from mine.slide_preview import list_slide_pngs
+
+        try:
+            slide_dir = att["slide_preview_dir"]
+        except (TypeError, KeyError):
+            slide_dir = getattr(att, "slide_preview_dir", None)
+        return bool(list_slide_pngs(slide_dir))
+
 
 @bp.route("/files/<int:aid>/preview")
 @login_required
@@ -778,8 +899,12 @@ def attachment_preview_pdf(aid: int):
     row = db.execute("SELECT * FROM content WHERE id = ?", (att["content_id"],)).fetchone()
     if not content_visible(load_current_user(), row):
         abort(404)
-    prev = att["preview_path"]
-    if not prev or not os.path.isfile(prev):
+    prev = resolve_stored_upload_path(att["preview_path"])
+    if not prev:
+        source = resolve_stored_upload_path(att["file_path"])
+        if source:
+            prev = _maybe_build_pdf_preview(db, att, source)
+    if not prev:
         abort(404)
     dl = _preview_download_name(att["file_name"] or "attachment")
     return send_file(
@@ -807,15 +932,176 @@ def attachment_preview_xlsx_html(aid: int):
     ext = fname.rsplit(".", 1)[-1].lower() if "." in fname else ""
     if ext != "xlsx":
         abort(404)
-    path = att["file_path"]
-    if not path or not os.path.isfile(path):
-        abort(404)
+    path = _resolved_attachment_or_404(att)
     try:
         with open(path, "rb") as fh:
             data = fh.read()
     except OSError:
         abort(404)
     html = render_xlsx_preview_html(data, workbook_title=fname)
+    if not html:
+        abort(404)
+    resp = make_response(html)
+    resp.headers["Content-Type"] = "text/html; charset=utf-8"
+    resp.headers["X-Frame-Options"] = "SAMEORIGIN"
+    return resp
+
+
+@bp.route("/files/<int:aid>/slides/<int:slide_num>")
+@login_required
+def attachment_slide_image(aid: int, slide_num: int):
+    """Serve one rasterized slide PNG from a deck preview."""
+    if slide_num < 1 or slide_num > 999:
+        abort(404)
+    db = get_db()
+    att = db.execute("SELECT * FROM attachments WHERE id = ?", (aid,)).fetchone()
+    if not att:
+        abort(404)
+    row = db.execute("SELECT * FROM content WHERE id = ?", (att["content_id"],)).fetchone()
+    if not content_visible(load_current_user(), row):
+        abort(404)
+
+    paths = _ensure_slide_preview_paths(db, att)
+    if not paths or slide_num > len(paths):
+        abort(404)
+
+    path = paths[slide_num - 1]
+    if not os.path.isfile(path):
+        abort(404)
+    return send_file(path, mimetype="image/png", as_attachment=False, download_name=f"slide-{slide_num:03d}.png")
+
+
+@bp.route("/files/<int:aid>/preview-slides")
+@login_required
+def attachment_preview_slides(aid: int):
+    """Full-fidelity slide carousel (PNG raster of each slide)."""
+    from mine.slide_carousel import render_slide_carousel_html
+
+    db = get_db()
+    att = db.execute("SELECT * FROM attachments WHERE id = ?", (aid,)).fetchone()
+    if not att:
+        abort(404)
+    row = db.execute("SELECT * FROM content WHERE id = ?", (att["content_id"],)).fetchone()
+    if not content_visible(load_current_user(), row):
+        abort(404)
+
+    paths = _ensure_slide_preview_paths(db, att)
+    if not paths:
+        abort(404)
+
+    slide_urls = [
+        url_for("content.attachment_slide_image", aid=aid, slide_num=i + 1)
+        for i in range(len(paths))
+    ]
+    html = render_slide_carousel_html(
+        deck_title=att["file_name"] or "Presentation",
+        slide_urls=slide_urls,
+    )
+    resp = make_response(html)
+    resp.headers["Content-Type"] = "text/html; charset=utf-8"
+    resp.headers["X-Frame-Options"] = "SAMEORIGIN"
+    return resp
+
+
+@bp.route("/files/<int:aid>/preview-pptx-html")
+@login_required
+def attachment_preview_pptx_html(aid: int):
+    """Visual slide preview for .pptx — embedded SVG/PNG icons and text (no LibreOffice)."""
+    from mine.pptx_preview import render_pptx_preview_html
+    from mine.pptx_visual_preview import render_pptx_visual_html
+
+    db = get_db()
+    att = db.execute("SELECT * FROM attachments WHERE id = ?", (aid,)).fetchone()
+    if not att:
+        abort(404)
+    row = db.execute("SELECT * FROM content WHERE id = ?", (att["content_id"],)).fetchone()
+    if not content_visible(load_current_user(), row):
+        abort(404)
+    fname = (att["file_name"] or "").strip()
+    ext = fname.rsplit(".", 1)[-1].lower() if "." in fname else ""
+    if ext not in ("ppt", "pptx"):
+        abort(404)
+    path = _resolved_attachment_or_404(att)
+    try:
+        with open(path, "rb") as fh:
+            data = fh.read()
+    except OSError:
+        abort(404)
+
+    def asset_url(media_name: str) -> str:
+        return url_for("content.attachment_pptx_asset", aid=aid, filename=media_name)
+
+    html = render_pptx_visual_html(data, deck_title=fname, asset_url_for=asset_url)
+    if not html:
+        html = render_pptx_preview_html(data, deck_title=fname)
+    if not html:
+        abort(404)
+    resp = make_response(html)
+    resp.headers["Content-Type"] = "text/html; charset=utf-8"
+    resp.headers["X-Frame-Options"] = "SAMEORIGIN"
+    return resp
+
+
+@bp.route("/files/<int:aid>/pptx-asset/<path:filename>")
+@login_required
+def attachment_pptx_asset(aid: int, filename: str):
+    """Serve one embedded image/SVG from inside a .pptx archive."""
+    from mine.pptx_visual_preview import is_safe_pptx_media_filename, read_pptx_media
+
+    if not is_safe_pptx_media_filename(filename):
+        abort(404)
+    db = get_db()
+    att = db.execute("SELECT * FROM attachments WHERE id = ?", (aid,)).fetchone()
+    if not att:
+        abort(404)
+    row = db.execute("SELECT * FROM content WHERE id = ?", (att["content_id"],)).fetchone()
+    if not content_visible(load_current_user(), row):
+        abort(404)
+    fname = (att["file_name"] or "").strip()
+    ext = fname.rsplit(".", 1)[-1].lower() if "." in fname else ""
+    if ext not in ("ppt", "pptx"):
+        abort(404)
+    path = _resolved_attachment_or_404(att)
+    try:
+        with open(path, "rb") as fh:
+            data = fh.read()
+    except OSError:
+        abort(404)
+    result = read_pptx_media(data, filename)
+    if not result:
+        abort(404)
+    blob, mime = result
+    resp = make_response(blob)
+    resp.headers["Content-Type"] = mime
+    resp.headers["Cache-Control"] = "private, max-age=3600"
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    return resp
+
+
+@bp.route("/files/<int:aid>/preview-docx-html")
+@login_required
+def attachment_preview_docx_html(aid: int):
+    """Paragraph text preview for .docx (works without LibreOffice or Office Online)."""
+    from mine.docx_preview import render_docx_preview_html
+
+    db = get_db()
+    att = db.execute("SELECT * FROM attachments WHERE id = ?", (aid,)).fetchone()
+    if not att:
+        abort(404)
+    row = db.execute("SELECT * FROM content WHERE id = ?", (att["content_id"],)).fetchone()
+    if not content_visible(load_current_user(), row):
+        abort(404)
+    fname = (att["file_name"] or "").strip()
+    ext = fname.rsplit(".", 1)[-1].lower() if "." in fname else ""
+    if ext != "docx":
+        abort(404)
+    path = _resolved_attachment_or_404(att)
+    try:
+        with open(path, "rb") as fh:
+            data = fh.read()
+    except OSError:
+        abort(404)
+    html = render_docx_preview_html(data, doc_title=fname)
     if not html:
         abort(404)
     resp = make_response(html)
@@ -834,9 +1120,7 @@ def download_attachment(aid: int):
     row = db.execute("SELECT * FROM content WHERE id = ?", (att["content_id"],)).fetchone()
     if not content_visible(load_current_user(), row):
         abort(404)
-    path = att["file_path"]
-    if not path or not os.path.isfile(path):
-        abort(404)
+    path = _resolved_attachment_or_404(att)
     fname = att["file_name"] or "file"
     mime, _ = mimetypes.guess_type(fname)
     inline = (request.args.get("inline") or "").strip().lower() in ("1", "true", "yes")

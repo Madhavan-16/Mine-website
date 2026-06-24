@@ -13,28 +13,56 @@
       {% set download_url = url_for("content.download_attachment", aid=f.id) %}
       {% set preview_pdf_url = url_for("content.attachment_preview_pdf", aid=f.id) %}
       {% set office_src = office_embed_src(f.id) if ext in ["ppt", "pptx", "xlsx", "xls"] else none %}
-      {% set has_pdf_preview = f.preview_path %}
+      {% set has_pdf_preview = attachment_has_pdf_preview(f) %}
+      {% set has_slide_preview = attachment_has_slide_preview(f) %}
+      {% set slides_carousel_url = url_for("content.attachment_preview_slides", aid=f.id) if ext in ["ppt", "pptx"] else none %}
       {% set xlsx_table_url = url_for("content.attachment_preview_xlsx_html", aid=f.id) if ext == "xlsx" else none %}
+      {% set pptx_slides_url = url_for("content.attachment_preview_pptx_html", aid=f.id) if ext in ["ppt", "pptx"] else none %}
+      {% set docx_text_url = url_for("content.attachment_preview_docx_html", aid=f.id) if ext == "docx" else none %}
       <div class="attach-preview-block" id="attach-{{ f.id }}">
         <div class="attach-preview-toolbar">
           <strong class="attach-preview-name">{{ name|e }}</strong>
           <div class="attach-preview-actions">
-            {# Download always first so it stays visible on narrow layouts #}
             <a class="btn btn-primary attach-preview-download" href="{{ download_url }}">Download original</a>
+            {% if has_slide_preview and slides_carousel_url %}
+              <a class="btn btn-secondary" href="{{ slides_carousel_url }}" target="_blank" rel="noopener">Open visual slides (new tab)</a>
+            {% endif %}
             {% if ext == "pdf" %}
               <a class="btn btn-secondary" href="{{ inline_url }}" target="_blank" rel="noopener">Open in new tab</a>
             {% elif has_pdf_preview %}
-              <a class="btn btn-secondary" href="{{ preview_pdf_url }}" target="_blank" rel="noopener">Open preview (PDF)</a>
+              <a class="btn btn-secondary" href="{{ preview_pdf_url }}" target="_blank" rel="noopener">Open PDF preview (new tab)</a>
             {% endif %}
             {% if office_src %}
-              <a class="btn btn-secondary" href="{{ office_src }}" target="_blank" rel="noopener">{% if ext in ["xlsx", "xls"] %}Open in Office Online (new tab){% else %}Open in new tab{% endif %}</a>
+              <a class="btn btn-secondary" href="{{ office_src }}" target="_blank" rel="noopener">{% if ext in ["xlsx", "xls"] %}Open in Office Online{% else %}Office Online{% endif %} (new tab)</a>
             {% endif %}
             {% if ext == "xlsx" and xlsx_table_url and not has_pdf_preview %}
               <a class="btn btn-secondary" href="{{ xlsx_table_url }}" target="_blank" rel="noopener">Open table preview (new tab)</a>
             {% endif %}
+            {% if pptx_slides_url and not has_slide_preview %}
+              <a class="btn btn-secondary" href="{{ pptx_slides_url }}" target="_blank" rel="noopener">Open visual preview (new tab)</a>
+            {% endif %}
+            {% if docx_text_url and not has_pdf_preview %}
+              <a class="btn btn-secondary" href="{{ docx_text_url }}" target="_blank" rel="noopener">Open document preview (new tab)</a>
+            {% endif %}
           </div>
         </div>
-        {% if has_pdf_preview %}
+        {# Visual slide raster — best fidelity for text, images, and icons #}
+        {% if has_slide_preview and slides_carousel_url %}
+          <div class="attach-preview-frame attach-preview-frame--pdf attach-preview-frame--slides">
+            <iframe title="Visual slide preview of {{ name|e }}" src="{{ slides_carousel_url }}"></iframe>
+          </div>
+        {% elif ext in ["ppt", "pptx"] and pptx_slides_url and not has_slide_preview %}
+          <div class="attach-preview-frame attach-preview-frame--pdf attach-preview-frame--pptx">
+            <iframe title="Visual slide preview of {{ name|e }}" src="{{ pptx_slides_url }}"></iframe>
+          </div>
+        {% elif has_pdf_preview and ext in ["ppt", "pptx"] %}
+          <p class="meta attach-preview-fallback" style="margin: 0 0 10px;">
+            Visual slide preview is building or unavailable — showing PDF below. PDF may omit some icons; use <strong>Download original</strong> for the full deck.
+          </p>
+          <div class="attach-preview-frame attach-preview-frame--pdf">
+            <iframe title="PDF preview of {{ name|e }}" src="{{ preview_pdf_url }}"></iframe>
+          </div>
+        {% elif has_pdf_preview %}
           <div class="attach-preview-frame attach-preview-frame--pdf">
             <iframe title="PDF preview of {{ name|e }}" src="{{ preview_pdf_url }}"></iframe>
           </div>
@@ -46,22 +74,21 @@
           <div class="attach-preview-frame attach-preview-frame--pdf">
             <iframe title="{{ name|e }}" src="{{ inline_url }}"></iframe>
           </div>
-        {# Prefer built-in .xlsx table preview (works on localhost); Office Online embed often appears blank when the app URL is not public #}
-        {% elif ext == "xlsx" and xlsx_table_url and not has_pdf_preview %}
+        {% elif ext == "xlsx" and xlsx_table_url %}
           <div class="attach-preview-frame attach-preview-frame--pdf attach-preview-frame--xlsx">
             <iframe title="Table preview of {{ name|e }}" src="{{ xlsx_table_url }}"></iframe>
+          </div>
+        {% elif docx_text_url %}
+          <div class="attach-preview-frame attach-preview-frame--pdf attach-preview-frame--docx">
+            <iframe title="Document preview of {{ name|e }}" src="{{ docx_text_url }}"></iframe>
           </div>
         {% elif office_src %}
           <div class="attach-preview-frame attach-preview-frame--pdf attach-preview-frame--office">
             <iframe title="{{ name|e }}" src="{{ office_src }}" referrerpolicy="strict-origin-when-cross-origin"></iframe>
           </div>
-        {% elif ext in ["ppt", "pptx", "xls"] and not config.ENABLE_OFFICE_EMBED_PREVIEW and not has_pdf_preview %}
-          <p class="meta attach-preview-fallback">
-            Office Online preview is turned off in configuration (<code>ENABLE_OFFICE_EMBED_PREVIEW</code>). Use <strong>Download original</strong> to open the file locally.
-          </p>
         {% elif ext in ["ppt", "pptx", "docx", "xls"] %}
           <p class="meta attach-preview-fallback">
-            No in-page preview for this file right now. Use <strong>Download original</strong> to open it.
+            Visual preview could not be generated yet. Use <strong>Download original</strong>, or install LibreOffice / PowerPoint and refresh (see <code>scripts/setup_libreoffice.ps1</code>).
           </p>
         {% elif ext == "xlsx" %}
           <p class="meta attach-preview-fallback">
