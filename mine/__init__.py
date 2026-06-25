@@ -30,6 +30,9 @@ def create_app():
         static_folder=str(base_dir / "static"),
     )
     app.config.from_object(Config)
+    from mine.azure_persist import ensure_azure_persistent_storage
+
+    ensure_azure_persistent_storage(app)
     Path(app.config["UPLOAD_FOLDER"]).mkdir(parents=True, exist_ok=True)
 
     db_init_app(app)

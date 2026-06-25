@@ -4,6 +4,23 @@ from pathlib import Path
 _BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def _production_defaults(env_key: str) -> Path:
+    from mine.azure_persist import (
+        azure_default_database_path,
+        azure_default_upload_folder,
+        is_azure_app_service,
+    )
+
+    if is_azure_app_service():
+        if env_key == "DATABASE_PATH":
+            return azure_default_database_path()
+        if env_key == "UPLOAD_FOLDER":
+            return azure_default_upload_folder()
+    if env_key == "DATABASE_PATH":
+        return _BASE_DIR / "mine.db"
+    return _BASE_DIR / "uploads"
+
+
 def _resolve_path(env_key: str, default: Path) -> str:
     raw = (os.environ.get(env_key) or "").strip()
     p = Path(raw) if raw else default
@@ -17,8 +34,8 @@ def _resolve_path(env_key: str, default: Path) -> str:
 class Config:
     BASE_DIR = _BASE_DIR
     SECRET_KEY = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
-    DATABASE = _resolve_path("DATABASE_PATH", BASE_DIR / "mine.db")
-    UPLOAD_FOLDER = _resolve_path("UPLOAD_FOLDER", BASE_DIR / "uploads")
+    DATABASE = _resolve_path("DATABASE_PATH", _production_defaults("DATABASE_PATH"))
+    UPLOAD_FOLDER = _resolve_path("UPLOAD_FOLDER", _production_defaults("UPLOAD_FOLDER"))
     MAX_CONTENT_LENGTH = int(os.environ.get("MAX_CONTENT_LENGTH", 10 * 1024 * 1024))
     ALLOWED_EXTENSIONS = {"pdf", "docx", "xlsx", "png", "jpg", "jpeg", "ppt", "pptx"}
     # PowerPoint in-browser preview uses Microsoft Office Online; the signed file URL must be HTTPS and reachable from the internet.

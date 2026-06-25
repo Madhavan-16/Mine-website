@@ -119,4 +119,5 @@ Change this immediately via **Admin → Users** after signing in.
 
 - Database defaults to `mine.db` in the project root (`DATABASE_PATH`).
 - Uploads use `uploads/` (`UPLOAD_FOLDER`, `MAX_CONTENT_LENGTH` in `.env.example`).
+- **Azure App Service:** use persistent `/home/data/` paths and `bash startup.sh` — see [docs/azure-deploy.md](docs/azure-deploy.md).
 - The **journey** page (`/journey`) and all **`/program/*`** pages are public; the operational portal remains behind login.

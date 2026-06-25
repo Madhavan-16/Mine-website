@@ -1,68 +1,145 @@
-# Azure App Service deployment — previews & attachments
+# Azure App Service — persistent data & deployments
 
-Pushing code to GitHub and deploying to Azure **does not copy your local uploads or database**. Previews work locally because the `.pptx` files exist on your machine; Azure starts with an empty `uploads/` folder unless you migrate data separately.
+Your MiNe app URL (example):  
+`https://mine-ffffhrdahfdhdcbx.centralindia-01.azurewebsites.net`
 
-## Why previews work locally but not on Azure
+**GitHub only deploys code.** Case studies, attachments, and `mine.db` live on the server disk unless you configure persistent paths.
 
-| What | Local | Azure (default GitHub deploy) |
-|------|-------|------------------------------|
-| Application code | Yes | Yes (from GitHub) |
-| `uploads/*.pptx` | Yes (on disk) | **No** — `uploads/*` is in `.gitignore` |
-| `mine.db` (content + attachment rows) | Yes | **Often no** — not in repo / fresh DB on first run |
-| Attachment `file_path` in DB | Windows paths like `C:\Users\...\uploads\...` | Those paths **do not exist** on Linux App Service |
-| LibreOffice / PowerPoint | Optional locally | **Not installed** on App Service (PDF/slide PNG previews won't generate) |
-| Visual PPTX preview (`preview-pptx-html`) | Works if file on disk | Works **only if** the same `.pptx` exists under `UPLOAD_FOLDER` |
+---
 
-The in-browser visual preview reads embedded SVG/PNG from the **original `.pptx` file on disk**. No file on Azure → empty or 404 preview.
+## One-time setup (recommended)
 
-## Fix: migrate data to Azure
+### Automatic (after you deploy this code)
 
-### 1. Use persistent paths on App Service
+On **Azure App Service**, MiNe detects `WEBSITE_SITE_NAME` and automatically:
 
-In **Azure Portal → App Service → Configuration → Application settings**, set:
+- Uses **`/home/data/mine.db`** and **`/home/data/uploads/`** (persistent across redeploys)
+- **Migrates once** from `/home/site/wwwroot/mine.db` and `uploads/` if persistent copies are empty
+
+No portal changes are **required** for paths or migration after the next deploy.
+
+### Optional portal settings (recommended for production)
+
+**Azure Portal → App Service → Settings → Configuration**
+
+| Name | Value |
+|------|--------|
+| `FLASK_SECRET_KEY` | Long random secret (keep stable across deploys) |
+| `DATABASE_PATH` | `/home/data/mine.db` |
+| `UPLOAD_FOLDER` | `/home/data/uploads` |
+
+**General settings → Startup Command** (optional if Oryx already starts the app):
 
 ```
-FLASK_SECRET_KEY=<strong-random-secret>
-DATABASE_PATH=/home/data/mine.db
-UPLOAD_FOLDER=/home/data/uploads
+bash startup.sh
 ```
 
-`/home` is persistent across restarts on App Service (unlike `/tmp`). Create the folder once via Kudu SSH or a startup script.
+Then sign in and check:
 
-### 2. Copy your local database
+1. Knowledge / case studies list shows your content
+2. **Download original** on an attachment works
+3. In-page preview works for `.pptx`
 
-From your dev machine (Kudu API, FTP, or Azure CLI):
+---
 
-- Copy `mine.db` → `/home/data/mine.db` on the app
+## What is saved automatically after setup
 
-Or re-create content by uploading attachments again through the Azure-hosted site (slower but simplest).
+| You do this on Azure | Stored where |
+|----------------------|--------------|
+| Create / edit knowledge content | `/home/data/mine.db` |
+| Upload `.pptx`, PDF, etc. | `/home/data/uploads/` |
+| `git push` + GitHub deploy | **Code only** — data in `/home/data/` is kept |
 
-### 3. Copy all upload files
+Future uploads from the Azure website go to `/home/data/uploads` automatically. No extra step per file.
 
-Copy **every file** from local `uploads/` to `/home/data/uploads/` on Azure.
+---
 
-Filenames must match what the DB expects (e.g. `68e1aaceb64546248a6d33e9fa3a087f_MINE_DTOW_-_Episode_2.pptx`). The app resolves Windows-style paths by falling back to `UPLOAD_FOLDER/<filename>`.
+## Moving existing data (8 case studies already on Azure)
 
-### 4. Restart the app
+If you uploaded **before** setting `DATABASE_PATH` / `UPLOAD_FOLDER`:
 
-After copying DB + uploads, restart App Service. On startup, MiNe normalizes attachment paths and may attempt PDF/slide backfill (LibreOffice is usually unavailable on Azure — visual PPTX preview still works without it).
+**Option A — Automatic (recommended)**  
+After steps 1–2 above, restart the app. `startup.sh` copies `wwwroot/mine.db` and `wwwroot/uploads/*` into `/home/data/` if persistent files are still empty.
 
-## Verify on Azure
+**Option B — Manual (Kudu)**  
 
-1. Sign in to the Azure URL and open a knowledge item with a PPT attachment.
-2. **Download original** — if this 404s, the file is missing from `UPLOAD_FOLDER`.
-3. Open browser DevTools → Network → check `/files/<id>/preview-pptx-html` and `/files/<id>/pptx-asset/...` responses.
+1. **Development Tools → Advanced Tools → Go**
+2. **SSH** or **Bash**
+3. Run:
 
-## Optional: Office Online embed
+```bash
+mkdir -p /home/data/uploads
+cp /home/site/wwwroot/mine.db /home/data/mine.db 2>/dev/null || true
+cp -r /home/site/wwwroot/uploads/* /home/data/uploads/ 2>/dev/null || true
+```
 
-Office Online requires a **public HTTPS** URL to fetch the file. This usually works on Azure (unlike localhost). It still requires the physical file to exist at the signed download URL.
+4. Restart the app from Overview.
 
-## Do not commit secrets or uploads
+---
 
-- Keep `uploads/` and `.env` out of Git (already in `.gitignore`).
-- Set production secrets only in Azure Application settings.
-- For team workflows, consider Azure Files mount or Blob storage for `UPLOAD_FOLDER` instead of manual copy.
+## Backup Azure data (recommended)
 
-## CI/CD note
+Git does **not** back up uploads or the database.
 
-`.github/workflows/main_mine.yml` deploys the repository artifact. Gitignored paths (`uploads/*`, `.env`) are **never** included in the build artifact.
+### Manual backup via Kudu
+
+1. Advanced Tools → **File Manager** (or SSH)
+2. Download:
+   - `/home/data/mine.db`
+   - All files under `/home/data/uploads/`
+3. Store on your PC or team file share.
+
+Repeat monthly or before major changes.
+
+### Use on local dev
+
+Copy downloaded files to your PC project:
+
+- `mine.db` → `c:\Users\...\MiNe\mine.db`
+- `uploads\*` → `c:\Users\...\MiNe\uploads\`
+
+Then run `python run.py`. This is a **file copy**, not `git pull`.
+
+### Azure App Service Backup (optional)
+
+If your plan supports it: **Backup** blade → configure Storage Account backup. Ask IT whether this is enabled in your subscription.
+
+---
+
+## Deploy workflow (code vs data)
+
+```
+Local code changes → git push → GitHub Actions → Azure redeploy
+                                      ↓
+                            /home/site/wwwroot/  (app code replaced)
+                            /home/data/          (database + uploads KEPT)
+```
+
+| Action | Affects code | Affects case studies / files |
+|--------|--------------|------------------------------|
+| `git push` + deploy | Yes | No (with `/home/data` settings) |
+| `git pull` on PC | Local code only | Does not sync Azure data |
+| Upload on Azure site | No | Yes — saved under `/home/data/` |
+
+---
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+|---------|----------------|
+| Case studies missing after deploy | `DATABASE_PATH` not set; data was only in `wwwroot` |
+| Download original 404 | File not in `UPLOAD_FOLDER`; check `/home/data/uploads/` in Kudu |
+| Preview empty | Same — missing `.pptx` on disk |
+| App won't start | Startup Command must be `bash startup.sh`; check **Log stream** |
+
+**Log stream:** App Service → **Monitoring → Log stream**
+
+---
+
+## Do not commit to Git
+
+- `uploads/*` (gitignored)
+- `mine.db` with production data
+- `.env` / secrets — use Azure Application settings only
+
+See also: [README.md](../README.md) (Docker volume example for local persistence).
