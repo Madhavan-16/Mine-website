@@ -106,8 +106,8 @@
     var isCaseStudy = moduleSelect && moduleSelect.value === CASE_STUDY;
     if (title) title.value = j.title || "";
     if (isCaseStudy) {
-      if (challenge) challenge.value = j.business_challenge || j.summary || "";
-      if (solution) solution.value = j.solution || j.body || "";
+      if (challenge) challenge.value = j.business_challenge || "";
+      if (solution) solution.value = j.solution || "";
     } else if (summary) {
       summary.value = j.summary || "";
     }

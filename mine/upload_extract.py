@@ -269,23 +269,240 @@ def _pptx_slide_blocks(data: bytes) -> list[list[str]]:
     return slides
 
 
+_GENERIC_CASE_STUDY_LABELS = frozenset(
+    {
+        "case study",
+        "case studies",
+        "customer profile",
+        "benefits",
+        "benefit",
+        "challenges",
+        "challenge",
+        "business challenge",
+        "solution",
+        "our solution",
+        "faster",
+        "better",
+        "cheaper",
+        "overview",
+        "agenda",
+    }
+)
+
+_BOILERPLATE_LINE_RE = re.compile(
+    r"(?:www\.hexaware\.com|hexaware technologies|all rights reserved|confidential|"
+    r"do not distribute|^\s*\d+\s*$|^\s*\|\s*$)",
+    re.I,
+)
+
+_SIDEBAR_NOISE_RE = re.compile(
+    r"(?:\$\s*[\d.]+\s*bn|employees?\s+worldwide|leading\s+stock\s+exchange|"
+    r"revenue|headquartered\s+in|customer\s+profile)",
+    re.I,
+)
+
+
+def _compact_label(text: str) -> str:
+    return re.sub(r"[\s:.\-–—|]+", " ", (text or "").lower()).strip()
+
+
+def _is_boilerplate_line(line: str) -> bool:
+    t = (line or "").strip()
+    if not t or len(t) < 3:
+        return True
+    if _BOILERPLATE_LINE_RE.search(t):
+        return True
+    if t.count("|") >= 2 and "hexaware" in t.lower():
+        return True
+    return False
+
+
+def _is_sidebar_noise(line: str) -> bool:
+    return bool(_SIDEBAR_NOISE_RE.search(line or ""))
+
+
+def _normalize_merged_blob(text: str) -> str:
+    """Insert line breaks before section labels, including tight Hexaware one-line exports."""
+    t = (text or "").replace("\r\n", "\n").replace("\r", "\n")
+    # Slide/page number before section headers: "... distribute. 1 Challenges ..."
+    t = re.sub(r"(\.\s*|\s+)\d+\s+(?=(?:business\s+)?challenges?\b)", r"\1\n", t, flags=re.I)
+    t = re.sub(r"\s+\d+\s+(?=(?:business\s+)?challenges?\b)", "\n", t, flags=re.I)
+    # Column headers often adjacent: "Challenges Solution Faster"
+    t = re.sub(r"\b(challenges?)\s+(solution)\b", r"\1\n\2", t, flags=re.I)
+    t = re.sub(r"\b(solution)\s+(faster|better|cheaper|benefits?)\b", r"\1\n\2", t, flags=re.I)
+    for label in (
+        r"(?:business\s+)?challenges?",
+        r"solution",
+        r"benefits?",
+        r"customer\s+profile",
+        r"faster",
+        r"better",
+        r"cheaper",
+    ):
+        t = re.sub(rf"\s+({label})\s+", rf"\n\1\n", t, flags=re.I)
+    t = re.sub(r"^(case\s+stud(?:y|ies))\s+", r"\1\n", t, flags=re.I)
+    return t
+
+
+def _prepare_blob_for_sections(text: str) -> str:
+    t = (text or "").replace("\r\n", "\n").replace("\r", "\n")
+    if re.search(r"\b(challenges?|solution|benefits?|case\s+study)\b", t, re.I):
+        t = _normalize_merged_blob(t)
+    return t
+
+
+def _strip_footer_noise(text: str) -> str:
+    t = text or ""
+    t = re.split(r"\s+www\.hexaware\.com\b", t, maxsplit=1, flags=re.I)[0]
+    t = re.split(r"\|\s*©", t, maxsplit=1, flags=re.I)[0]
+    t = re.split(r"\bconfidential\b", t, maxsplit=1, flags=re.I)[0]
+    t = re.sub(r"\bdo not distribute\.?\s*", "", t, flags=re.I)
+    t = re.sub(r"\ball rights reserved\.?\s*", "", t, flags=re.I)
+    t = re.sub(r"\s+\d+\s*$", "", t).strip()
+    return t
+
+
+def _slide_combined_text(blocks: list[str]) -> str:
+    return " ".join((b or "").strip() for b in blocks if (b or "").strip())
+
+
+def _extract_title_from_preamble(preamble: str, filename: str) -> str:
+    cleaned = _strip_footer_noise(_strip_case_study_prefix(preamble))
+    if not cleaned:
+        return ""
+    candidates = [_strip_case_study_prefix(x) for x in re.split(r"\n+", _prepare_blob_for_sections(cleaned)) if x.strip()]
+    title = _pick_case_study_title(candidates, filename)
+    if title and _compact_label(title) not in _GENERIC_CASE_STUDY_LABELS:
+        return title
+    # Headline often appears before footer noise in the same line.
+    head = _strip_footer_noise(cleaned)
+    head = _strip_case_study_prefix(head)
+    if len(head) >= 20 and _compact_label(head) not in _GENERIC_CASE_STUDY_LABELS:
+        return _clean_autofill_title(head[:500])
+    return ""
+
+
+def _find_challenge_bullet_start(raw: str, after: int) -> int:
+    m = re.search(
+        r"\b(Existing|Data streamed|Lack of|No support|No advanced|The existing|Customer faced|Client faced)\b",
+        raw[after:],
+        re.I,
+    )
+    return after + m.start() if m else after
+
+
+def _find_solution_bullet_start(raw: str, after: int) -> int:
+    m = re.search(
+        r"\b(Migration|Leveraged|Implemented|Deployed|Introduced|All data other|Azure Blob|"
+        r"automated assessment|streaming data analytics)\b",
+        raw[after:],
+        re.I,
+    )
+    return after + m.start() if m else len(raw)
+
+
+def _segment_case_study_blob(text: str, filename: str) -> tuple[str, str, str]:
+    """Marker-based split for single-slide decks with column headers in one text run."""
+    raw = _prepare_blob_for_sections(text or "")
+    if not raw.strip():
+        return "", "", ""
+
+    challenge_m = re.search(r"\b(?:business\s+)?challenges?\b", raw, re.I)
+    solution_m = re.search(r"\bsolution\b", raw, re.I)
+    stop_m = re.search(r"\b(?:faster|better|cheaper|benefits?|customer\s+profile)\b", raw, re.I)
+
+    preamble = raw[: challenge_m.start()] if challenge_m else raw
+    title = _extract_title_from_preamble(preamble, filename)
+
+    challenge_body = ""
+    solution_body = ""
+    stop_at = len(raw)
+
+    if challenge_m:
+        # Hexaware-style slides put "Challenges Solution Faster" headers before body text.
+        inline_body = ""
+        if solution_m and solution_m.start() > challenge_m.end():
+            inline_body = raw[challenge_m.end() : solution_m.start()].strip()
+
+        if len(inline_body) >= 40:
+            challenge_body = inline_body
+            if solution_m:
+                solution_body = raw[solution_m.end() : stop_at]
+        else:
+            ch_start = _find_challenge_bullet_start(raw, challenge_m.end())
+            sol_start = _find_solution_bullet_start(raw, ch_start + 20)
+            if sol_start > ch_start:
+                challenge_body = raw[ch_start:sol_start]
+                solution_body = raw[sol_start:stop_at]
+            else:
+                challenge_body = raw[ch_start:stop_at]
+    elif solution_m:
+        sol_start = _find_solution_bullet_start(raw, solution_m.end())
+        solution_body = raw[sol_start:stop_at]
+
+    # Trim benefits / sidebar tail from solution
+    if solution_body:
+        ben_in_sol = re.search(r"\b(?:faster|better|cheaper)\b", solution_body, re.I)
+        if ben_in_sol and ben_in_sol.start() < 80:
+            solution_body = solution_body[ben_in_sol.end() :].strip()
+
+    challenge_body = re.sub(r"^(?:business\s+)?challenges?\s*", "", challenge_body, flags=re.I).strip()
+    solution_body = re.sub(r"^solution\s*", "", solution_body, flags=re.I).strip()
+    challenge_body = _strip_footer_noise(challenge_body)
+    solution_body = _strip_footer_noise(solution_body)
+
+    return (
+        title,
+        _join_case_study_lines([challenge_body]) if challenge_body else "",
+        _join_case_study_lines([solution_body]) if solution_body else "",
+    )
+
+
+def _strip_case_study_prefix(line: str) -> str:
+    t = re.sub(r"^case\s+stud(?:y|ies)\s+", "", (line or "").strip(), flags=re.I).strip()
+    t = re.split(r"\s+www\.hexaware\.com\b", t, maxsplit=1, flags=re.I)[0].strip()
+    t = re.split(r"\s+\|\s*(?:©|all rights reserved|confidential)", t, maxsplit=1, flags=re.I)[0].strip()
+    return t
+
+
+def _explode_text_blocks(blocks: list[str]) -> list[str]:
+    """Split large multi-line shapes into lines for section detection."""
+    out: list[str] = []
+    for block in blocks:
+        t = _prepare_blob_for_sections((block or "").strip())
+        if not t:
+            continue
+        needs_split = len(t) > 100 and (
+            "\n" in t
+            or re.search(r"\b(challenges?|solution|benefits?|faster|better|cheaper)\b", t, re.I)
+        )
+        if needs_split:
+            for piece in re.split(r"\n+", t):
+                p = piece.strip()
+                if p:
+                    out.append(p)
+        else:
+            out.append(t)
+    return out
+
+
 def _case_study_section_kind(text: str) -> tuple[str | None, str]:
     """Classify a text block as a case-study section header; return (kind, inline body)."""
     raw = (text or "").strip()
     if not raw:
         return None, ""
-    low = raw.lower()
-    compact = re.sub(r"[\s:.\-–—]+", " ", low).strip()
+    compact = _compact_label(raw)
 
     challenge_labels = {
         "challenge",
+        "challenges",
         "business challenge",
+        "business challenges",
         "the challenge",
+        "the challenges",
         "client challenge",
         "problem statement",
         "the problem",
-        "situation",
-        "background",
     }
     solution_labels = {
         "solution",
@@ -295,27 +512,37 @@ def _case_study_section_kind(text: str) -> tuple[str | None, str]:
         "approach",
         "our approach",
         "implementation",
-        "results",
-        "outcome",
+    }
+    skip_labels = {
+        "benefits",
+        "benefit",
+        "faster",
+        "better",
+        "cheaper",
+        "customer profile",
+        "key benefits",
         "outcomes",
+        "results",
     }
 
     if compact in challenge_labels:
         return "challenge", ""
     if compact in solution_labels:
         return "solution", ""
+    if compact in skip_labels:
+        return "skip", ""
 
     for pat, kind in (
         (
             re.compile(
-                r"^(?:the\s+)?(?:business\s+)?challenge(?:\s+statement)?\s*[:\-–—.]?\s*(.*)$",
+                r"^(?:the\s+)?(?:business\s+)?challenges?\s*[:\-–—.]?\s*(.*)$",
                 re.I | re.S,
             ),
             "challenge",
         ),
         (
             re.compile(
-                r"^(?:client|customer)\s+(?:challenge|situation|context)\s*[:\-–—.]?\s*(.*)$",
+                r"^(?:client|customer)\s+(?:challenge|situation|context)s?\s*[:\-–—.]?\s*(.*)$",
                 re.I | re.S,
             ),
             "challenge",
@@ -339,8 +566,12 @@ def _case_study_section_kind(text: str) -> tuple[str | None, str]:
             "solution",
         ),
         (
-            re.compile(r"^(?:key\s+)?results?(?:\s+and\s+outcomes?)?\s*[:\-–—.]?\s*(.*)$", re.I | re.S),
-            "solution",
+            re.compile(r"^(?:key\s+)?benefits?\s*[:\-–—.]?\s*(.*)$", re.I | re.S),
+            "skip",
+        ),
+        (
+            re.compile(r"^(?:faster|better|cheaper)\s*[:\-–—.]?\s*(.*)$", re.I | re.S),
+            "skip",
         ),
     ):
         m = pat.match(raw)
@@ -352,16 +583,122 @@ def _case_study_section_kind(text: str) -> tuple[str | None, str]:
     return None, ""
 
 
-def _case_study_title_from_first_slide(blocks: list[str], filename: str) -> str:
-    if not blocks:
-        return _clean_autofill_title(title_from_filename(filename))
-    for block in blocks:
-        kind, _ = _case_study_section_kind(block)
+def _pick_case_study_title(candidates: list[str], filename: str) -> str:
+    scored: list[tuple[int, str]] = []
+    for block in candidates:
+        t = _norm_ws(block)
+        if not t or _is_boilerplate_line(t):
+            continue
+        compact = _compact_label(t)
+        if compact in _GENERIC_CASE_STUDY_LABELS:
+            continue
+        if _is_sidebar_noise(t):
+            continue
+        kind, _ = _case_study_section_kind(t)
         if kind:
             continue
-        if 6 <= len(block) <= 220:
-            return _clean_autofill_title(block[:500])
-    return _clean_autofill_title(blocks[0][:500])
+        if len(t) < 12:
+            continue
+        # Prefer substantive headline-length titles.
+        score = len(t)
+        if 35 <= len(t) <= 220:
+            score += 500
+        if re.search(r"\b(for a|transformation|migration|automated|organization|mining)\b", t, re.I):
+            score += 200
+        if re.search(r"\bmigration from\b|\bleveraged\b|\bloaded in\b|\bdatabricks\b", t, re.I):
+            score -= 400
+        scored.append((score, t))
+    if scored:
+        scored.sort(key=lambda x: -x[0])
+        return _clean_autofill_title(scored[0][1][:500])
+    stem = title_from_filename(filename)
+    if _compact_label(stem) in _GENERIC_CASE_STUDY_LABELS:
+        return ""
+    return _clean_autofill_title(stem)
+
+
+def _parse_merged_slide_text(text: str) -> tuple[list[str], list[str], list[str]]:
+    """Parse one combined shape into title, challenge, and solution line lists."""
+    title_lines: list[str] = []
+    challenge_lines: list[str] = []
+    solution_lines: list[str] = []
+    mode = "title"
+
+    prepared = _prepare_blob_for_sections(text or "")
+    for line in re.split(r"\n+", prepared):
+        line = line.strip()
+        if not line or _is_boilerplate_line(line):
+            continue
+
+        kind, tail = _case_study_section_kind(line)
+        if kind == "challenge":
+            mode = "challenge"
+            if tail:
+                challenge_lines.append(tail)
+            continue
+        if kind == "solution":
+            mode = "solution"
+            if tail:
+                solution_lines.append(tail)
+            continue
+        if kind == "skip":
+            mode = "skip"
+            continue
+
+        compact = _compact_label(line)
+        if compact in _GENERIC_CASE_STUDY_LABELS:
+            continue
+        if _is_sidebar_noise(line):
+            continue
+        if mode == "skip":
+            continue
+        if mode == "title":
+            stripped = _strip_case_study_prefix(line)
+            if stripped and _compact_label(stripped) not in _GENERIC_CASE_STUDY_LABELS:
+                title_lines.append(stripped)
+        elif mode == "challenge":
+            challenge_lines.append(line)
+        elif mode == "solution":
+            solution_lines.append(line)
+
+    return title_lines, challenge_lines, solution_lines
+
+
+def _split_bullet_candidates(line: str) -> list[str]:
+    """Split run-on PPT paragraphs into separate bullet lines."""
+    t = _norm_ws(line)
+    if not t:
+        return []
+    if len(t) < 160:
+        return [t]
+    parts = re.split(r"(?<=[.!?])\s+(?=[A-Z])", t)
+    bullets = [p.strip() for p in parts if len(p.strip()) >= 10]
+    return bullets if len(bullets) >= 2 else [t]
+
+
+def _join_case_study_lines(lines: list[str], max_chars: int = 6000) -> str:
+    bullets: list[str] = []
+    seen: set[str] = set()
+    expanded: list[str] = []
+    for line in lines:
+        expanded.extend(_split_bullet_candidates(line))
+    for line in expanded:
+        t = _norm_ws(line)
+        if not t or len(t) < 8 or _is_boilerplate_line(t):
+            continue
+        key = t.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        bullets.append(f"• {t}" if not t.startswith("•") else t)
+    if not bullets:
+        return ""
+    return _clip("\n".join(bullets), max_chars)
+
+
+def _case_study_title_from_first_slide(blocks: list[str], filename: str) -> str:
+    exploded = _explode_text_blocks(blocks)
+    return _pick_case_study_title(exploded, filename)
 
 
 def _join_case_study_parts(parts: list[str], max_chars: int = 6000) -> str:
@@ -402,47 +739,40 @@ def extract_case_study_pptx(data: bytes, filename: str) -> tuple[str, str, str]:
     if not slides:
         return title_from_filename(filename), "", ""
 
-    title = _case_study_title_from_first_slide(slides[0], filename)
-    challenge_parts: list[str] = []
-    solution_parts: list[str] = []
-    active: str | None = None
+    title = ""
+    challenge = ""
+    solution = ""
 
-    for slide_blocks in slides:
-        slide_active: str | None = None
-        for block in slide_blocks:
-            kind, tail = _case_study_section_kind(block)
-            if kind:
-                slide_active = kind
-                active = kind
-                if tail:
-                    (challenge_parts if kind == "challenge" else solution_parts).append(tail)
-                continue
-            target = slide_active or active
-            if target == "challenge":
-                challenge_parts.append(block)
-            elif target == "solution":
-                solution_parts.append(block)
+    for slide_idx, slide_blocks in enumerate(slides):
+        combined = _slide_combined_text(slide_blocks)
+        if not combined:
+            continue
+        t, c, s = _segment_case_study_blob(combined, filename if slide_idx == 0 else "")
+        if not title and t:
+            title = t
+        if c:
+            challenge = f"{challenge}\n{c}".strip() if challenge else c
+        if s:
+            solution = f"{solution}\n{s}".strip() if solution else s
 
-    challenge = _join_case_study_parts(challenge_parts)
-    solution = _join_case_study_parts(solution_parts)
+    if not title:
+        title = _case_study_title_from_first_slide(slides[0], filename)
+    if _compact_label(title) in _GENERIC_CASE_STUDY_LABELS:
+        title = _extract_title_from_preamble(_slide_combined_text(slides[0]), filename)
 
     if not challenge and len(slides) >= 2:
-        challenge = _slide_body_without_header(slides[1])
+        _, c, _ = _segment_case_study_blob(_slide_combined_text(slides[1]), filename)
+        challenge = c
     if not solution and len(slides) >= 3:
-        solution = _slide_body_without_header(slides[2])
-    if not solution and len(slides) == 2 and challenge:
-        # Two-slide deck: second slide may combine challenge + solution paragraphs.
-        blocks = slides[1]
-        if len(blocks) >= 2:
-            challenge = _join_case_study_parts(blocks[: max(1, len(blocks) // 2)])
-            solution = _join_case_study_parts(blocks[max(1, len(blocks) // 2) :])
+        _, _, s = _segment_case_study_blob(_slide_combined_text(slides[2]), filename)
+        solution = s
 
     if challenge and challenge.lower() == title.lower():
         challenge = ""
     if solution and solution.lower() == title.lower():
         solution = ""
 
-    return title, challenge[:6000], solution[:6000]
+    return title[:500], challenge[:6000], solution[:6000]
 
 
 def extract_pptx(data: bytes, filename: str) -> tuple[str, str, str]:
@@ -583,6 +913,17 @@ def suggest_from_upload(filename: str, data: bytes, *, module: str | None = None
         "business_challenge": "",
         "solution": "",
     }
-    if mod == "case_study":
+    if mod == "case_study" and ext == "pptx":
+        slides = _pptx_slide_blocks(data)
+        combined = _slide_combined_text(slides[0]) if slides else ""
+        if combined:
+            seg_title, seg_challenge, seg_solution = _segment_case_study_blob(combined, name)
+            if seg_title:
+                result["title"] = _clean_autofill_title(seg_title[:500])
+            if seg_challenge:
+                result["business_challenge"] = seg_challenge[:6000]
+            if seg_solution:
+                result["solution"] = seg_solution[:6000]
+    elif mod == "case_study":
         result["business_challenge"] = (summary or "")[:6000]
     return result
