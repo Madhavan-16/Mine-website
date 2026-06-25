@@ -12,6 +12,8 @@ KNOWLEDGE_SERIES_MODULES = [
 
 KNOWLEDGE_SERIES_MODULE_KEYS = frozenset(m for m, _ in KNOWLEDGE_SERIES_MODULES)
 
+CASE_STUDY_MODULE = "case_study"
+
 STANDALONE_REPO_MODULES = frozenset({"onboarding", "innovation", "training", "hall_of_fame"})
 
 # URL segment (path) -> content.module slug

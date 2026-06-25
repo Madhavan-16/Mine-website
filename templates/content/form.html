@@ -25,13 +25,24 @@
       </div>
     {% endif %}
     <label for="module">Knowledge series</label>
-    {{ form.module() }}
+    {{ form.module(id="module") }}
     <label for="title">Title</label>
     {{ form.title() }}
-    <label for="summary">Summary</label>
-    {{ form.summary() }}
-    <label for="body">Body</label>
-    {{ form.body(rows=10) }}
+
+    <div class="content-form-fields content-form-fields--default" id="fields-default">
+      <label for="summary">Summary</label>
+      {{ form.summary() }}
+      <label for="body">Body</label>
+      {{ form.body(rows=10) }}
+    </div>
+
+    <div class="content-form-fields content-form-fields--case-study" id="fields-case-study" hidden>
+      <label for="business_challenge">Business challenge</label>
+      {{ form.business_challenge() }}
+      <label for="solution">Solution</label>
+      {{ form.solution(rows=10) }}
+    </div>
+
     <label for="tags">Tags</label>
     {{ form.tags(placeholder="comma, separated, values") }}
 
@@ -39,7 +50,7 @@
     {{ form.attachment() }}
     <p class="help">Allowed types: PDF, DOCX, XLSX, PPT, PPTX, PNG, JPG — max 10 MB per request.</p>
     <div class="toolbar" style="margin-top: 10px; flex-wrap: wrap; gap: 8px; align-items: center;">
-      <button type="button" class="btn btn-secondary" id="btn-autofill-from-file">Suggest title &amp; summary from file</button>
+      <button type="button" class="btn btn-secondary" id="btn-autofill-from-file">Suggest from file</button>
       <span class="meta" id="autofill-status" aria-live="polite"></span>
     </div>
 
@@ -52,6 +63,32 @@
   </form>
   <script>
 (function () {
+  var CASE_STUDY = "case_study";
+  var moduleSelect = document.getElementById("module");
+  var fieldsDefault = document.getElementById("fields-default");
+  var fieldsCaseStudy = document.getElementById("fields-case-study");
+
+  function syncAutofillLabel() {
+    var btn = document.getElementById("btn-autofill-from-file");
+    if (!btn) return;
+    var isCaseStudy = moduleSelect && moduleSelect.value === CASE_STUDY;
+    btn.textContent = isCaseStudy
+      ? "Suggest title, challenge & solution from file"
+      : "Suggest title & summary from file";
+  }
+
+  function syncFieldGroups() {
+    var isCaseStudy = moduleSelect && moduleSelect.value === CASE_STUDY;
+    if (fieldsDefault) fieldsDefault.hidden = isCaseStudy;
+    if (fieldsCaseStudy) fieldsCaseStudy.hidden = !isCaseStudy;
+    syncAutofillLabel();
+  }
+
+  if (moduleSelect) {
+    moduleSelect.addEventListener("change", syncFieldGroups);
+    syncFieldGroups();
+  }
+
   var btn = document.getElementById("btn-autofill-from-file");
   var statusEl = document.getElementById("autofill-status");
   var suggestUrl = {{ url_for("content.content_suggest_fields") | tojson }};
@@ -64,8 +101,16 @@
   function applySuggestions(j) {
     var title = document.getElementById("title");
     var summary = document.getElementById("summary");
+    var challenge = document.getElementById("business_challenge");
+    var solution = document.getElementById("solution");
+    var isCaseStudy = moduleSelect && moduleSelect.value === CASE_STUDY;
     if (title) title.value = j.title || "";
-    if (summary) summary.value = j.summary || "";
+    if (isCaseStudy) {
+      if (challenge) challenge.value = j.business_challenge || j.summary || "";
+      if (solution) solution.value = j.solution || j.body || "";
+    } else if (summary) {
+      summary.value = j.summary || "";
+    }
   }
 
   function runAutofill() {
@@ -83,6 +128,9 @@
     var fd = new FormData();
     fd.append("csrf_token", csrf.value);
     fd.append("file", fileInput.files[0], fileInput.files[0].name);
+    if (moduleSelect && moduleSelect.value) {
+      fd.append("module", moduleSelect.value);
+    }
     fetch(suggestUrl, { method: "POST", body: fd, credentials: "same-origin" })
       .then(function (r) {
         var ct = (r.headers.get("content-type") || "").toLowerCase();
@@ -102,7 +150,12 @@
           return;
         }
         applySuggestions(res.j);
-        if (statusEl) statusEl.textContent = "Title and short summary filled from file. Add the body yourself if needed.";
+        var isCaseStudy = moduleSelect && moduleSelect.value === CASE_STUDY;
+        if (statusEl) {
+          statusEl.textContent = isCaseStudy
+            ? "Title, business challenge, and solution filled from file. Review before submitting."
+            : "Title and short summary filled from file. Add the body yourself if needed.";
+        }
       })
       .catch(function (e) {
         if (statusEl) statusEl.textContent = e && e.message ? e.message : "Network error; try again.";

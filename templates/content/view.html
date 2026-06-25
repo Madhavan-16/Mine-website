@@ -67,19 +67,35 @@
     {% endif %}
 
     <div class="card content-view-summary-card">
-      <h2 style="margin-top:0;">Summary</h2>
-      <div class="body-rich content-summary-text">
-        {% if row.summary and row.summary.strip() %}
-          {{ row.summary|e }}
-        {% else %}
-          <span class="meta">No summary provided.</span>
-        {% endif %}
-      </div>
+      {% if row.module == 'case_study' %}
+        <h2 style="margin-top:0;">Business challenge</h2>
+        <div class="body-rich content-summary-text">
+          {% if row.summary and row.summary.strip() %}
+            {{ row.summary|e }}
+          {% else %}
+            <span class="meta">No business challenge provided.</span>
+          {% endif %}
+        </div>
+      {% else %}
+        <h2 style="margin-top:0;">Summary</h2>
+        <div class="body-rich content-summary-text">
+          {% if row.summary and row.summary.strip() %}
+            {{ row.summary|e }}
+          {% else %}
+            <span class="meta">No summary provided.</span>
+          {% endif %}
+        </div>
+      {% endif %}
     </div>
 
     <div class="card">
-      <h2 style="margin-top:0;">Body</h2>
-      <div class="body-rich">{% if row.body and row.body.strip() %}{{ row.body|e }}{% else %}<span class="meta">—</span>{% endif %}</div>
+      {% if row.module == 'case_study' %}
+        <h2 style="margin-top:0;">Solution</h2>
+        <div class="body-rich">{% if row.body and row.body.strip() %}{{ row.body|e }}{% else %}<span class="meta">No solution provided.</span>{% endif %}</div>
+      {% else %}
+        <h2 style="margin-top:0;">Body</h2>
+        <div class="body-rich">{% if row.body and row.body.strip() %}{{ row.body|e }}{% else %}<span class="meta">—</span>{% endif %}</div>
+      {% endif %}
     </div>
 
     {% include "_attachment_previews.html" %}

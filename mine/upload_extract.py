@@ -238,6 +238,213 @@ def _pptx_iter_shapes(shapes):
             yield shape
 
 
+def _pptx_slide_blocks(data: bytes) -> list[list[str]]:
+    from pptx import Presentation
+
+    prs = Presentation(io.BytesIO(data))
+    slides: list[list[str]] = []
+    total = 0
+    for slide in prs.slides:
+        blocks: list[str] = []
+        if total >= _MAX_EXTRACT_CHARS:
+            slides.append(blocks)
+            continue
+        for shape in _pptx_iter_shapes(slide.shapes):
+            if hasattr(shape, "text"):
+                t = _norm_ws(getattr(shape, "text", "") or "")
+                if t:
+                    blocks.append(t)
+                    total += len(t)
+        if slide.has_notes_slide:
+            try:
+                nf = slide.notes_slide.notes_text_frame
+                if nf and nf.text:
+                    t = _norm_ws(nf.text)
+                    if t:
+                        blocks.append(t)
+                        total += len(t)
+            except Exception:
+                pass
+        slides.append(blocks)
+    return slides
+
+
+def _case_study_section_kind(text: str) -> tuple[str | None, str]:
+    """Classify a text block as a case-study section header; return (kind, inline body)."""
+    raw = (text or "").strip()
+    if not raw:
+        return None, ""
+    low = raw.lower()
+    compact = re.sub(r"[\s:.\-–—]+", " ", low).strip()
+
+    challenge_labels = {
+        "challenge",
+        "business challenge",
+        "the challenge",
+        "client challenge",
+        "problem statement",
+        "the problem",
+        "situation",
+        "background",
+    }
+    solution_labels = {
+        "solution",
+        "our solution",
+        "the solution",
+        "proposed solution",
+        "approach",
+        "our approach",
+        "implementation",
+        "results",
+        "outcome",
+        "outcomes",
+    }
+
+    if compact in challenge_labels:
+        return "challenge", ""
+    if compact in solution_labels:
+        return "solution", ""
+
+    for pat, kind in (
+        (
+            re.compile(
+                r"^(?:the\s+)?(?:business\s+)?challenge(?:\s+statement)?\s*[:\-–—.]?\s*(.*)$",
+                re.I | re.S,
+            ),
+            "challenge",
+        ),
+        (
+            re.compile(
+                r"^(?:client|customer)\s+(?:challenge|situation|context)\s*[:\-–—.]?\s*(.*)$",
+                re.I | re.S,
+            ),
+            "challenge",
+        ),
+        (
+            re.compile(
+                r"^(?:problem\s+statement|the\s+problem)\s*[:\-–—.]?\s*(.*)$",
+                re.I | re.S,
+            ),
+            "challenge",
+        ),
+        (
+            re.compile(
+                r"^(?:our\s+)?(?:proposed\s+)?solution(?:\s+overview)?\s*[:\-–—.]?\s*(.*)$",
+                re.I | re.S,
+            ),
+            "solution",
+        ),
+        (
+            re.compile(r"^(?:our\s+)?approach\s*[:\-–—.]?\s*(.*)$", re.I | re.S),
+            "solution",
+        ),
+        (
+            re.compile(r"^(?:key\s+)?results?(?:\s+and\s+outcomes?)?\s*[:\-–—.]?\s*(.*)$", re.I | re.S),
+            "solution",
+        ),
+    ):
+        m = pat.match(raw)
+        if m:
+            tail = (m.group(1) or "").strip()
+            if tail or len(compact) < 90:
+                return kind, tail
+
+    return None, ""
+
+
+def _case_study_title_from_first_slide(blocks: list[str], filename: str) -> str:
+    if not blocks:
+        return _clean_autofill_title(title_from_filename(filename))
+    for block in blocks:
+        kind, _ = _case_study_section_kind(block)
+        if kind:
+            continue
+        if 6 <= len(block) <= 220:
+            return _clean_autofill_title(block[:500])
+    return _clean_autofill_title(blocks[0][:500])
+
+
+def _join_case_study_parts(parts: list[str], max_chars: int = 6000) -> str:
+    cleaned: list[str] = []
+    seen: set[str] = set()
+    for part in parts:
+        t = _norm_ws(part)
+        if not t or len(t) < 8:
+            continue
+        key = t.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        cleaned.append(t)
+    if not cleaned:
+        return ""
+    return _clip("\n\n".join(cleaned), max_chars)
+
+
+def _slide_body_without_header(blocks: list[str]) -> str:
+    if not blocks:
+        return ""
+    parts: list[str] = []
+    for i, block in enumerate(blocks):
+        kind, tail = _case_study_section_kind(block)
+        if kind and i == 0 and not tail:
+            continue
+        if kind and i == 0 and tail:
+            parts.append(tail)
+            continue
+        parts.append(block)
+    return _join_case_study_parts(parts)
+
+
+def extract_case_study_pptx(data: bytes, filename: str) -> tuple[str, str, str]:
+    """Return title, business challenge, and solution from a case-study deck."""
+    slides = _pptx_slide_blocks(data)
+    if not slides:
+        return title_from_filename(filename), "", ""
+
+    title = _case_study_title_from_first_slide(slides[0], filename)
+    challenge_parts: list[str] = []
+    solution_parts: list[str] = []
+    active: str | None = None
+
+    for slide_blocks in slides:
+        slide_active: str | None = None
+        for block in slide_blocks:
+            kind, tail = _case_study_section_kind(block)
+            if kind:
+                slide_active = kind
+                active = kind
+                if tail:
+                    (challenge_parts if kind == "challenge" else solution_parts).append(tail)
+                continue
+            target = slide_active or active
+            if target == "challenge":
+                challenge_parts.append(block)
+            elif target == "solution":
+                solution_parts.append(block)
+
+    challenge = _join_case_study_parts(challenge_parts)
+    solution = _join_case_study_parts(solution_parts)
+
+    if not challenge and len(slides) >= 2:
+        challenge = _slide_body_without_header(slides[1])
+    if not solution and len(slides) >= 3:
+        solution = _slide_body_without_header(slides[2])
+    if not solution and len(slides) == 2 and challenge:
+        # Two-slide deck: second slide may combine challenge + solution paragraphs.
+        blocks = slides[1]
+        if len(blocks) >= 2:
+            challenge = _join_case_study_parts(blocks[: max(1, len(blocks) // 2)])
+            solution = _join_case_study_parts(blocks[max(1, len(blocks) // 2) :])
+
+    if challenge and challenge.lower() == title.lower():
+        challenge = ""
+    if solution and solution.lower() == title.lower():
+        solution = ""
+
+    return title, challenge[:6000], solution[:6000]
+
+
 def extract_pptx(data: bytes, filename: str) -> tuple[str, str, str]:
     from pptx import Presentation
 
@@ -325,12 +532,26 @@ def extract_xlsx(data: bytes, filename: str) -> tuple[str, str, str]:
         wb.close()
 
 
-def suggest_from_upload(filename: str, data: bytes) -> dict[str, str]:
-    """Return title and a short summary gist; body is left empty for the client."""
+def suggest_from_upload(filename: str, data: bytes, *, module: str | None = None) -> dict[str, str]:
+    """Return autofill fields from an uploaded file (shape depends on knowledge module)."""
     name = filename or "file"
     ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
     title = title_from_filename(name)
     summary = ""
+    mod = (module or "").strip()
+
+    if mod == "case_study" and ext == "pptx":
+        try:
+            cs_title, challenge, solution = extract_case_study_pptx(data, name)
+            return {
+                "title": _clean_autofill_title((cs_title or title)[:500]),
+                "summary": "",
+                "body": "",
+                "business_challenge": (challenge or "")[:6000],
+                "solution": (solution or "")[:6000],
+            }
+        except Exception:
+            pass
 
     try:
         if ext == "pdf":
@@ -343,7 +564,9 @@ def suggest_from_upload(filename: str, data: bytes) -> dict[str, str]:
             title, summary, _ = extract_xlsx(data, name)
         elif ext == "ppt":
             title = title_from_filename(name)
-            summary = "Legacy .ppt files cannot be read for auto-fill; use .pptx or type a summary."
+            summary = (
+                "Legacy .ppt files cannot be read for auto-fill; use .pptx or type fields manually."
+            )
         elif ext in ("png", "jpg", "jpeg"):
             title = title_from_filename(name)
             summary = "Image attachment — add a short description if needed."
@@ -353,8 +576,13 @@ def suggest_from_upload(filename: str, data: bytes) -> dict[str, str]:
         title = title_from_filename(name)
         summary = ""
 
-    return {
+    result = {
         "title": _clean_autofill_title((title or title_from_filename(name))[:500]),
         "summary": (summary or "")[:2000],
         "body": "",
+        "business_challenge": "",
+        "solution": "",
     }
+    if mod == "case_study":
+        result["business_challenge"] = (summary or "")[:6000]
+    return result

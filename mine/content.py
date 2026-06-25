@@ -28,6 +28,7 @@ from wtforms.validators import DataRequired, Length, Optional
 
 from mine.auth_utils import load_current_user, login_required, roles_required
 from mine.catalog_modules import (
+    CASE_STUDY_MODULE,
     KNOWLEDGE_SERIES_MODULE_KEYS,
     KNOWLEDGE_SERIES_MODULES,
     STANDALONE_MODULE_TO_SEGMENT,
@@ -92,6 +93,7 @@ def _knowledge_series_form_choices(current_module: str | None) -> list[tuple[str
     return choices
 
 
+
 class ContentForm(FlaskForm):
     module = SelectField(
         "Knowledge series",
@@ -103,6 +105,16 @@ class ContentForm(FlaskForm):
         "Summary", validators=[Optional(), Length(max=2000)], render_kw={"id": "summary", "rows": 5}
     )
     body = TextAreaField("Body", validators=[Optional()], render_kw={"id": "body"})
+    business_challenge = TextAreaField(
+        "Business challenge",
+        validators=[Optional()],
+        render_kw={"id": "business_challenge", "rows": 6},
+    )
+    solution = TextAreaField(
+        "Solution",
+        validators=[Optional()],
+        render_kw={"id": "solution", "rows": 6},
+    )
     tags = StringField("Tags (comma-separated)", validators=[Optional(), Length(max=500)])
     attachment = FileField(
         "Attachment",
@@ -177,12 +189,35 @@ def _str_or_none(s: str) -> str | None:
     return t or None
 
 
+def _content_summary_body_from_form(form, module: str) -> tuple[str | None, str | None]:
+    if module == CASE_STUDY_MODULE:
+        return _str_or_none(form.business_challenge.data), _str_or_none(form.solution.data)
+    return _str_or_none(form.summary.data), _str_or_none(form.body.data)
+
+
+def _case_study_submit_errors(form, action: str) -> list[str]:
+    if action != "submit":
+        return []
+    out: list[str] = []
+    if not _str_or_none(form.business_challenge.data):
+        out.append("Business challenge is required when you submit for review, or use Save draft to add it later.")
+    if not _str_or_none(form.solution.data):
+        out.append("Solution is required when you submit for review, or use Save draft to add it later.")
+    return out
+
+
+def _populate_case_study_form_fields(form, row) -> None:
+    if (row["module"] or "").strip() != CASE_STUDY_MODULE:
+        return
+    form.business_challenge.data = row["summary"] or ""
+    form.solution.data = row["body"] or ""
+
+
 def _insert_new_content_from_form(user, form, module: str) -> int:
     action = (request.form.get("action") or "draft").strip()
     status = "pending" if action == "submit" else "draft"
     title = (form.title.data or "").strip()
-    summary = _str_or_none(form.summary.data)
-    body = _str_or_none(form.body.data)
+    summary, body = _content_summary_body_from_form(form, module)
     tags = form.tags.data or ""
     db = get_db()
     cur = db.execute(
@@ -249,8 +284,7 @@ def _update_from_form(
                 flash(m, "danger")
             return False
     title = (form.title.data or "").strip()
-    summary = _str_or_none(form.summary.data) if hasattr(form, "summary") else None
-    body = _str_or_none(form.body.data) if hasattr(form, "body") else None
+    summary, body = _content_summary_body_from_form(form, module)
     db = get_db()
     db.execute(
         """
@@ -552,6 +586,13 @@ def content_create():
         if mod_sl not in KNOWLEDGE_SERIES_MODULE_KEYS:
             flash("Choose one of the knowledge-repository series.", "danger")
             return render_template("content/form.html", form=form, mode="create")
+        if mod_sl == CASE_STUDY_MODULE:
+            action = (request.form.get("action") or "draft").strip()
+            errs = _case_study_submit_errors(form, action)
+            for msg in errs:
+                flash(msg, "danger")
+            if errs:
+                return render_template("content/form.html", form=form, mode="create")
         cid = _insert_new_content_from_form(user, form, mod_sl)
         get_db().commit()
         flash("Content saved.", "success")
@@ -583,11 +624,19 @@ def content_suggest_fields():
     if len(raw) > max_len:
         return jsonify(ok=False, error="File is too large."), 413
     try:
-        fields = suggest_from_upload(fname, raw)
+        module = (request.form.get("module") or "").strip()
+        fields = suggest_from_upload(fname, raw, module=module)
     except Exception:
         current_app.logger.exception("suggest_from_upload failed for %s", fname)
         return jsonify(ok=False, error="Could not read this file for suggestions."), 422
-    return jsonify(ok=True, title=fields["title"], summary=fields["summary"], body=fields["body"])
+    return jsonify(
+        ok=True,
+        title=fields["title"],
+        summary=fields["summary"],
+        body=fields["body"],
+        business_challenge=fields.get("business_challenge", ""),
+        solution=fields.get("solution", ""),
+    )
 
 
 def current_app_upload_folder():
@@ -622,12 +671,20 @@ def content_edit(cid: int):
     form = ContentForm(obj=row)
     form.module.choices = _knowledge_series_form_choices(row["module"])
     form.tags.data = ", ".join(get_tags(cid))
+    _populate_case_study_form_fields(form, row)
     if form.validate_on_submit():
         new_mod = (form.module.data or "").strip()
         allowed = KNOWLEDGE_SERIES_MODULE_KEYS | {(row["module"] or "").strip()}
         if new_mod not in allowed:
             flash("That module cannot be assigned from this editor.", "danger")
             return render_template("content/form.html", form=form, mode="edit", row=row)
+        if new_mod == CASE_STUDY_MODULE:
+            action = (request.form.get("action") or "draft").strip()
+            errs = _case_study_submit_errors(form, action)
+            for msg in errs:
+                flash(msg, "danger")
+            if errs:
+                return render_template("content/form.html", form=form, mode="edit", row=row)
         if not _update_from_form(user, row, cid, form, module=new_mod):
             return render_template("content/form.html", form=form, mode="edit", row=row)
         get_db().commit()
