@@ -1,30 +1,23 @@
 #!/bin/bash
-# Azure App Service startup — persistent data dirs + optional one-time migration.
+# Azure App Service startup — uses project-root mine.db + uploads from git deploy.
 # Portal: Configuration → General settings → Startup Command = bash startup.sh
 set -euo pipefail
 
-DB_PATH="${DATABASE_PATH:-/home/data/mine.db}"
-UPLOAD_DIR="${UPLOAD_FOLDER:-/home/data/uploads}"
-WWWROOT="/home/site/wwwroot"
+cd /home/site/wwwroot
+
+DB_PATH="${DATABASE_PATH:-mine.db}"
+UPLOAD_DIR="${UPLOAD_FOLDER:-uploads}"
 PORT="${PORT:-8000}"
+
+if [[ "$DB_PATH" != /* ]]; then
+  DB_PATH="/home/site/wwwroot/$DB_PATH"
+fi
+if [[ "$UPLOAD_DIR" != /* ]]; then
+  UPLOAD_DIR="/home/site/wwwroot/$UPLOAD_DIR"
+fi
 
 mkdir -p "$(dirname "$DB_PATH")"
 mkdir -p "$UPLOAD_DIR"
-
-# One-time migration from default wwwroot paths (no-op if persistent data already exists).
-if [ -f "$WWWROOT/mine.db" ] && [ ! -f "$DB_PATH" ]; then
-  echo "MiNe: migrating database to $DB_PATH"
-  cp "$WWWROOT/mine.db" "$DB_PATH"
-fi
-
-if [ -d "$WWWROOT/uploads" ]; then
-  shopt -s nullglob
-  www_files=( "$WWWROOT/uploads/"* )
-  if [ "${#www_files[@]}" -gt 0 ] && [ -z "$(ls -A "$UPLOAD_DIR" 2>/dev/null || true)" ]; then
-    echo "MiNe: migrating uploads to $UPLOAD_DIR"
-    cp -r "$WWWROOT/uploads/"* "$UPLOAD_DIR"/
-  fi
-fi
 
 echo "MiNe: DATABASE_PATH=$DB_PATH"
 echo "MiNe: UPLOAD_FOLDER=$UPLOAD_DIR"

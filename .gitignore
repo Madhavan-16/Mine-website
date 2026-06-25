@@ -4,8 +4,7 @@ __pycache__/
 .venv/
 venv/
 .env
-uploads/*
-!uploads/.gitkeep
+# Generated slide preview cache (rebuilt on first view; not needed in git)
 uploads/.slide_previews/
 tools/LibreOfficePortable/
 tools/downloads/

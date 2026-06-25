@@ -64,3 +64,8 @@ jobs:
           app-name: 'Mine'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_689C4A5E95F94CB7AC8EFB1613BDF5D4 }}
+
+      - name: Portal settings reminder
+        run: |
+          echo "MiNe ignores legacy DATABASE_PATH/UPLOAD_FOLDER on Azure automatically."
+          echo "Run scripts/azure_fix_portal.sh once in Azure Cloud Shell to set startup command and remove stale portal settings."

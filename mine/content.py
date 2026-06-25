@@ -329,6 +329,8 @@ def _update_from_form(
 
 
 def _save_upload(file_storage, upload_folder: str) -> tuple[str, str]:
+    from mine.upload_paths import to_portable_upload_path
+
     orig = file_storage.filename or "file"
     safe = re.sub(r"[^A-Za-z0-9._-]", "_", orig)
     name = f"{uuid4().hex}_{safe}"
@@ -336,7 +338,7 @@ def _save_upload(file_storage, upload_folder: str) -> tuple[str, str]:
     upload_root.mkdir(parents=True, exist_ok=True)
     path = upload_root / name
     file_storage.save(str(path))
-    return orig, str(path.resolve())
+    return orig, to_portable_upload_path(path)
 
 
 def _insert_attachment_from_upload(db, content_id: int, file_storage) -> None:
@@ -346,8 +348,13 @@ def _insert_attachment_from_upload(db, content_id: int, file_storage) -> None:
     preview_path = None
     if current_app.config.get("ENABLE_OFFICE_PDF_PREVIEW", True):
         from mine.preview_convert import convert_office_file_to_pdf
+        from mine.upload_paths import resolve_stored_upload_path, to_portable_upload_path
 
-        preview_path = convert_office_file_to_pdf(path, upload_folder)
+        abs_source = resolve_stored_upload_path(path)
+        if abs_source:
+            pdf = convert_office_file_to_pdf(abs_source, upload_folder)
+            if pdf:
+                preview_path = to_portable_upload_path(pdf)
     cur = db.execute(
         """
         INSERT INTO attachments (content_id, file_name, file_path, preview_path, slide_preview_dir)
@@ -373,13 +380,16 @@ def _build_slide_preview_for_attachment(
 
     if not is_slide_deck_path(original_name or source_path):
         return None
+    from mine.upload_paths import resolve_stored_upload_path
+
+    abs_source = resolve_stored_upload_path(source_path) or source_path
     scale = float(current_app.config.get("SLIDE_PREVIEW_SCALE", 2.0))
-    paths = generate_slide_png_previews(source_path, upload_folder, attachment_id, scale=scale)
+    paths = generate_slide_png_previews(abs_source, upload_folder, attachment_id, scale=scale)
     if not paths:
         return None
-    from pathlib import Path
+    from mine.upload_paths import to_portable_upload_path
 
-    return str(Path(paths[0]).parent)
+    return to_portable_upload_path(Path(paths[0]).parent)
 
 
 def _preview_download_name(original_file_name: str) -> str:
@@ -395,9 +405,11 @@ def _maybe_build_pdf_preview(db, att, source_path: str) -> str | None:
 
     preview_path = convert_office_file_to_pdf(source_path, current_app_upload_folder())
     if preview_path:
+        from mine.upload_paths import to_portable_upload_path
+
         db.execute(
             "UPDATE attachments SET preview_path = ? WHERE id = ?",
-            (preview_path, att["id"]),
+            (to_portable_upload_path(preview_path), att["id"]),
         )
         db.commit()
     return preview_path
@@ -411,8 +423,10 @@ def _attachment_slide_preview_dir(att) -> str | None:
     if not raw:
         return None
     from mine.slide_preview import list_slide_pngs
+    from mine.upload_paths import resolve_stored_path
 
-    return raw if list_slide_pngs(raw) else None
+    resolved = resolve_stored_path(raw, kind="dir")
+    return resolved if resolved and list_slide_pngs(resolved) else None
 
 
 def _ensure_slide_preview_paths(db, att) -> list[str]:
@@ -436,9 +450,9 @@ def _ensure_slide_preview_paths(db, att) -> list[str]:
     scale = float(current_app.config.get("SLIDE_PREVIEW_SCALE", 2.0))
     paths = generate_slide_png_previews(source, current_app_upload_folder(), att["id"], scale=scale)
     if paths:
-        from pathlib import Path
+        from mine.upload_paths import to_portable_upload_path
 
-        slide_dir = str(Path(paths[0]).parent)
+        slide_dir = to_portable_upload_path(Path(paths[0]).parent)
         db.execute(
             "UPDATE attachments SET slide_preview_dir = ? WHERE id = ?",
             (slide_dir, att["id"]),
@@ -861,12 +875,13 @@ def content_delete(cid: int):
             except OSError:
                 pass
         from mine.slide_preview import remove_slide_preview_dir
+        from mine.upload_paths import resolve_stored_path
 
         try:
             slide_dir = f["slide_preview_dir"]
         except (TypeError, KeyError):
             slide_dir = None
-        remove_slide_preview_dir(slide_dir)
+        remove_slide_preview_dir(resolve_stored_path(slide_dir, kind="dir"))
     db.execute("DELETE FROM content WHERE id = ?", (cid,))
     log_audit(user["id"], "content_delete", "content", cid, None)
     db.commit()

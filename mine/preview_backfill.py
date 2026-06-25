@@ -6,7 +6,7 @@ import logging
 
 from mine.preview_convert import convert_office_file_to_pdf, find_libreoffice_executable
 from mine.slide_preview import generate_slide_png_previews, is_slide_deck_path, list_slide_pngs
-from mine.upload_paths import resolve_stored_upload_path
+from mine.upload_paths import resolve_stored_upload_path, to_portable_upload_path
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def backfill_missing_pdf_previews(db, upload_folder: str) -> dict:
         if pdf:
             db.execute(
                 "UPDATE attachments SET preview_path = ? WHERE id = ?",
-                (pdf, att["id"]),
+                (to_portable_upload_path(pdf), att["id"]),
             )
             converted += 1
             logger.info("PDF preview backfill: attachment %s -> %s", att["id"], pdf)
@@ -51,6 +51,9 @@ def backfill_missing_pdf_previews(db, upload_folder: str) -> dict:
     if converted:
         db.commit()
     return {"converted": converted, "failed": failed}
+
+
+from pathlib import Path
 
 
 def backfill_missing_slide_previews(db, upload_folder: str, *, scale: float = 2.0) -> dict:
@@ -84,11 +87,9 @@ def backfill_missing_slide_previews(db, upload_folder: str, *, scale: float = 2.
             continue
         paths = generate_slide_png_previews(source, upload_folder, att["id"], scale=scale)
         if paths:
-            from pathlib import Path
-
             db.execute(
                 "UPDATE attachments SET slide_preview_dir = ? WHERE id = ?",
-                (str(Path(paths[0]).parent), att["id"]),
+                (to_portable_upload_path(Path(paths[0]).parent), att["id"]),
             )
             converted += 1
             logger.info("Slide preview backfill: attachment %s (%s slides)", att["id"], len(paths))
