@@ -53,7 +53,6 @@
 
     window.setTimeout(function () {
       modal.hidden = true;
-      activeSlug = null;
       if (lastFocus && typeof lastFocus.focus === "function") {
         lastFocus.focus();
       }

@@ -32,8 +32,10 @@
     <div class="content-form-fields content-form-fields--default" id="fields-default">
       <label for="summary">Summary</label>
       {{ form.summary() }}
-      <label for="body">Body</label>
-      {{ form.body(rows=10) }}
+      <div id="field-body">
+        <label for="body">Body</label>
+        {{ form.body(rows=10) }}
+      </div>
     </div>
 
     <div class="content-form-fields content-form-fields--case-study" id="fields-case-study" hidden>
@@ -64,9 +66,11 @@
   <script>
 (function () {
   var CASE_STUDY = "case_study";
+  var NO_BODY_MODULES = ["kyc", "domain_term"];
   var moduleSelect = document.getElementById("module");
   var fieldsDefault = document.getElementById("fields-default");
   var fieldsCaseStudy = document.getElementById("fields-case-study");
+  var fieldBody = document.getElementById("field-body");
 
   function syncAutofillLabel() {
     var btn = document.getElementById("btn-autofill-from-file");
@@ -78,9 +82,12 @@
   }
 
   function syncFieldGroups() {
-    var isCaseStudy = moduleSelect && moduleSelect.value === CASE_STUDY;
+    var mod = moduleSelect ? moduleSelect.value : "";
+    var isCaseStudy = mod === CASE_STUDY;
+    var hideBody = NO_BODY_MODULES.indexOf(mod) !== -1;
     if (fieldsDefault) fieldsDefault.hidden = isCaseStudy;
     if (fieldsCaseStudy) fieldsCaseStudy.hidden = !isCaseStudy;
+    if (fieldBody) fieldBody.hidden = hideBody;
     syncAutofillLabel();
   }
 
@@ -154,7 +161,9 @@
         if (statusEl) {
           statusEl.textContent = isCaseStudy
             ? "Title, business challenge, and solution filled from file. Review before submitting."
-            : "Title and short summary filled from file. Add the body yourself if needed.";
+            : (NO_BODY_MODULES.indexOf(moduleSelect && moduleSelect.value) !== -1
+              ? "Title and summary filled from file. Review before submitting."
+              : "Title and short summary filled from file. Add the body yourself if needed.");
         }
       })
       .catch(function (e) {

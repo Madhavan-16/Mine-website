@@ -131,6 +131,11 @@
           <a class="btn btn-secondary" href="{{ url_for('main.knowledge') }}">Clear</a>
         </div>
       </form>
+      {% if current_user.role in ['admin', 'moderator'] %}
+        <div class="krepo-filters__create">
+          <a class="btn btn-primary" href="{{ url_for('content.content_create', module=module) if module else url_for('content.content_create') }}">+ Create content</a>
+        </div>
+      {% endif %}
     </aside>
 
     <div class="krepo-results">
@@ -139,7 +144,7 @@
         <ul class="krepo-result-list">
           {% for item in rows %}
             <li>
-              <a class="krepo-result" href="{{ url_for('content.content_view', cid=item.id) }}">
+              <a class="krepo-result" href="{{ url_for('content.content_view', cid=item.id, return_to=request.full_path) }}">
                 <div class="krepo-result__top">
                   <h2 class="krepo-result__title">{{ item.title }}</h2>
                   <span class="krepo-result__badge">{{ item.module }}</span>

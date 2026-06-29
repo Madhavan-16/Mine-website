@@ -1,5 +1,14 @@
 {% extends "base.html" %}
 {% block title %}{{ row.title }}{% endblock %}
+{% set knowledge_module_labels = {
+  'kyc': 'KYC series',
+  'kya': 'KYA series',
+  'domain_term': 'Term of the week',
+  'newsletter': 'Newsletter',
+  'case_study': 'Case studies',
+  'rfp_snippet': 'RFP snippets',
+  'blog': 'Blogs & whitepapers'
+} %}
 {% block page_header %}
   <div class="page-head">
     <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -21,6 +30,10 @@
         <a href="{{ url_for('reference.fmi_kyc') }}">Program map</a>
         <span class="breadcrumb-sep" aria-hidden="true">›</span>
         <a href="{{ url_for('main.hall_of_fame') }}">Hall of Fame</a>
+      {% elif row.module in knowledge_module_labels %}
+        <a href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
+        <span class="breadcrumb-sep" aria-hidden="true">›</span>
+        <a href="{{ return_to or url_for('main.knowledge', module=row.module) }}">{{ knowledge_module_labels[row.module] }}</a>
       {% else %}
         <a href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
         <span class="breadcrumb-sep" aria-hidden="true">›</span>
@@ -29,6 +42,11 @@
       <span class="breadcrumb-sep" aria-hidden="true">›</span>
       <span>{{ row.title }}</span>
     </nav>
+    {% if row.module in knowledge_module_labels %}
+      <p class="content-view-back">
+        <a href="{{ return_to or url_for('main.knowledge', module=row.module) }}" class="content-view-back__link">← Back to {{ knowledge_module_labels[row.module] }}</a>
+      </p>
+    {% endif %}
     <h1 class="page-title" style="text-transform:none;">{{ row.title }}</h1>
   </div>
 {% endblock %}
@@ -88,15 +106,17 @@
       {% endif %}
     </div>
 
+    {% if row.module != 'case_study' and row.module not in ['kyc', 'domain_term'] %}
     <div class="card">
-      {% if row.module == 'case_study' %}
-        <h2 style="margin-top:0;">Solution</h2>
-        <div class="body-rich">{% if row.body and row.body.strip() %}{{ row.body|e }}{% else %}<span class="meta">No solution provided.</span>{% endif %}</div>
-      {% else %}
-        <h2 style="margin-top:0;">Body</h2>
-        <div class="body-rich">{% if row.body and row.body.strip() %}{{ row.body|e }}{% else %}<span class="meta">—</span>{% endif %}</div>
-      {% endif %}
+      <h2 style="margin-top:0;">Body</h2>
+      <div class="body-rich">{% if row.body and row.body.strip() %}{{ row.body|e }}{% else %}<span class="meta">—</span>{% endif %}</div>
     </div>
+    {% elif row.module == 'case_study' %}
+    <div class="card">
+      <h2 style="margin-top:0;">Solution</h2>
+      <div class="body-rich">{% if row.body and row.body.strip() %}{{ row.body|e }}{% else %}<span class="meta">No solution provided.</span>{% endif %}</div>
+    </div>
+    {% endif %}
 
     {% include "_attachment_previews.html" %}
 

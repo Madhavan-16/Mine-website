@@ -29,6 +29,7 @@ from wtforms.validators import DataRequired, Length, Optional
 from mine.auth_utils import load_current_user, login_required, roles_required
 from mine.catalog_modules import (
     CASE_STUDY_MODULE,
+    KNOWLEDGE_MODULES_WITHOUT_BODY,
     KNOWLEDGE_SERIES_MODULE_KEYS,
     KNOWLEDGE_SERIES_MODULES,
     STANDALONE_MODULE_TO_SEGMENT,
@@ -192,6 +193,8 @@ def _str_or_none(s: str) -> str | None:
 def _content_summary_body_from_form(form, module: str) -> tuple[str | None, str | None]:
     if module == CASE_STUDY_MODULE:
         return _str_or_none(form.business_challenge.data), _str_or_none(form.solution.data)
+    if module in KNOWLEDGE_MODULES_WITHOUT_BODY:
+        return _str_or_none(form.summary.data), None
     return _str_or_none(form.summary.data), _str_or_none(form.body.data)
 
 
@@ -469,6 +472,17 @@ def _resolved_attachment_or_404(att, key: str = "file_path") -> str:
     return path
 
 
+def _safe_return_path(raw: str | None) -> str | None:
+    """Allow only same-site relative return paths (e.g. /knowledge?module=case_study)."""
+    path = (raw or "").strip()
+    if not path or not path.startswith("/") or path.startswith("//"):
+        return None
+    parsed = urlparse(path)
+    if parsed.scheme or parsed.netloc:
+        return None
+    return path
+
+
 def _attachment_manage_href(user, row) -> str | None:
     """URL to the editor where admins/moderators can upload an attachment (None if not allowed)."""
     # load_current_user() returns sqlite3.Row — supports row["key"] but not .get()
@@ -575,6 +589,7 @@ def content_view(cid: int):
         files=files,
         related_rows=related,
         attachment_manage_url=_attachment_manage_href(user, row),
+        return_to=_safe_return_path(request.args.get("return_to")),
     )
 
 

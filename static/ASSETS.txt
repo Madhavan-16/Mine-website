@@ -11,6 +11,7 @@ static/fonts/inter/  Inter woff2 — no Google Fonts CDN required
 static/img/          Raster infographics, logos, journey art
   domain/            Open-pit copper domain knowledge infographics (6 PNGs)
   hero-motifs/       Landing bento modal images (5 topics)
+  journey/           Freeport–Hexaware journey infographics (partnership milestones archive + current)
   leadership/        Executive portrait thumbnails (12 PNGs)
 static/js/           Application scripts and motion bundles
 static/vendor/       Vendored AOS + GSAP (no CDN)

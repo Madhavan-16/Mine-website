@@ -1,4 +1,5 @@
 import bcrypt
+from urllib.parse import urlparse
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
 from flask_wtf import FlaskForm
 from wtforms import PasswordField, SelectField, StringField, TextAreaField
@@ -9,6 +10,15 @@ from mine.db import get_db
 from mine.services import log_audit, moderation_entry, notify
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
+
+
+def _safe_post_redirect(default_endpoint: str, **default_kwargs):
+    raw = (request.form.get("next") or request.args.get("next") or "").strip()
+    if raw.startswith("/") and not raw.startswith("//"):
+        parsed = urlparse(raw)
+        if not parsed.scheme and not parsed.netloc:
+            return redirect(raw)
+    return redirect(url_for(default_endpoint, **default_kwargs))
 
 
 class RejectForm(FlaskForm):
@@ -130,7 +140,7 @@ def approve(cid: int):
     notify(row["author_id"], f"Your submission was approved: #{cid} — {row['title']}")
     db.commit()
     flash("Content approved.", "success")
-    return redirect(url_for("admin.moderation"))
+    return _safe_post_redirect("admin.moderation")
 
 
 @bp.route("/reject/<int:cid>", methods=["POST"])
@@ -141,7 +151,7 @@ def reject(cid: int):
     form = RejectForm()
     if not form.validate_on_submit():
         flash("A rejection reason is required.", "danger")
-        return redirect(url_for("admin.moderation"))
+        return _safe_post_redirect("admin.moderation")
     db = get_db()
     row = db.execute("SELECT * FROM content WHERE id = ?", (cid,)).fetchone()
     if not row or (row["status"] or "").strip().lower() != "pending":
@@ -159,7 +169,7 @@ def reject(cid: int):
     notify(row["author_id"], msg)
     db.commit()
     flash("Content rejected and returned to author.", "info")
-    return redirect(url_for("admin.moderation"))
+    return _safe_post_redirect("admin.moderation")
 
 
 @bp.route("/users")

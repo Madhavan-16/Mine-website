@@ -19,7 +19,8 @@ CSS_URL_RE = re.compile(r"""url\s*\(\s*['"]?\.\./([^'")]+)['"]?\s*\)""")
 REQUIRED_STATIC_FILES = [
     "img/hexaware-freeport-lockup.png",
     "img/freeport-story-timeline.png",
-    "img/freeport-hexaware-partnership-milestones.png",
+    "img/journey/two-decades-excellence-transformation-journey.png",
+    "img/journey/freeport-hexaware-partnership-milestones-original.png",
     "img/freeport-autonomous-mining-revolution.png",
     "img/strategic-context-delivery-teams.png",
     "img/freeport-strategic-corporate-snapshot.png",

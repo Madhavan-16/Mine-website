@@ -204,6 +204,13 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
   position: relative;
 }
 
+body.layout-landing #portal-stats,
+body.layout-landing #explore-mine,
+body.layout-landing #problem-title,
+body.layout-landing #value-title {
+  scroll-margin-top: calc(var(--portal-header-offset, 72px) + 14px);
+}
+
 @media (max-width: 520px) {
   .landing-hero-main {
     padding: clamp(14px, 4vw, 22px) clamp(14px, 3.8vw, 22px);
@@ -443,8 +450,10 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 .landing-role-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(16px, 2.2vw, 24px);
+  gap: clamp(18px, 2.4vw, 28px);
   align-items: stretch;
+  padding: 8px 0 10px;
+  isolation: isolate;
 }
 
 @media (max-width: 992px) {
@@ -616,7 +625,7 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 
 .landing-role-card:hover,
 .landing-role-card:focus-within {
-  transform: translateY(-8px) scale(1.01);
+  transform: translateY(-4px) scale(1.005);
   border-color: color-mix(in srgb, var(--role-accent) 38%, white);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.88) inset,
@@ -636,7 +645,7 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 
 .landing-role-card[open]:hover,
 .landing-role-card[open]:focus-within {
-  transform: translateY(-7px) scale(1.01);
+  transform: translateY(-3px) scale(1.005);
   border-color: color-mix(in srgb, var(--role-accent) 52%, rgba(255, 255, 255, 0.65));
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.92) inset,
@@ -1062,6 +1071,8 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
   width: 56px;
   height: 56px;
   flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 16px;
 }
 
 .landing-kpi-icon-wrap::before {
@@ -1075,11 +1086,12 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 
 .landing-kpi-pulse {
   position: absolute;
-  inset: -4px;
-  border-radius: 20px;
+  inset: 0;
+  border-radius: 16px;
   border: 1px solid rgba(0, 174, 240, 0.35);
   opacity: 0.55;
   animation: landing-kpi-pulse-ring 2.6s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .landing-kpi-icon {
@@ -1224,6 +1236,12 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
   margin-top: 0.75rem;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  body.layout-landing #main .landing-featured .card-grid .card:hover {
+    transform: translateY(-2px);
+  }
+}
+
 .landing-card-title-row {
   display: flex;
   align-items: flex-start;
@@ -1257,6 +1275,7 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
   margin-left: calc(-1 * var(--landing-bleed-x));
   margin-right: calc(-1 * var(--landing-bleed-x));
   margin-top: calc(-1 * clamp(var(--space-6), 3vw, var(--space-8)));
+  margin-bottom: 2px;
   width: calc(100% + 2 * var(--landing-bleed-x));
   max-width: none;
   border-radius: 0;
@@ -1648,13 +1667,18 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 
 .landing-hero-showcase__play-link {
   position: absolute;
-  inset: 0;
+  inset: 0 0 4.25rem 0;
   z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  font: inherit;
+  cursor: pointer;
   text-decoration: none;
   color: #fff;
   background: rgba(2, 20, 32, 0.18);
@@ -1747,7 +1771,7 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 .landing-hero-showcase__scrim {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 1;
   background: linear-gradient(
     180deg,
     rgba(2, 20, 32, 0.08) 0%,
@@ -1880,7 +1904,9 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: clamp(12px, 2vw, 18px) 0 clamp(8px, 1.2vw, 10px);
+  position: relative;
+  z-index: 1;
+  margin: clamp(14px, 2.2vw, 20px) 0 clamp(10px, 1.4vw, 14px);
   padding: 0;
 }
 
@@ -2160,10 +2186,137 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
   margin-top: 0.75rem;
 }
 
-/* Value-chain insight modals (hero bento cards) */
+/* Hero YouTube lightbox — matches showcase stage proportions */
+body.landing-hero-video-open,
 body.landing-motif-modal-open {
   overflow: hidden;
 }
+
+.landing-hero-video-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1150;
+  display: grid;
+  place-items: center;
+  padding: clamp(12px, 3vw, 24px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+
+.landing-hero-video-modal.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.landing-hero-video-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 12, 22, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.landing-hero-video-modal__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 720px);
+  border-radius: calc(var(--radius-lg) + 6px);
+  overflow: hidden;
+  background: #0a1628;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 28px 72px rgba(2, 3, 5, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  transform: translateY(8px) scale(0.98);
+  transition: transform 0.24s ease;
+}
+
+.landing-hero-video-modal.is-open .landing-hero-video-modal__dialog {
+  transform: translateY(0) scale(1);
+}
+
+.landing-hero-video-modal__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.landing-hero-video-modal__close:hover {
+  background: rgba(0, 0, 0, 0.78);
+}
+
+.landing-hero-video-modal__close:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 2px;
+}
+
+.landing-hero-video-modal__title {
+  margin: 0;
+  padding: 14px 48px 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.landing-hero-video-modal__player {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #000;
+}
+
+.landing-hero-video-modal__iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.landing-hero-video-modal__foot {
+  margin: 0;
+  padding: 10px 16px 12px;
+  text-align: right;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.landing-hero-video-modal__external {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.78);
+  text-decoration: none;
+}
+
+.landing-hero-video-modal__external:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero-video-modal,
+  .landing-hero-video-modal__dialog {
+    transition: none;
+  }
+
+  .landing-hero-video-modal__dialog {
+    transform: none;
+  }
+}
+
+/* Value-chain insight modals (hero bento cards) */
 
 .landing-motif-modal {
   position: fixed;

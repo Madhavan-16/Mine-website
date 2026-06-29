@@ -14,6 +14,9 @@ KNOWLEDGE_SERIES_MODULE_KEYS = frozenset(m for m, _ in KNOWLEDGE_SERIES_MODULES)
 
 CASE_STUDY_MODULE = "case_study"
 
+# Knowledge series that use title + summary only (no separate body field).
+KNOWLEDGE_MODULES_WITHOUT_BODY = frozenset({"kyc", "domain_term"})
+
 STANDALONE_REPO_MODULES = frozenset({"onboarding", "innovation", "training", "hall_of_fame"})
 
 # URL segment (path) -> content.module slug
