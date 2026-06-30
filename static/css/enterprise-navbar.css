@@ -536,6 +536,16 @@ body.layout-portal.nav-mobile-open .nav-drawer-backdrop {
     visibility: visible;
     transition: transform var(--duration-slow) var(--ease-standard), visibility 0s linear 0s;
   }
+
+  .nav-drawer-signout {
+    margin-top: auto;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--hex-grey-200);
+  }
+
+  .nav-drawer-signout__btn {
+    width: 100%;
+  }
 }
 
 body.nav-mobile-open {

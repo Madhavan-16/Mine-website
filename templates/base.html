@@ -8,7 +8,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/content-cards.css') }}" />
+    {% if current_user and (request.endpoint or '') not in ('main.landing', 'main.welcome') %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/portal-list.css') }}" />
+    {% endif %}
+    {% if (request.endpoint or '') not in ('main.landing', 'main.welcome') %}
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/aos/aos.css') }}" />
+    {% endif %}
     {% block head_extra %}{% endblock %}
   </head>
   {% set _ep = request.endpoint or '' %}
@@ -115,11 +120,11 @@
 
       <div class="topbar-actions">
         {% if current_user %}
-        <div class="dropdown">
-          <button class="btn btn-secondary" type="button" aria-haspopup="true" aria-expanded="false">
+        <div class="dropdown" data-dropdown>
+          <button class="btn btn-secondary dropdown__trigger" type="button" data-dropdown-trigger aria-haspopup="true" aria-expanded="false" aria-controls="notif-panel">
             Notifications{% if notif_count %} ({{ notif_count }}){% endif %}
           </button>
-          <div class="dropdown-panel" role="menu" aria-label="Notifications">
+          <div class="dropdown-panel" id="notif-panel" data-dropdown-panel role="menu" aria-label="Notifications">
             {% if notifs_recent %}
               {% for n in notifs_recent %}
                 <div class="notif-item {% if not n.is_read %}flash-info{% endif %}">
@@ -132,22 +137,52 @@
                   {% endif %}
                 </div>
               {% endfor %}
-              <form method="post" action="{{ url_for('admin.notifications_read') }}" style="margin-top:8px;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                <button class="btn btn-secondary" type="submit" style="width:100%;">Mark all read</button>
-              </form>
+              <div class="notif-actions">
+                <form method="post" action="{{ url_for('admin.notifications_read') }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <button class="btn btn-secondary" type="submit">Mark all read</button>
+                </form>
+                {% if notif_read_count %}
+                <form method="post" action="{{ url_for('admin.notifications_clear_read') }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <button class="btn btn-secondary" type="submit">Clear all read</button>
+                </form>
+                {% endif %}
+              </div>
             {% else %}
-              <div class="meta" style="padding:8px;">No notifications.</div>
+              <div class="dropdown-empty">No notifications.</div>
             {% endif %}
           </div>
         </div>
-        <div class="dropdown">
-          <button class="btn btn-secondary" type="button" aria-haspopup="true" aria-expanded="false">{{ current_user.display_name }}</button>
-          <div class="dropdown-panel" role="menu" aria-label="Account">
-            <form method="post" action="{{ url_for('auth.logout') }}" style="padding:8px;">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-              <button class="btn btn-secondary" type="submit" style="width:100%;">Sign out</button>
-            </form>
+        <div class="dropdown" data-dropdown>
+          <button class="btn btn-secondary dropdown__trigger" type="button" data-dropdown-trigger aria-haspopup="true" aria-expanded="false" aria-controls="account-panel">
+            {{ current_user.display_name }}
+          </button>
+          <div class="dropdown-panel dropdown-panel--menu" id="account-panel" data-dropdown-panel role="menu" aria-label="Account">
+            <nav class="dropdown-menu">
+              {% if current_user.role == 'admin' %}
+              <a class="dropdown-menu__item" href="{{ url_for('admin.admin_profile') }}" role="menuitem">Profile</a>
+              <a class="dropdown-menu__item" href="{{ url_for('admin.settings_password') }}" role="menuitem">Account settings</a>
+              {% elif current_user.role == 'moderator' %}
+              <a class="dropdown-menu__item" href="{{ url_for('admin.moderator_profile') }}" role="menuitem">Profile</a>
+              <a class="dropdown-menu__item" href="{{ url_for('auth.account_settings') }}" role="menuitem">Account settings</a>
+              {% else %}
+              <a class="dropdown-menu__item" href="{{ url_for('auth.profile') }}" role="menuitem">Profile</a>
+              <a class="dropdown-menu__item" href="{{ url_for('auth.account_settings') }}" role="menuitem">Account settings</a>
+              {% endif %}
+              {% if current_user.role in ['admin', 'moderator'] %}
+              <a class="dropdown-menu__item" href="{{ url_for('main.my_submissions') }}" role="menuitem">My submissions</a>
+              <a class="dropdown-menu__item" href="{{ url_for('admin.moderation') }}" role="menuitem">
+                Moderation{% if pending_moderation %} ({{ pending_moderation }}){% endif %}
+              </a>
+              <a class="dropdown-menu__item" href="{{ url_for('content.content_list') }}" role="menuitem">Content catalogue (admin)</a>
+              {% endif %}
+              <div class="dropdown-menu__divider" role="separator"></div>
+              <form method="post" action="{{ url_for('auth.logout') }}" class="dropdown-menu__form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <button class="dropdown-menu__item dropdown-menu__item--button" type="submit" role="menuitem">Sign out</button>
+              </form>
+            </nav>
           </div>
         </div>
         {% else %}
@@ -205,21 +240,11 @@
         {% if current_user.role in ['admin','moderator'] %}
         <a class="portal-nav-bar__link" href="{{ url_for('main.my_submissions') }}"{% if request.endpoint == 'main.my_submissions' %} aria-current="page"{% endif %}>My Submissions</a>
         {% endif %}
-        <a class="portal-nav-bar__link" href="{{ url_for('content.content_list') }}"{% if request.blueprint == 'content' %} aria-current="page"{% endif %}>Content</a>
-
-        {% if current_user.role != 'admin' %}
-        <span class="portal-nav-bar__section">Account</span>
-        <a class="portal-nav-bar__link" href="{{ url_for('auth.account_settings') }}"{% if request.endpoint in ('auth.account_settings', 'auth.account_settings_password') %} aria-current="page"{% endif %}>Settings</a>
-        {% if current_user.role == 'moderator' %}
-        <a class="portal-nav-bar__link" href="{{ url_for('admin.moderator_profile') }}"{% if request.endpoint == 'admin.moderator_profile' %} aria-current="page"{% endif %}>Profile</a>
-        {% else %}
-        <a class="portal-nav-bar__link" href="{{ url_for('auth.profile') }}"{% if request.endpoint == 'auth.profile' %} aria-current="page"{% endif %}>Profile</a>
-        {% endif %}
-        {% endif %}
 
         {% if current_user.role in ['admin','moderator'] %}
         <span class="portal-nav-bar__section">Admin panel</span>
         <a class="portal-nav-bar__link" href="{{ url_for('admin.moderation') }}"{% if request.endpoint == 'admin.moderation' %} aria-current="page"{% endif %}>Moderation</a>
+        <a class="portal-nav-bar__link" href="{{ url_for('content.content_list') }}"{% if request.blueprint == 'content' and request.endpoint == 'content.content_list' %} aria-current="page"{% endif %}>Content catalogue</a>
         <a class="portal-nav-bar__link" href="{{ url_for('admin.analytics') }}"{% if request.endpoint == 'admin.analytics' %} aria-current="page"{% endif %}>Analytics</a>
         {% endif %}
         {% if current_user.role == 'admin' %}
@@ -274,19 +299,21 @@
       {% if current_user.role in ['admin','moderator'] %}
       <a class="nav-link" href="{{ url_for('main.my_submissions') }}"{% if request.endpoint == 'main.my_submissions' %} aria-current="page"{% endif %}>My Submissions</a>
       {% endif %}
-      <a class="nav-link" href="{{ url_for('content.content_list') }}"{% if request.blueprint == 'content' %} aria-current="page"{% endif %}>Content</a>
-      {% if current_user and current_user.role != 'admin' %}
       <div class="nav-section">Account</div>
-      <a class="nav-link" href="{{ url_for('auth.account_settings') }}"{% if request.endpoint in ('auth.account_settings', 'auth.account_settings_password') %} aria-current="page"{% endif %}>Settings</a>
-      {% if current_user.role == 'moderator' %}
+      {% if current_user.role == 'admin' %}
+      <a class="nav-link" href="{{ url_for('admin.admin_profile') }}"{% if request.endpoint == 'admin.admin_profile' %} aria-current="page"{% endif %}>Profile</a>
+      <a class="nav-link" href="{{ url_for('admin.settings_password') }}"{% if request.endpoint in ('admin.settings', 'admin.settings_password') %} aria-current="page"{% endif %}>Account settings</a>
+      {% elif current_user.role == 'moderator' %}
       <a class="nav-link" href="{{ url_for('admin.moderator_profile') }}"{% if request.endpoint == 'admin.moderator_profile' %} aria-current="page"{% endif %}>Profile</a>
+      <a class="nav-link" href="{{ url_for('auth.account_settings') }}"{% if request.endpoint in ('auth.account_settings', 'auth.account_settings_password') %} aria-current="page"{% endif %}>Account settings</a>
       {% else %}
       <a class="nav-link" href="{{ url_for('auth.profile') }}"{% if request.endpoint == 'auth.profile' %} aria-current="page"{% endif %}>Profile</a>
-      {% endif %}
+      <a class="nav-link" href="{{ url_for('auth.account_settings') }}"{% if request.endpoint in ('auth.account_settings', 'auth.account_settings_password') %} aria-current="page"{% endif %}>Account settings</a>
       {% endif %}
       {% if current_user and current_user.role in ['admin','moderator'] %}
       <div class="nav-section">Admin panel</div>
-      <a class="nav-link" href="{{ url_for('admin.moderation') }}"{% if request.endpoint == 'admin.moderation' %} aria-current="page"{% endif %}>Moderation</a>
+      <a class="nav-link" href="{{ url_for('admin.moderation') }}"{% if request.endpoint == 'admin.moderation' %} aria-current="page"{% endif %}>Moderation{% if pending_moderation %} ({{ pending_moderation }}){% endif %}</a>
+      <a class="nav-link" href="{{ url_for('content.content_list') }}"{% if request.endpoint == 'content.content_list' %} aria-current="page"{% endif %}>Content catalogue</a>
       <a class="nav-link" href="{{ url_for('admin.analytics') }}"{% if request.endpoint == 'admin.analytics' %} aria-current="page"{% endif %}>Analytics</a>
       {% endif %}
       {% if current_user and current_user.role == 'admin' %}
@@ -297,6 +324,10 @@
         <a class="nav-link nav-sublink" href="{{ url_for('admin.admin_profile') }}"{% if request.endpoint == 'admin.admin_profile' %} aria-current="page"{% endif %}>Profile</a>
       </details>
       {% endif %}
+      <form method="post" action="{{ url_for('auth.logout') }}" class="nav-drawer-signout">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button class="btn btn-secondary nav-drawer-signout__btn" type="submit">Sign out</button>
+      </form>
     </aside>
     {% endif %}
 
@@ -314,9 +345,11 @@
 
     {% include "includes/site_footer.html" %}
 
+    {% if (request.endpoint or '') not in ('main.landing', 'main.welcome') %}
+    <script src="{{ url_for('static', filename='js/motion-init.js') }}" defer></script>
     <script src="{{ url_for('static', filename='vendor/aos/aos.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/ambient-network.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='js/motion-init.js') }}" defer></script>
+    {% endif %}
     {% if request.endpoint not in ('main.landing', 'main.welcome') and request.endpoint != 'reference.fmi_kyc' and request.endpoint != 'main.open_pit_copper_domain' %}
     <script src="{{ url_for('static', filename='js/site-motion.bundle.js') }}" defer></script>
     {% endif %}

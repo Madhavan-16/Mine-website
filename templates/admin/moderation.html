@@ -1,16 +1,26 @@
 {% extends "base.html" %}
 {% block title %}Moderation{% endblock %}
-{% block page_header %}
-  <div class="page-head">
-    <nav class="breadcrumb" aria-label="Breadcrumb"><span>Admin</span><span class="breadcrumb-sep" aria-hidden="true">›</span><span>Moderation</span></nav>
-    <h1 class="page-title">Content moderation queue <span class="page-title-meta">({{ rows|length }} pending)</span></h1>
-  </div>
-{% endblock %}
+{% block page_header %}{% endblock %}
 {% block content %}
-  <p class="page-lede" style="margin-bottom:16px;">
-    Review the full text below, then approve or reject. Rejections require a reason and notify the author.
-    Use <strong>Open full record</strong> only if you need attachments or the full-page layout.
-  </p>
+<div class="portal-page">
+  <header class="portal-hero">
+    <div class="portal-hero__copy">
+      <nav class="portal-breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+        <span class="portal-breadcrumb__sep" aria-hidden="true">›</span>
+        <span aria-current="page">Moderation</span>
+      </nav>
+      <span class="portal-eyebrow">Admin review</span>
+      <h1 class="portal-hero__title">Content moderation queue</h1>
+      <p class="portal-lede">Review submissions below, then approve or reject. Rejections require a reason and notify the author. Use <strong>Open full record</strong> for attachments or the full-page layout.</p>
+    </div>
+    <div class="portal-hero__aside">
+      <div class="portal-stat" role="status">
+        <span class="portal-stat__value">{{ rows|length }}</span>
+        <span class="portal-stat__label">Pending</span>
+      </div>
+    </div>
+  </header>
 
   {% if rows and rows|length > 0 %}
     <div class="mod-review-list">
@@ -19,34 +29,48 @@
           <header class="mod-review-card-head">
             <div>
               <h2 class="mod-review-title">{{ item.title }}</h2>
-              <p class="meta" style="margin:6px 0 0;">
-                <span class="badge">{{ item.module }}</span>
-                · {{ item.author_name }} · {{ item.author_email|e }}
-                · Submitted {{ item.updated_at }}
+              <p class="mod-review-meta">
+                <span class="portal-module-chip">{{ module_label(item.module) }}</span>
+                <span>{{ item.author_name }} · {{ item.author_email|e }}</span>
+                <span>Submitted {{ item.updated_at }}</span>
               </p>
             </div>
             <div class="mod-actions">
               <form method="post" action="{{ url_for('admin.approve', cid=item.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                <button class="btn btn-primary" type="submit">✅ Approve</button>
+                <button class="btn btn-primary" type="submit">Approve</button>
               </form>
-              <button class="btn btn-danger" type="button" data-reject-open="{{ item.id }}">❌ Reject</button>
+              <button class="btn btn-danger" type="button" data-reject-open="{{ item.id }}">Reject</button>
               <a class="btn btn-secondary" href="{{ url_for('content.content_view', cid=item.id) }}" target="_blank" rel="noopener">Open full record</a>
             </div>
           </header>
 
           <div class="mod-review-body">
-            <h3 class="mod-review-subhead">Summary</h3>
-            <p class="mod-review-summary">{% if item.summary %}{{ item.summary|e }}{% else %}<span class="meta">No summary provided.</span>{% endif %}</p>
-
-            <h3 class="mod-review-subhead">Body</h3>
-            <div class="mod-preview-scroll" tabindex="0" aria-label="Submission body for {{ item.title|e }}">
-              {% if item.body %}
-                <pre class="mod-preview-pre">{{ item.body|e }}</pre>
-              {% else %}
-                <p class="meta">No body text.</p>
+            {% if item.module == 'case_study' %}
+              <h3 class="mod-review-subhead">Business challenge</h3>
+              <p class="mod-review-summary">{% if item.summary %}{{ item.summary|e }}{% else %}<span class="meta">No business challenge provided.</span>{% endif %}</p>
+              <h3 class="mod-review-subhead">Solution</h3>
+              <div class="mod-preview-scroll" tabindex="0" aria-label="Solution for {{ item.title|e }}">
+                {% if item.body %}
+                  <pre class="mod-preview-pre">{{ item.body|e }}</pre>
+                {% else %}
+                  <p class="meta">No solution provided.</p>
+                {% endif %}
+              </div>
+            {% else %}
+              <h3 class="mod-review-subhead">Summary</h3>
+              <p class="mod-review-summary">{% if item.summary %}{{ item.summary|e }}{% else %}<span class="meta">No summary provided.</span>{% endif %}</p>
+              {% if item.module not in ['kyc', 'domain_term'] %}
+                <h3 class="mod-review-subhead">Body</h3>
+                <div class="mod-preview-scroll" tabindex="0" aria-label="Submission body for {{ item.title|e }}">
+                  {% if item.body %}
+                    <pre class="mod-preview-pre">{{ item.body|e }}</pre>
+                  {% else %}
+                    <p class="meta">No body text.</p>
+                  {% endif %}
+                </div>
               {% endif %}
-            </div>
+            {% endif %}
 
             {% set files = attachments_by_content.get(item.id, []) %}
             {% if files and files|length > 0 %}
@@ -118,6 +142,7 @@
 })();
     </script>
   {% else %}
-    <div class="card meta" style="margin-top: 12px;">No pending items.</div>
+    <p class="portal-empty">No pending items in the moderation queue.</p>
   {% endif %}
+</div>
 {% endblock %}

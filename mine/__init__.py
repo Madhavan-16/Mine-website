@@ -12,6 +12,7 @@ from mine.config import Config
 from mine.db import (
     ensure_attachment_preview_column,
     ensure_attachment_slide_preview_column,
+    ensure_notifications_scope,
     ensure_user_mail_tokens_table,
     get_db,
     init_app as db_init_app,
@@ -57,26 +58,35 @@ def create_app():
     @app.context_processor
     def inject_nav():
         from mine.auth_utils import load_current_user
+        from mine.catalog_modules import MODULE_LABELS, module_label
+        from mine.services import count_read_notifications, count_unread_notifications, get_user_notifications
 
         user = load_current_user()
         notifs = []
         n_unread = 0
+        n_read = 0
+        pending_moderation = None
         if user:
-            db = get_db()
-            n_unread = db.execute(
-                "SELECT COUNT(*) AS c FROM notifications WHERE user_id = ? AND is_read = 0",
-                (user["id"],),
-            ).fetchone()["c"]
-            notifs = db.execute(
-                """
-                SELECT * FROM notifications
-                WHERE user_id = ?
-                ORDER BY id DESC
-                LIMIT 6
-                """,
-                (user["id"],),
-            ).fetchall()
-        return dict(current_user=user, notif_count=n_unread, notifs_recent=notifs)
+            uid = user["id"]
+            n_unread = count_unread_notifications(uid)
+            n_read = count_read_notifications(uid)
+            notifs = get_user_notifications(uid, limit=6)
+            if user["role"] in ("admin", "moderator"):
+                pending_moderation = int(
+                    get_db()
+                    .execute("SELECT COUNT(*) AS c FROM content WHERE status = 'pending'")
+                    .fetchone()["c"]
+                    or 0
+                )
+        return dict(
+            current_user=user,
+            notif_count=n_unread,
+            notif_read_count=n_read,
+            notifs_recent=notifs,
+            pending_moderation=pending_moderation,
+            module_labels=MODULE_LABELS,
+            module_label=module_label,
+        )
 
     with app.app_context():
         if not Path(app.config["DATABASE"]).exists():
@@ -87,6 +97,7 @@ def create_app():
         seed_if_empty()
         ensure_attachment_preview_column()
         ensure_attachment_slide_preview_column()
+        ensure_notifications_scope()
         ensure_user_mail_tokens_table()
         from mine.upload_paths import normalize_attachment_paths_in_db
 

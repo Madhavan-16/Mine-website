@@ -63,3 +63,21 @@ STANDALONE_REPO_UI = {
         "edit_flash": "Hall of Fame entry updated.",
     },
 }
+
+MODULE_LABELS = dict(KNOWLEDGE_SERIES_MODULES)
+MODULE_LABELS.update(
+    {
+        "projects": "Programs & projects",
+        "onboarding": "Onboarding kit",
+        "innovation": "Innovation center",
+        "training": "Training corner",
+        "hall_of_fame": "Hall of Fame",
+    }
+)
+
+
+def module_label(slug: str | None) -> str:
+    key = (slug or "").strip()
+    if not key:
+        return "—"
+    return MODULE_LABELS.get(key, key.replace("_", " ").title())

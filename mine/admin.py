@@ -7,7 +7,14 @@ from wtforms.validators import DataRequired, Email, EqualTo, Length
 
 from mine.auth_utils import load_current_user, login_required, roles_required
 from mine.db import get_db
-from mine.services import log_audit, moderation_entry, notify
+from mine.services import (
+    clear_all_read_notifications,
+    clear_notification,
+    log_audit,
+    mark_all_notifications_read,
+    moderation_entry,
+    notify,
+)
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -291,6 +298,7 @@ def users_delete():
             (admin_id, uid),
         )
         db.execute("DELETE FROM notifications WHERE user_id = ?", (uid,))
+        db.execute("DELETE FROM notification_user_state WHERE user_id = ?", (uid,))
         db.execute("UPDATE moderation_log SET performed_by = NULL WHERE performed_by = ?", (uid,))
         db.execute("UPDATE audit_log SET user_id = NULL WHERE user_id = ?", (uid,))
         log_audit(
@@ -346,20 +354,30 @@ def analytics():
 def notifications_read():
     """Mark all notifications read for current user."""
     user = load_current_user()
-    db = get_db()
-    db.execute("UPDATE notifications SET is_read = 1 WHERE user_id = ?", (user["id"],))
-    db.commit()
+    mark_all_notifications_read(user["id"])
+    get_db().commit()
+    return redirect(request.referrer or url_for("main.dashboard"))
+
+
+@bp.route("/notifications/clear-read", methods=["POST"])
+@login_required
+def notifications_clear_read():
+    """Delete/dismiss all read notifications for current user."""
+    user = load_current_user()
+    clear_all_read_notifications(user["id"])
+    get_db().commit()
+    flash("Read notifications cleared.", "success")
     return redirect(request.referrer or url_for("main.dashboard"))
 
 
 @bp.route("/notifications/<int:nid>/clear", methods=["POST"])
 @login_required
 def notifications_clear(nid: int):
-    """Delete one notification for current user."""
+    """Delete one read notification for current user."""
     user = load_current_user()
-    db = get_db()
-    db.execute("DELETE FROM notifications WHERE id = ? AND user_id = ?", (nid, user["id"]))
-    db.commit()
+    if not clear_notification(user["id"], nid):
+        abort(404)
+    get_db().commit()
     return redirect(request.referrer or url_for("main.dashboard"))
 
 

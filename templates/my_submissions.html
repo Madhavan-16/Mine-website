@@ -1,33 +1,54 @@
 {% extends "base.html" %}
-{% block title %}My Submissions{% endblock %}
+{% from "includes/status_badge.html" import status_badge %}
+{% block title %}My submissions{% endblock %}
+{% block page_header %}{% endblock %}
 {% block content %}
-  <div class="toolbar">
-    <h1 style="margin:0;">My submissions</h1>
-    <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">New knowledge submission</a>
-  </div>
-  <table class="table" style="margin-top: 12px;">
-    <thead>
-      <tr>
-        <th scope="col">Title</th>
-        <th scope="col">Module</th>
-        <th scope="col">Status</th>
-        <th scope="col">Updated</th>
-      </tr>
-    </thead>
-    <tbody>
+<div class="portal-page">
+  <header class="portal-hero">
+    <div class="portal-hero__copy">
+      <nav class="portal-breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+        <span class="portal-breadcrumb__sep" aria-hidden="true">›</span>
+        <span aria-current="page">My submissions</span>
+      </nav>
+      <span class="portal-eyebrow">Author workspace</span>
+      <h1 class="portal-hero__title">My submissions</h1>
+      <p class="portal-lede">Track drafts, pending reviews, and published knowledge items you have created.</p>
+    </div>
+    <div class="portal-hero__aside">
+      <div class="portal-stat" role="status">
+        <span class="portal-stat__value">{{ rows|length }}</span>
+        <span class="portal-stat__label">Total</span>
+      </div>
+      <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ New submission</a>
+    </div>
+  </header>
+
+  {% if rows and rows|length > 0 %}
+    <ul class="portal-result-list">
       {% for item in rows %}
-        <tr>
-          <td><a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a></td>
-          <td><span class="badge">{{ item.module }}</span></td>
-          <td>
-            {% if item.status == 'approved' %}<span class="badge badge-success">approved</span>
-            {% elif item.status == 'pending' %}<span class="badge badge-warning">pending</span>
-            {% elif item.status == 'rejected' %}<span class="badge badge-danger">rejected</span>
-            {% else %}<span class="badge badge-info">{{ item.status }}</span>{% endif %}
-          </td>
-          <td class="meta">{{ item.updated_at }}</td>
-        </tr>
+        <li>
+          <a class="portal-result" href="{{ url_for('content.content_view', cid=item.id) }}">
+            <div class="portal-result__top">
+              <h2 class="portal-result__title">{{ item.title }}</h2>
+              <span class="portal-module-chip">{{ module_label(item.module) }}</span>
+            </div>
+            <p class="portal-result__meta">
+              {{ status_badge(item.status) }}
+              <span aria-hidden="true"> · </span>
+              Updated {{ item.updated_at }}
+            </p>
+          </a>
+        </li>
       {% endfor %}
-    </tbody>
-  </table>
+    </ul>
+  {% else %}
+    <p class="portal-empty">
+      You have not submitted any knowledge content yet.
+      <span class="portal-empty__action">
+        <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">Create your first submission</a>
+      </span>
+    </p>
+  {% endif %}
+</div>
 {% endblock %}

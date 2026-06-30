@@ -93,6 +93,53 @@ def ensure_user_mail_tokens_table():
     db.commit()
 
 
+def ensure_notifications_scope():
+    """Existing DBs: personal vs common notifications and per-user common state."""
+    db = get_db()
+    db.execute(
+        """
+        CREATE TABLE IF NOT EXISTS notification_user_state (
+          notification_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL,
+          is_read INTEGER DEFAULT 0,
+          is_cleared INTEGER DEFAULT 0,
+          PRIMARY KEY (notification_id, user_id),
+          FOREIGN KEY (notification_id) REFERENCES notifications(id) ON DELETE CASCADE,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+        """
+    )
+
+    cols = {row[1]: row for row in db.execute("PRAGMA table_info(notifications)").fetchall()}
+    if "scope" not in cols:
+        db.execute("ALTER TABLE notifications ADD COLUMN scope TEXT NOT NULL DEFAULT 'personal'")
+        db.execute("UPDATE notifications SET scope = 'personal' WHERE scope IS NULL OR scope = ''")
+        cols = {row[1]: row for row in db.execute("PRAGMA table_info(notifications)").fetchall()}
+
+    user_id_col = cols.get("user_id")
+    if user_id_col and user_id_col[3] == 1:
+        db.executescript(
+            """
+            CREATE TABLE notifications_new (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              user_id INTEGER,
+              message TEXT NOT NULL,
+              scope TEXT NOT NULL DEFAULT 'personal',
+              is_read INTEGER DEFAULT 0,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              FOREIGN KEY (user_id) REFERENCES users(id)
+            );
+            INSERT INTO notifications_new (id, user_id, message, scope, is_read, created_at)
+            SELECT id, user_id, message, COALESCE(scope, 'personal'), is_read, created_at
+            FROM notifications;
+            DROP TABLE notifications;
+            ALTER TABLE notifications_new RENAME TO notifications;
+            """
+        )
+
+    db.commit()
+
+
 def init_app(app):
     app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command)

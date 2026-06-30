@@ -76,11 +76,22 @@ CREATE TABLE IF NOT EXISTS audit_log (
 
 CREATE TABLE IF NOT EXISTS notifications (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
+  user_id INTEGER,
   message TEXT NOT NULL,
+  scope TEXT NOT NULL DEFAULT 'personal',
   is_read INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS notification_user_state (
+  notification_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  is_read INTEGER DEFAULT 0,
+  is_cleared INTEGER DEFAULT 0,
+  PRIMARY KEY (notification_id, user_id),
+  FOREIGN KEY (notification_id) REFERENCES notifications(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS user_mail_tokens (

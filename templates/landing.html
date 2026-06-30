@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 {% block head_extra %}
+  <meta name="description" content="MiNe — the governed knowledge portal for Freeport–Hexaware delivery. Browse approved case studies, onboarding, training, and domain intelligence in one searchable home." />
+  <meta property="og:title" content="MiNe · Mining Intelligence and Knowledge Enablement" />
+  <meta property="og:description" content="Your single source of truth for Freeport account context, delivery evidence, and onboarding." />
+  <meta property="og:type" content="website" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+  {% if current_user %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/portal-list.css') }}" />
+  {% endif %}
 {% endblock %}
 {% block content %}
   {# Prep class before paint-with-content: scoped to homepage only (see landing.css). #}
@@ -33,7 +40,15 @@
             <p class="landing-hero-tagline">
               Your single source of truth for everything Freeport — context, delivery evidence, and onboarding in one searchable home.
             </p>
-            {% include "includes/landing_hero_motifs.html" %}
+            <div class="landing-hero-actions">
+              {% if current_user %}
+                <a class="btn btn-primary" href="{{ url_for('main.dashboard') }}">Go to dashboard</a>
+                <a class="btn btn-secondary landing-hero-actions__btn" href="#explore-mine">Explore sections</a>
+              {% else %}
+                <a class="btn btn-primary" href="{{ url_for('auth.login') }}">Sign in to MiNe</a>
+                <a class="btn btn-secondary landing-hero-actions__btn" href="#explore-mine">See what's inside</a>
+              {% endif %}
+            </div>
           </div>
         </div>
         {% if hero_showcase %}
@@ -89,6 +104,7 @@
           {% endif %}
         </aside>
         {% endif %}
+        {% include "includes/landing_hero_motifs.html" %}
       </div>
     </div>
   </section>
@@ -171,7 +187,8 @@
     <a class="landing-jump-pill" href="#portal-stats">Live stats</a>
     <a class="landing-jump-pill" href="#value-title">Value for you</a>
     <a class="landing-jump-pill" href="#explore-mine">Quick access</a>
-    <a class="landing-jump-pill" href="#problem-title">Why MiNe</a>
+    <a class="landing-jump-pill" href="#knowledge-problem">Why MiNe</a>
+    {% if current_user %}<a class="landing-jump-pill" href="#featured-knowledge">Featured</a>{% endif %}
   </nav>
 
   <section id="portal-stats" class="landing-stats-band" aria-labelledby="stats-title" data-landing-motion>
@@ -180,11 +197,11 @@
         <span class="landing-section-eyebrow">Live from the catalog</span>
         <h2 id="stats-title" class="landing-section-title landing-section-title--on-dark">Portal at a glance</h2>
         <p class="landing-stats-band__lead">
-          Real totals from the MiNe knowledge base and directory — numbers count up when you scroll here.
+          Real totals from the MiNe knowledge repository and directory — numbers count up when you scroll here.
         </p>
       </header>
       <div id="landing-kpi-scope" class="landing-kpi-grid landing-kpi-grid--band" role="list" aria-label="Key performance indicators" data-landing-stagger>
-        <article class="landing-kpi-card landing-kpi-card--band" role="listitem" data-landing-item>
+        <a class="landing-kpi-card landing-kpi-card--band landing-kpi-card--link" href="{{ kpi_links.knowledge }}" role="listitem" data-landing-item>
           <div class="landing-kpi-card__glow" aria-hidden="true"></div>
           <div class="landing-kpi-card__inner">
             <div class="landing-kpi-icon-wrap">
@@ -194,11 +211,11 @@
             <div class="landing-kpi-body">
               <span class="landing-kpi-live"><span class="landing-kpi-live-dot" aria-hidden="true"></span> Live</span>
               <span class="landing-kpi-value" data-kpi-target="{{ portal_stats.knowledge_items | int }}">0</span>
-              <span class="landing-kpi-label">Knowledge items</span>
+              <span class="landing-kpi-label">Knowledge series items</span>
             </div>
           </div>
-        </article>
-        <article class="landing-kpi-card landing-kpi-card--band" role="listitem" data-landing-item>
+        </a>
+        <a class="landing-kpi-card landing-kpi-card--band landing-kpi-card--link" href="{{ kpi_links.projects }}" role="listitem" data-landing-item>
           <div class="landing-kpi-card__glow" aria-hidden="true"></div>
           <div class="landing-kpi-card__inner">
             <div class="landing-kpi-icon-wrap">
@@ -211,8 +228,8 @@
               <span class="landing-kpi-label">Active projects</span>
             </div>
           </div>
-        </article>
-        <article class="landing-kpi-card landing-kpi-card--band" role="listitem" data-landing-item>
+        </a>
+        <a class="landing-kpi-card landing-kpi-card--band landing-kpi-card--link" href="{{ kpi_links.innovations }}" role="listitem" data-landing-item>
           <div class="landing-kpi-card__glow" aria-hidden="true"></div>
           <div class="landing-kpi-card__inner">
             <div class="landing-kpi-icon-wrap">
@@ -225,8 +242,8 @@
               <span class="landing-kpi-label">Innovations delivered</span>
             </div>
           </div>
-        </article>
-        <article class="landing-kpi-card landing-kpi-card--band" role="listitem" data-landing-item>
+        </a>
+        <a class="landing-kpi-card landing-kpi-card--band landing-kpi-card--link" href="{{ kpi_links.team }}" role="listitem" data-landing-item>
           <div class="landing-kpi-card__glow" aria-hidden="true"></div>
           <div class="landing-kpi-card__inner">
             <div class="landing-kpi-icon-wrap">
@@ -239,7 +256,7 @@
               <span class="landing-kpi-label">Team members</span>
             </div>
           </div>
-        </article>
+        </a>
       </div>
     </div>
   </section>
@@ -250,7 +267,7 @@
       <span class="landing-section-eyebrow">Built for every role</span>
       <h2 id="value-title" class="landing-section-title">Value for you</h2>
       <p class="landing-role-section-lead">
-        Tailored routes into MiNe — <strong>preview on hover</strong>, or <strong>open</strong> a card for the full checklist.
+        Tailored routes into MiNe — expand a card for the full checklist{% if not current_user %} (sign in to open each area){% endif %}.
       </p>
     </header>
     <div class="landing-role-grid" role="list" data-landing-stagger>
@@ -305,32 +322,35 @@
     <header class="landing-explore-head">
       <span class="landing-section-eyebrow">One click away</span>
       <h2 id="explore-title" class="landing-section-title">Explore MiNe</h2>
-      <p class="landing-section-lead">Jump into the areas that matter; counts reflect approved catalog items where applicable.</p>
+      <p class="landing-section-lead">Jump into the areas that matter{% if not current_user %} — sign in when prompted to open protected sections{% endif %}.</p>
     </header>
-    <div class="landing-quick-grid landing-quick-grid--bento" role="list" data-landing-stagger>
+    <div class="landing-quick-grid landing-quick-grid--3x3" role="list" data-landing-stagger>
       {% for tile in quick_access %}
-        <a class="card landing-quick-tile{% if loop.index <= 2 %} landing-quick-tile--featured{% endif %}" href="{{ tile.href }}" role="listitem" data-landing-item>
+        <a class="card landing-quick-tile{% if tile.requires_login %} landing-quick-tile--signin{% endif %}{% if tile.is_empty %} landing-quick-tile--empty{% endif %}" href="{{ tile.href }}" role="listitem" data-landing-item>
           <span class="landing-quick-emoji" aria-hidden="true">{{ tile.emoji }}</span>
           <span class="landing-quick-title">{{ tile.label }}</span>
-          <span class="landing-quick-desc">Open section</span>
-          <span class="landing-quick-count">{{ tile.count }} items</span>
+          <span class="landing-quick-desc">{% if tile.requires_login %}Sign in to open{% else %}Open section{% endif %}</span>
+          {% if tile.stat_text %}
+            <span class="landing-quick-count">{{ tile.stat_text }}</span>
+          {% endif %}
         </a>
       {% endfor %}
     </div>
   </section>
 
-  <section class="landing-narrow landing-section-knowledge" aria-labelledby="problem-title" data-landing-motion>
-    <header class="landing-problem-head">
-      <span class="landing-section-eyebrow">The challenge</span>
-      <h2 id="problem-title" class="landing-section-title">The knowledge problem</h2>
-      <p class="landing-section-lead landing-knowledge-matrix__lead">
-        As the account scaled, several critical issues emerged — MiNe was built to close these gaps.
-      </p>
-    </header>
-    <figure class="landing-knowledge-table" data-knowledge-matrix>
-      <figcaption class="visually-hidden">Structured pain points and impact descriptions.</figcaption>
-      <div class="landing-knowledge-problem" role="group" aria-label="Knowledge maturity gaps">
-        <div class="landing-knowledge-problem-grid" data-landing-stagger>
+  <section id="knowledge-problem" class="landing-knowledge-band landing-section-knowledge" aria-labelledby="problem-title" data-landing-motion>
+    <div class="landing-knowledge-band__inner">
+      <header class="landing-problem-head">
+        <span class="landing-section-eyebrow">The challenge</span>
+        <h2 id="problem-title" class="landing-section-title">The knowledge problem</h2>
+        <p class="landing-section-lead landing-knowledge-matrix__lead">
+          As the account scaled, several critical issues emerged — MiNe was built to close these gaps.
+        </p>
+      </header>
+      <figure class="landing-knowledge-table" data-knowledge-matrix>
+        <figcaption class="visually-hidden">Structured pain points and impact descriptions.</figcaption>
+        <div class="landing-knowledge-problem" role="group" aria-label="Knowledge maturity gaps">
+          <div class="landing-knowledge-problem-grid" data-landing-stagger>
           <article class="landing-problem-card" data-knowledge-row data-landing-item tabindex="0">
             <div class="landing-problem-card__icon" aria-hidden="true">📚</div>
             <h3 class="landing-problem-card__title">Knowledge silos</h3>
@@ -364,38 +384,46 @@
         </div>
       </div>
     </figure>
+    </div>
   </section>
 
   {% if current_user %}
-  <section class="landing-narrow landing-section-spaced landing-featured" data-landing-motion>
+  <section id="featured-knowledge" class="landing-narrow landing-section-spaced landing-featured" data-landing-motion>
     <span class="landing-section-eyebrow">Curated for you</span>
     <h2 class="landing-section-title landing-section-title--featured">Featured knowledge</h2>
-    <p class="meta">Approved catalog highlights (click a title to open).</p>
-    <div class="toolbar landing-featured-actions">
+    <p class="landing-featured-lede">Approved catalogue highlights from the knowledge repository.</p>
+    <div class="landing-featured-actions">
       {% if current_user.role in ['admin','moderator'] %}
-        <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">Create knowledge content</a>
+        <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create content</a>
       {% endif %}
+      <a class="btn btn-secondary" href="{{ url_for('main.knowledge') }}">Browse repository</a>
     </div>
     {% if featured and featured|length > 0 %}
-      <div class="card-grid" data-landing-stagger>
+      <ul class="portal-result-list landing-featured-list">
         {% for item in featured %}
-          <article class="card" data-landing-item>
-            <div class="toolbar landing-card-title-row">
-              <h3>
-                <a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a>
-              </h3>
-              <span class="badge">{{ item.module }}</span>
-            </div>
-            {% if item.summary and item.summary.strip() %}
-              <p class="meta landing-card-summary">{{ item.summary|replace('\n', ' ')|truncate(180, True)|e }}</p>
-            {% else %}
-              <p class="meta landing-card-summary">No summary provided.</p>
-            {% endif %}
-          </article>
+          <li>
+            <a class="portal-result landing-featured-card" href="{{ url_for('content.content_view', cid=item.id) }}">
+              <div class="portal-result__top">
+                <h3 class="portal-result__title">{{ item.title }}</h3>
+                <span class="portal-module-chip">{{ module_label(item.module) }}</span>
+              </div>
+              {% if item.summary and item.summary.strip() %}
+                <p class="landing-featured-excerpt">{{ item.summary|replace('\n', ' ')|truncate(200, True)|e }}</p>
+              {% else %}
+                <p class="landing-featured-excerpt landing-featured-excerpt--muted">No summary provided.</p>
+              {% endif %}
+              <span class="landing-featured-link">Read article →</span>
+            </a>
+          </li>
         {% endfor %}
-      </div>
+      </ul>
     {% else %}
-      <div class="card meta">No approved content yet. Sign in as an administrator to seed the first articles.</div>
+      <p class="portal-empty">
+        No approved knowledge articles yet.
+        {% if current_user.role in ['admin','moderator'] %}
+          <span class="portal-empty__action"><a class="btn btn-primary" href="{{ url_for('content.content_create') }}">Create the first article</a></span>
+        {% endif %}
+      </p>
     {% endif %}
   </section>
   {% endif %}

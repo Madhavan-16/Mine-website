@@ -153,6 +153,54 @@ def _count_approved_knowledge_repo(db) -> int:
     return int(r["c"] or 0)
 
 
+def _landing_tile_stat(count: int, *, kind: str = "articles") -> str | None:
+    """Human-readable stat line for Explore tiles; None hides the line when empty catalogue."""
+    if kind == "eras":
+        return f"{count} {'era' if count == 1 else 'eras'}"
+    if kind == "topics":
+        return f"{count} {'topic' if count == 1 else 'topics'}"
+    if kind == "pending":
+        return "Nothing pending" if count == 0 else f"{count} pending"
+    if kind == "overview":
+        return "Program overview"
+    if kind == "articles":
+        if count == 0:
+            return None
+        return f"{count} {'article' if count == 1 else 'articles'}"
+    if count == 0:
+        return None
+    return f"{count} items"
+
+
+def _landing_quick_tile(
+    label: str,
+    emoji: str,
+    destination: str,
+    count: int,
+    user,
+    *,
+    public: bool = False,
+    stat_kind: str = "articles",
+    stat_line: str | None = None,
+):
+    """Build explore tile; guests are sent to login with ?next= for protected destinations."""
+    requires_login = not public and not user
+    href = destination
+    if requires_login:
+        href = url_for("auth.login", next=destination)
+    if stat_line is None:
+        stat_line = _landing_tile_stat(count, kind=stat_kind)
+    return {
+        "label": label,
+        "emoji": emoji,
+        "href": href,
+        "count": count,
+        "stat_text": stat_line,
+        "requires_login": requires_login,
+        "is_empty": stat_kind == "articles" and count == 0,
+    }
+
+
 def _knowledge_module_counts(db):
     keys = [m for m, _ in KNOWLEDGE_MODULES]
     placeholders = ",".join("?" * len(keys))
@@ -333,9 +381,6 @@ def _landing_page_context(db, user):
     innovation_n = _count_approved_module(db, "innovation")
     training_n = _count_approved_module(db, "training")
     fame_n = _count_approved_module(db, "hall_of_fame")
-    approved_total = db.execute(
-        "SELECT COUNT(*) AS c FROM content WHERE status = 'approved'"
-    ).fetchone()["c"]
     team_n = db.execute(
         "SELECT COUNT(*) AS c FROM users WHERE is_active = 1"
     ).fetchone()["c"]
@@ -349,74 +394,123 @@ def _landing_page_context(db, user):
     journey_story_beats = len(_FREEPORT_STORY)
 
     portal_stats = {
-        "knowledge_items": int(approved_total or 0),
+        "knowledge_items": knowledge_repo_n,
         "projects": projects_n,
         "innovations": innovation_n,
         "team_members": int(team_n or 0),
     }
 
+    if user and user["role"] == "admin":
+        team_href = url_for("admin.users")
+    elif user:
+        team_href = url_for("main.dashboard")
+    else:
+        team_href = url_for("auth.login", next=url_for("main.dashboard"))
+
+    kpi_links = {
+        "knowledge": url_for("main.knowledge") if user else url_for("auth.login", next=url_for("main.knowledge")),
+        "projects": url_for("projects.project_list") if user else url_for("auth.login", next=url_for("projects.project_list")),
+        "innovations": url_for("main.innovation") if user else url_for("auth.login", next=url_for("main.innovation")),
+        "team": team_href,
+    }
+
     quick_access = [
-        {
-            "label": "Freeport–Hexaware Journey",
-            "emoji": "📜",
-            "href": url_for("main.journey"),
-            "count": journey_story_beats,
-        },
-        {
-            "label": "Programs & Projects",
-            "emoji": "📊",
-            "href": url_for("projects.project_list"),
-            "count": projects_n,
-        },
-        {
-            "label": "Knowledge repository",
-            "emoji": "📚",
-            "href": url_for("main.knowledge"),
-            "count": knowledge_repo_n,
-        },
-        {
-            "label": "Onboarding Kit",
-            "emoji": "💼",
-            "href": url_for("main.onboarding"),
-            "count": onboarding_n,
-        },
-        {
-            "label": "Innovation Center",
-            "emoji": "💡",
-            "href": url_for("main.innovation"),
-            "count": innovation_n,
-        },
-        {
-            "label": "Training Corner",
-            "emoji": "🎓",
-            "href": url_for("main.training"),
-            "count": training_n,
-        },
-        {
-            "label": "Hall of Fame",
-            "emoji": "🏆",
-            "href": url_for("main.hall_of_fame"),
-            "count": fame_n,
-        },
+        _landing_quick_tile(
+            "Freeport–Hexaware Journey",
+            "📜",
+            url_for("main.journey"),
+            journey_story_beats,
+            user,
+            public=True,
+            stat_kind="eras",
+        ),
+        _landing_quick_tile(
+            "Domain Knowledge",
+            "⛏️",
+            url_for("main.open_pit_copper_domain"),
+            6,
+            user,
+            stat_kind="topics",
+        ),
+        _landing_quick_tile(
+            "Programs & Projects",
+            "📊",
+            url_for("projects.project_list"),
+            projects_n,
+            user,
+        ),
+        _landing_quick_tile(
+            "Knowledge repository",
+            "📚",
+            url_for("main.knowledge"),
+            knowledge_repo_n,
+            user,
+        ),
+        _landing_quick_tile(
+            "Onboarding Kit",
+            "💼",
+            url_for("main.onboarding"),
+            onboarding_n,
+            user,
+        ),
+        _landing_quick_tile(
+            "Innovation Center",
+            "💡",
+            url_for("main.innovation"),
+            innovation_n,
+            user,
+        ),
+        _landing_quick_tile(
+            "Training Corner",
+            "🎓",
+            url_for("main.training"),
+            training_n,
+            user,
+        ),
+        _landing_quick_tile(
+            "Hall of Fame",
+            "🏆",
+            url_for("main.hall_of_fame"),
+            fame_n,
+            user,
+        ),
     ]
 
+    if not user:
+        quick_access.append(
+            _landing_quick_tile(
+                "Program map (KYC)",
+                "🗺️",
+                url_for("reference.fmi_kyc"),
+                1,
+                user,
+                public=True,
+                stat_kind="overview",
+            )
+        )
+
     if user and user["role"] in ("admin", "moderator"):
-        stats_tile_href = url_for("admin.analytics")
-        stats_tile_count = pending_n
+        quick_access.append(
+            _landing_quick_tile(
+                "Analytics & insight",
+                "📈",
+                url_for("admin.analytics"),
+                pending_n,
+                user,
+                stat_kind="pending",
+            )
+        )
     elif user:
-        stats_tile_href = url_for("main.dashboard")
-        stats_tile_count = portal_stats["knowledge_items"]
-    else:
-        stats_tile_href = url_for("main.knowledge")
-        stats_tile_count = knowledge_repo_n
-    quick_access.append(
-        {
-            "label": "Analytics & insight",
-            "emoji": "📈",
-            "href": stats_tile_href,
-            "count": stats_tile_count,
-        }
-    )
+        quick_access.append(
+            _landing_quick_tile(
+                "Dashboard",
+                "📈",
+                url_for("main.dashboard"),
+                knowledge_repo_n,
+                user,
+                stat_kind="articles",
+            )
+        )
 
     hero_showcase = _hero_showcase_slides()
     hero_motifs = _hero_motifs()
@@ -477,6 +571,7 @@ def _landing_page_context(db, user):
         "hero_motifs": hero_motifs,
         "hero_showcase": hero_showcase,
         "portal_stats": portal_stats,
+        "kpi_links": kpi_links,
         "quick_access": quick_access,
         "value_cards": value_cards,
     }

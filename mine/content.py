@@ -259,7 +259,7 @@ def _insert_new_content_from_form(user, form, module: str) -> int:
     log_audit(user["id"], "content_create", "content", cid, status)
     if status == "pending":
         moderation_entry(cid, user["id"], "submit", None)
-        _notify_moderators(f"New submission pending review: #{cid} — {title}")
+        _notify_moderators(f"New submission pending review: #{cid} — {title}", except_user_id=user["id"])
     return cid
 
 
@@ -325,7 +325,7 @@ def _update_from_form(
         _insert_attachment_from_upload(db, cid, att)
     if new_status == "pending" and old_row["status"] != "pending":
         moderation_entry(cid, user["id"], "submit", None)
-        _notify_moderators(f"Submission pending review: #{cid} — {title}")
+        _notify_moderators(f"Submission pending review: #{cid} — {title}", except_user_id=user["id"])
     moderation_entry(cid, user["id"], "edit", None)
     log_audit(user["id"], "content_edit", "content", cid, new_status)
     return True
@@ -498,13 +498,16 @@ def _attachment_manage_href(user, row) -> str | None:
     return url_for("content.content_edit", cid=cid)
 
 
-def _notify_moderators(message: str):
+def _notify_moderators(message: str, *, except_user_id: int | None = None):
     db = get_db()
     rows = db.execute(
         "SELECT id FROM users WHERE role IN ('admin','moderator') AND is_active = 1"
     ).fetchall()
     for r in rows:
-        notify(r["id"], message)
+        uid = int(r["id"])
+        if except_user_id is not None and uid == except_user_id:
+            continue
+        notify(uid, message)
     try:
         from flask import current_app
 
@@ -521,28 +524,18 @@ def _notify_moderators(message: str):
 @login_required
 def content_list():
     user = load_current_user()
+    if user["role"] not in ("admin", "moderator"):
+        return redirect(url_for("main.knowledge"))
     db = get_db()
-    if user["role"] in ("admin", "moderator"):
-        rows = db.execute(
-            """
-            SELECT c.*, u.display_name AS author_name
-            FROM content c
-            JOIN users u ON u.id = c.author_id
-            ORDER BY c.updated_at DESC
-            LIMIT 200
-            """
-        ).fetchall()
-    else:
-        rows = db.execute(
-            """
-            SELECT c.*, u.display_name AS author_name
-            FROM content c
-            JOIN users u ON u.id = c.author_id
-            WHERE c.status = 'approved'
-            ORDER BY c.updated_at DESC
-            LIMIT 200
-            """,
-        ).fetchall()
+    rows = db.execute(
+        """
+        SELECT c.*, u.display_name AS author_name
+        FROM content c
+        JOIN users u ON u.id = c.author_id
+        ORDER BY c.updated_at DESC
+        LIMIT 200
+        """
+    ).fetchall()
     return render_template("content/list.html", rows=rows)
 
 

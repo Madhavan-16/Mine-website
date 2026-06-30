@@ -1,30 +1,56 @@
 {% extends "base.html" %}
-{% block title %}Content{% endblock %}
+{% from "includes/status_badge.html" import status_badge %}
+{% block title %}Content catalogue{% endblock %}
+{% block page_header %}{% endblock %}
 {% block content %}
-  <div class="toolbar">
-    <h1 style="margin:0;">Content</h1>
-    {% if current_user.role in ['admin','moderator'] %}
-    <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">Create knowledge content</a>
-    {% endif %}
-  </div>
-  <table class="table" style="margin-top: 12px;">
-    <thead>
-      <tr>
-        <th scope="col">Title</th>
-        <th scope="col">Module</th>
-        <th scope="col">Status</th>
-        <th scope="col">Author</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for item in rows %}
-        <tr>
-          <td><a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a></td>
-          <td><span class="badge">{{ item.module }}</span></td>
-          <td class="meta">{{ item.status }}</td>
-          <td class="meta">{{ item.author_name }}</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="portal-page">
+  <header class="portal-hero">
+    <div class="portal-hero__copy">
+      <nav class="portal-breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+        <span class="portal-breadcrumb__sep" aria-hidden="true">›</span>
+        <span aria-current="page">Content catalogue</span>
+      </nav>
+      <span class="portal-eyebrow">Admin view</span>
+      <h1 class="portal-hero__title">Content catalogue</h1>
+      <p class="portal-lede">All catalogue records across modules and statuses. Browse approved items in the <a href="{{ url_for('main.knowledge') }}">Knowledge repository</a>.</p>
+    </div>
+    <div class="portal-hero__aside">
+      <div class="portal-stat" role="status">
+        <span class="portal-stat__value">{{ rows|length }}</span>
+        <span class="portal-stat__label">Records</span>
+      </div>
+      <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create content</a>
+    </div>
+  </header>
+
+  {% if rows and rows|length > 0 %}
+    <div class="portal-table-wrap">
+      <table class="portal-table">
+        <thead>
+          <tr>
+            <th scope="col">Title</th>
+            <th scope="col">Module</th>
+            <th scope="col">Status</th>
+            <th scope="col">Author</th>
+            <th scope="col">Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in rows %}
+            <tr>
+              <td><a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a></td>
+              <td><span class="portal-module-chip">{{ module_label(item.module) }}</span></td>
+              <td>{{ status_badge(item.status) }}</td>
+              <td class="meta">{{ item.author_name }}</td>
+              <td class="meta">{{ item.updated_at }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="portal-empty">No content records yet.</p>
+  {% endif %}
+</div>
 {% endblock %}

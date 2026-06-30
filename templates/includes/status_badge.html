@@ -1,0 +1,14 @@
+{% macro status_badge(status) %}
+  {% set s = (status or '')|lower %}
+  {% if s == 'approved' %}
+    <span class="portal-status portal-status--approved">Approved</span>
+  {% elif s == 'pending' %}
+    <span class="portal-status portal-status--pending">Pending</span>
+  {% elif s == 'rejected' %}
+    <span class="portal-status portal-status--rejected">Rejected</span>
+  {% elif s == 'draft' %}
+    <span class="portal-status portal-status--draft">Draft</span>
+  {% else %}
+    <span class="portal-status portal-status--draft">{{ status or '—' }}</span>
+  {% endif %}
+{% endmacro %}
