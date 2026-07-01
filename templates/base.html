@@ -18,6 +18,7 @@
   </head>
   {% set _ep = request.endpoint or '' %}
   {% set _is_landing = _ep in ('main.landing', 'main.welcome') %}
+  {% set _is_auth_page = request.blueprint == 'auth' %}
   {% if request.blueprint == 'admin' %}
     {% set motion_profile = 'admin-ultra' %}
   {% elif _ep == 'main.dashboard' %}
@@ -37,6 +38,7 @@
     class="{% if _is_landing %}layout-landing{% elif current_user %}layout-portal{% elif request.blueprint == 'reference' %}layout-reference{% else %}layout-public{% endif %}{% if request.endpoint == 'reference.fmi_kyc' %} has-journey-motion{% endif %}"
     data-motion-profile="{{ motion_profile }}"
   >
+    {% if not _is_auth_page %}
     <script>
       (function () {
         try {
@@ -51,6 +53,7 @@
         } catch (e) {}
       })();
     </script>
+    {% endif %}
     <div class="ambient-backdrop" aria-hidden="true">
       <div class="ambient-backdrop__gradient"></div>
       <div class="ambient-backdrop__grid"></div>
@@ -345,12 +348,12 @@
 
     {% include "includes/site_footer.html" %}
 
-    {% if (request.endpoint or '') not in ('main.landing', 'main.welcome') %}
+    {% if (request.endpoint or '') not in ('main.landing', 'main.welcome') and not _is_auth_page %}
     <script src="{{ url_for('static', filename='js/motion-init.js') }}" defer></script>
     <script src="{{ url_for('static', filename='vendor/aos/aos.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/ambient-network.js') }}" defer></script>
     {% endif %}
-    {% if request.endpoint not in ('main.landing', 'main.welcome') and request.endpoint != 'reference.fmi_kyc' and request.endpoint != 'main.open_pit_copper_domain' %}
+    {% if request.endpoint not in ('main.landing', 'main.welcome') and request.endpoint != 'reference.fmi_kyc' and request.endpoint != 'main.open_pit_copper_domain' and not _is_auth_page %}
     <script src="{{ url_for('static', filename='js/site-motion.bundle.js') }}" defer></script>
     {% endif %}
     <script src="{{ url_for('static', filename='js/navbar.js') }}" defer></script>

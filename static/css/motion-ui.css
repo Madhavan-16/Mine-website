@@ -13,10 +13,22 @@
 }
 
 /* Site-wide scroll / enter prep (see site-motion.bundle.js) — opacity only, no color changes */
+/* Auth/sign-in must stay visible even if motion scripts fail to load */
+html.site-motion-prep #main:has(.auth-card),
+#main .auth-card {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   html.site-motion-prep #main {
     opacity: 0;
     transform: translateY(10px);
+  }
+
+  html.site-motion-prep #main:has(.auth-card) {
+    opacity: 1;
+    transform: none;
   }
 
   html.site-motion-prep #main .card:not([data-aos]):not([data-motion-skip]),

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Sign in{% endblock %}
 {% block content %}
-  <div class="card auth-card" data-aos="fade-up" data-aos-duration="480" data-aos-offset="12">
+  <div class="card auth-card" data-motion-skip>
     <h1>Sign in</h1>
     <p class="meta">Use your MiNe account credentials.</p>
     <form method="post" class="form" action="{{ url_for('auth.login') }}">
