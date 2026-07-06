@@ -19,7 +19,7 @@
     document.documentElement.classList.add("landing-motion-prep");
     window.setTimeout(function () {
       document.documentElement.classList.remove("landing-motion-prep");
-    }, 3500);
+    }, 1200);
   } catch (_) {}
 })();
   </script>
@@ -452,5 +452,5 @@
     </div>
   </section>
 
-  <script src="{{ url_for('static', filename='js/landing-motion.bundle.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/landing-motion.bundle.js') }}" defer onerror="document.documentElement.classList.remove('landing-motion-prep')"></script>
 {% endblock %}

@@ -42,6 +42,8 @@ class Config:
     SECRET_KEY = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
     DATABASE = _resolve_path("DATABASE_PATH", _default_data_path("DATABASE_PATH"))
     UPLOAD_FOLDER = _resolve_path("UPLOAD_FOLDER", _default_data_path("UPLOAD_FOLDER"))
+    _team_roster = (os.environ.get("TEAM_ROSTER_XLSX") or "").strip()
+    TEAM_ROSTER_XLSX = _team_roster or str(_BASE_DIR / "data" / "Freeport active resource Tracker - Updated.xlsx")
     MAX_CONTENT_LENGTH = int(os.environ.get("MAX_CONTENT_LENGTH", 10 * 1024 * 1024))
     ALLOWED_EXTENSIONS = {"pdf", "docx", "xlsx", "png", "jpg", "jpeg", "ppt", "pptx"}
     # PowerPoint in-browser preview uses Microsoft Office Online; the signed file URL must be HTTPS and reachable from the internet.

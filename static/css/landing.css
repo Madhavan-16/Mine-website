@@ -308,6 +308,17 @@ body.layout-landing #value-title {
   }
 }
 
+/* Fail-safe: never leave landing content invisible if motion JS fails or stalls */
+html:not(.landing-motion-prep) body.layout-landing section[data-landing-motion]:not(.landing-hero),
+html:not(.landing-motion-prep) body.layout-landing [data-landing-stagger] [data-landing-item],
+html:not(.landing-motion-prep) body.layout-landing .landing-role-grid .landing-role-card,
+html:not(.landing-motion-prep) body.layout-landing [data-knowledge-matrix] [data-knowledge-row],
+html:not(.landing-motion-prep) body.layout-landing .landing-hero-showcase__stage,
+html:not(.landing-motion-prep) body.layout-landing .landing-stats-band {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
 .landing-knowledge-problem {
   border-radius: calc(var(--radius-lg) + 4px);
   border: 1px solid rgba(189, 191, 192, 0.42);

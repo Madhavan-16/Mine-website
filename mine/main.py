@@ -5,6 +5,7 @@ from mine.catalog_modules import KNOWLEDGE_SERIES_MODULES as KNOWLEDGE_MODULES
 from mine.config import Config
 from mine.db import get_db
 from mine.hero_showcase import _hero_showcase_slides
+from mine.team_roster import group_roster_for_display, load_team_roster, roster_member_count, roster_xlsx_path
 
 bp = Blueprint("main", __name__)
 
@@ -372,6 +373,19 @@ def _knowledge_repo_feed_recent(db, limit: int = 40):
     ).fetchall()
 
 
+def _active_team_count(db) -> int:
+    """Prefer roster workbook count when the tracker file is present."""
+    try:
+        n = roster_member_count()
+        if n > 0:
+            return n
+    except Exception:
+        pass
+    return int(
+        db.execute("SELECT COUNT(*) AS c FROM users WHERE is_active = 1").fetchone()["c"] or 0
+    )
+
+
 def _landing_page_context(db, user):
     """Shared template context for marketing / platform overview (landing.html)."""
     featured = _approved_list(None, 6) if user else []
@@ -381,9 +395,7 @@ def _landing_page_context(db, user):
     innovation_n = _count_approved_module(db, "innovation")
     training_n = _count_approved_module(db, "training")
     fame_n = _count_approved_module(db, "hall_of_fame")
-    team_n = db.execute(
-        "SELECT COUNT(*) AS c FROM users WHERE is_active = 1"
-    ).fetchone()["c"]
+    team_n = _active_team_count(db)
     pending_n = int(
         db.execute(
             "SELECT COUNT(*) AS c FROM content WHERE status = 'pending'"
@@ -401,11 +413,11 @@ def _landing_page_context(db, user):
     }
 
     if user and user["role"] == "admin":
-        team_href = url_for("admin.users")
+        team_href = url_for("main.team_roster")
     elif user:
-        team_href = url_for("main.dashboard")
+        team_href = url_for("main.team_roster")
     else:
-        team_href = url_for("auth.login", next=url_for("main.dashboard"))
+        team_href = url_for("main.team_roster")
 
     kpi_links = {
         "knowledge": url_for("main.knowledge") if user else url_for("auth.login", next=url_for("main.knowledge")),
@@ -604,6 +616,14 @@ def welcome():
     return render_template("landing.html", **ctx)
 
 
+@bp.route("/team")
+def team_roster():
+    """Public roster — Name and TSR from the Freeport active resource tracker workbook."""
+    roster = load_team_roster()
+    roster_groups = group_roster_for_display(roster)
+    return render_template("team_roster.html", roster=roster, roster_groups=roster_groups)
+
+
 @bp.route("/dashboard")
 @login_required
 def dashboard():
@@ -615,9 +635,7 @@ def dashboard():
     )
     projects_n = _count_approved_module(db, "projects")
     innovation_n = _count_approved_module(db, "innovation")
-    team_n = int(
-        db.execute("SELECT COUNT(*) AS c FROM users WHERE is_active = 1").fetchone()["c"] or 0
-    )
+    team_n = _active_team_count(db)
 
     portal_stats = {
         "knowledge_items": approved_total,

@@ -15,6 +15,7 @@ from mine.services import (
     moderation_entry,
     notify,
 )
+from mine.team_roster import import_roster_users, load_team_roster, save_roster_workbook
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -189,7 +190,61 @@ def users():
     ).fetchall()
     create_form = UserCreateForm()
     update_form = UserUpdateForm()
-    return render_template("admin/users.html", rows=rows, create_form=create_form, update_form=update_form)
+    roster_preview = load_team_roster()
+    return render_template(
+        "admin/users.html",
+        rows=rows,
+        create_form=create_form,
+        update_form=update_form,
+        roster_preview=roster_preview,
+    )
+
+
+@bp.route("/team-roster/upload", methods=["POST"])
+@login_required
+@roles_required("admin")
+def team_roster_upload():
+    upload = request.files.get("roster_file")
+    if not upload or not upload.filename:
+        flash("Choose an Excel file to upload.", "danger")
+        return redirect(request.referrer or url_for("main.team_roster"))
+    if not upload.filename.lower().endswith((".xlsx", ".xlsm")):
+        flash("Upload an Excel workbook (.xlsx).", "danger")
+        return redirect(request.referrer or url_for("main.team_roster"))
+    try:
+        save_roster_workbook(upload)
+        roster = load_team_roster()
+        if not roster:
+            flash("File saved, but no Name/TSR columns were found. Check the workbook layout.", "warning")
+        else:
+            flash(f"Resource tracker uploaded — {len(roster)} team members loaded.", "success")
+    except Exception:
+        flash("Could not save the workbook.", "danger")
+    return redirect(request.referrer or url_for("main.team_roster"))
+
+
+@bp.route("/users/import-roster", methods=["POST"])
+@login_required
+@roles_required("admin")
+def users_import_roster():
+    db = get_db()
+    result = import_roster_users(db, actor_id=load_current_user()["id"])
+    if result.get("error"):
+        flash(result["error"], "danger")
+    elif result["created"]:
+        db.commit()
+        msg = f"Created {result['created']} MiNe account(s) from the roster."
+        if result.get("credentials_file"):
+            msg += " Passwords saved to logs/team-roster-import.csv — distribute securely."
+        if result["skipped"]:
+            msg += f" Skipped {result['skipped']} (already exist)."
+        flash(msg, "success")
+    else:
+        flash("No new accounts to create — roster users may already exist.", "info")
+    next_url = (request.form.get("next") or "").strip()
+    if next_url.startswith("/") and not next_url.startswith("//"):
+        return redirect(next_url)
+    return redirect(url_for("admin.users"))
 
 
 @bp.route("/users/create", methods=["POST"])

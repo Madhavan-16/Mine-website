@@ -27,6 +27,16 @@ function isLanding() {
 
 function failSafeReveal() {
   document.documentElement.classList.remove("landing-motion-prep");
+  document
+    .querySelectorAll(
+      "body.layout-landing section[data-landing-motion]:not(.landing-hero), body.layout-landing [data-landing-item], body.layout-landing .landing-hero-showcase__stage, body.layout-landing .landing-stats-band"
+    )
+    .forEach((el) => {
+      if (parseFloat(getComputedStyle(el).opacity) < 0.05) {
+        el.style.opacity = "1";
+        el.style.transform = "none";
+      }
+    });
 }
 
 function bindHoverLift(selector, opts = {}) {
@@ -94,7 +104,8 @@ function init() {
     return;
   }
 
-  window.setTimeout(failSafeReveal, 3400);
+  window.setTimeout(failSafeReveal, 1200);
+  window.setTimeout(failSafeReveal, 5000);
   initScrollReveals();
   initStaggerGroups();
 

@@ -10,3 +10,4 @@ tools/LibreOfficePortable/
 tools/downloads/
 node_modules/
 logs/mail-outbox.log
+logs/team-roster-import.csv

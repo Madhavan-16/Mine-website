@@ -1,19 +1,36 @@
 {% extends "base.html" %}
+{% from "projects/_section_panel.html" import project_section_icon, render_project_section, project_card_emblem %}
 {% block title %}Programs & Projects{% endblock %}
-{% block page_header %}
-  <div class="page-head">
-    <nav class="breadcrumb" aria-label="Breadcrumb"><span>Programs</span><span class="breadcrumb-sep" aria-hidden="true">›</span><span>Active programs &amp; projects</span></nav>
-    <h1 class="page-title">Active programs &amp; projects</h1>
-  </div>
+{% block head_extra %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/portal-list.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/projects-portal.css') }}" />
 {% endblock %}
+{% block page_header %}{% endblock %}
 {% block content %}
-  {% include "includes/back_program_map.html" %}
+<div class="portal-page projects-portal-page" data-projects-portal>
+  <header class="portal-hero">
+    <div class="portal-hero__copy">
+      <nav class="portal-breadcrumb" aria-label="Breadcrumb">
+        <span>Programs</span>
+        <span class="portal-breadcrumb__sep" aria-hidden="true">›</span>
+        <span aria-current="page">Programs &amp; projects</span>
+      </nav>
+      <span class="portal-eyebrow">Delivery portfolio</span>
+      <h1 class="portal-hero__title">Programs &amp; projects</h1>
+      <p class="portal-lede">Open a program to explore scope, applications, value chain, and technology — one insight panel at a time.</p>
+    </div>
+    <div class="portal-hero__aside">
+      <div class="portal-stat" role="status">
+        <span class="portal-stat__value">{{ rows|length }}</span>
+        <span class="portal-stat__label">Projects</span>
+      </div>
+      {% if current_user.role in ['admin','moderator'] %}
+      <a class="btn btn-primary" href="{{ url_for('projects.project_create') }}">Add project</a>
+      {% endif %}
+    </div>
+  </header>
 
-  {% if current_user.role in ['admin','moderator'] %}
-  <div class="toolbar" style="margin-bottom: 12px;">
-    <a class="btn btn-primary" href="{{ url_for('projects.project_create') }}">Add program or project</a>
-  </div>
-  {% endif %}
+  {% include "includes/back_program_map.html" %}
 
   <form method="get" class="filters-bar" action="{{ url_for('projects.project_list') }}">
     <div class="field">
@@ -54,34 +71,94 @@
     </div>
   </form>
 
-  <div class="mod-table-wrap">
-    <table class="mod-table">
-      <thead>
-        <tr>
-          <th scope="col">Project name</th>
-          <th scope="col">Program</th>
-          <th scope="col">PM</th>
-          <th scope="col">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for item in rows %}
-          {% set ds = (item.delivery_status or '')|lower %}
-          <tr>
-            <td><a href="{{ url_for('projects.project_detail', cid=item.id) }}">{{ item.title }}</a></td>
-            <td class="meta">{{ item.program_name or "—" }}</td>
-            <td class="meta">{{ item.project_manager or "—" }}</td>
-            <td>
-              <span class="status-pill">
-                <span class="status-dot {% if not item.delivery_status %}status-dot--na{% elif 'risk' in ds or 'at risk' in ds %}status-dot--risk{% else %}status-dot--ok{% endif %}" aria-hidden="true"></span>{{ item.delivery_status or "—" }}
-              </span>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  {% if rows %}
+  <div class="projects-portal-stack" role="list">
+    {% for item in rows %}
+    {% set tone = loop.index0 % 3 %}
+    <article
+      class="project-card project-card--tone-{{ tone }}"
+      role="listitem"
+      data-project-card
+      id="project-{{ item.id }}"
+    >
+      <button
+        type="button"
+        class="project-card__header"
+        data-project-card-toggle
+        aria-expanded="false"
+        aria-controls="project-panel-{{ item.id }}"
+      >
+        <span class="project-card__emblem" aria-hidden="true">{{ project_card_emblem() }}</span>
+        <span class="project-card__accent" aria-hidden="true"></span>
+        <span class="project-card__index" aria-hidden="true">{{ '%02d'|format(loop.index) }}</span>
+        <h2 class="project-card__title">{{ item.title }}</h2>
+        <span class="project-card__chev" aria-hidden="true"></span>
+      </button>
+      <div class="project-card__panel" id="project-panel-{{ item.id }}" data-project-card-panel aria-hidden="true">
+        <div class="project-card__panel-inner">
+          <div class="project-card__body">
+            <div class="project-explorer" data-project-explorer>
+              <div class="project-explorer__rail" role="tablist" aria-label="Project sections" data-project-tabs>
+                {% for section_key, section_label in project_sections %}
+                <button
+                  type="button"
+                  class="project-explorer__tab{% if loop.first %} is-active{% endif %}"
+                  role="tab"
+                  id="tab-{{ item.id }}-{{ section_key }}"
+                  aria-selected="{% if loop.first %}true{% else %}false{% endif %}"
+                  aria-controls="panel-{{ item.id }}-{{ section_key }}"
+                  data-project-tab="{{ section_key }}"
+                  data-section="{{ section_key }}"
+                >
+                  <span class="project-explorer__tab-icon">{{ project_section_icon(project_section_icons.get(section_key, 'chip')) }}</span>
+                  <span class="project-explorer__tab-label">{{ section_label }}</span>
+                </button>
+                {% endfor %}
+              </div>
+              <div class="project-explorer__stage" data-project-stage>
+                {% for section_key, section_label in project_sections %}
+                <section
+                  class="project-section-panel{% if loop.first %} is-active{% endif %}"
+                  role="tabpanel"
+                  id="panel-{{ item.id }}-{{ section_key }}"
+                  aria-labelledby="tab-{{ item.id }}-{{ section_key }}"
+                  data-project-panel="{{ section_key }}"
+                  data-section="{{ section_key }}"
+                  {% if not loop.first %}hidden{% endif %}
+                >
+                  <header class="project-section-panel__head">
+                    <span class="project-section-panel__badge" aria-hidden="true">{{ project_section_icon(project_section_icons.get(section_key, 'overview')) }}</span>
+                    <div class="project-section-panel__head-copy">
+                      <h3 class="project-section-panel__title">{{ section_label }}</h3>
+                      <p class="project-section-panel__hint">
+                        {% if section_key == 'overview' %}Engagement summary and timeline
+                        {% elif section_key == 'supported_applications' %}Platforms and applications in scope
+                        {% elif section_key == 'scope_of_work' %}Delivery responsibilities
+                        {% elif section_key == 'business_functions' %}Business capabilities supported
+                        {% elif section_key == 'mining_value_chain' %}Mining operations across the value chain
+                        {% else %}Tools, platforms, and technical stack{% endif %}
+                      </p>
+                    </div>
+                  </header>
+                  <div class="project-section-panel__body">
+                    {{ render_project_section(item.section_views.get(section_key, {'empty': True}), section_key, project_section_icons.get(section_key, 'overview')) }}
+                  </div>
+                </section>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
   </div>
-  {% if not rows or rows|length == 0 %}
-    <p class="meta" style="margin-top:12px;">No projects match these filters.</p>
+  {% else %}
+  <div class="projects-portal-empty">
+    <p>No projects match these filters.</p>
+  </div>
   {% endif %}
+
+  <script src="{{ url_for('static', filename='js/projects-portal.js') }}" defer></script>
+</div>
 {% endblock %}

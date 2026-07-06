@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request
 from mine.auth_utils import login_required
 from mine.content import run_project_create, run_project_edit
 from mine.db import get_db
+from mine.project_catalog import PROJECT_SECTION_ICONS, PROJECT_SECTIONS, enrich_project_rows
 
 bp = Blueprint("projects", __name__)
 
@@ -87,9 +88,22 @@ def project_list():
     else:
         sql += " ORDER BY c.updated_at DESC"
     rows = db.execute(sql, args).fetchall()
+    enriched = enrich_project_rows(rows)
+    if q:
+        ql = q.lower()
+        enriched = [
+            r
+            for r in enriched
+            if ql in (r.get("title") or "").lower()
+            or ql in (r.get("summary") or "").lower()
+        ]
+    if sort == "alpha":
+        enriched.sort(key=lambda r: (r.get("title") or "").lower())
     return render_template(
         "projects/list.html",
-        rows=rows,
+        rows=enriched,
+        project_sections=PROJECT_SECTIONS,
+        project_section_icons=PROJECT_SECTION_ICONS,
         program=program,
         status=status,
         region=region,

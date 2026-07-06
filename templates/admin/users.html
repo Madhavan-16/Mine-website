@@ -22,6 +22,14 @@
     </div>
   </header>
 
+  {% set roster_count = roster_preview|length if roster_preview is defined else 0 %}
+  <div class="portal-card" style="margin-bottom: 16px;">
+    <h2 class="portal-card__title">Team roster</h2>
+    <p class="meta" style="margin: 0 0 12px;">
+      <a href="{{ url_for('main.team_roster') }}">View team list</a>{% if roster_count %} ({{ roster_count }} members){% endif %}
+    </p>
+  </div>
+
   <div class="portal-card">
     <h2 class="portal-card__title">Create user</h2>
     <form method="post" action="{{ url_for('admin.users_create') }}" class="form">
