@@ -5,6 +5,7 @@ from mine.catalog_modules import KNOWLEDGE_SERIES_MODULES as KNOWLEDGE_MODULES
 from mine.config import Config
 from mine.db import get_db
 from mine.hero_showcase import _hero_showcase_slides
+from mine.project_catalog import count_portfolio_projects
 from mine.team_roster import group_roster_for_display, load_team_roster, roster_member_count, roster_xlsx_path
 
 bp = Blueprint("main", __name__)
@@ -390,7 +391,7 @@ def _landing_page_context(db, user):
     """Shared template context for marketing / platform overview (landing.html)."""
     featured = _approved_list(None, 6) if user else []
     knowledge_repo_n = _count_approved_knowledge_repo(db)
-    projects_n = _count_approved_module(db, "projects")
+    projects_n = count_portfolio_projects(db)
     onboarding_n = _count_approved_module(db, "onboarding")
     innovation_n = _count_approved_module(db, "innovation")
     training_n = _count_approved_module(db, "training")
@@ -633,7 +634,7 @@ def dashboard():
     approved_total = int(
         db.execute("SELECT COUNT(*) AS c FROM content WHERE status = 'approved'").fetchone()["c"] or 0
     )
-    projects_n = _count_approved_module(db, "projects")
+    projects_n = count_portfolio_projects(db)
     innovation_n = _count_approved_module(db, "innovation")
     team_n = _active_team_count(db)
 

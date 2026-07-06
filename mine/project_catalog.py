@@ -277,3 +277,23 @@ def enrich_project_rows(rows, catalog: dict | None = None) -> list[dict]:
         out.append(db_by_id[str(row["id"])])
 
     return out
+
+
+def count_portfolio_projects(db=None, rows=None, catalog: dict | None = None) -> int:
+    """Projects visible on /projects — catalog entries plus approved DB rows, deduplicated."""
+    if rows is None:
+        if db is None:
+            catalog = catalog if catalog is not None else load_project_section_catalog()
+            return len(catalog.get("entries") or [])
+        rows = db.execute(
+            """
+            SELECT c.*, u.display_name AS author_name,
+                   p.program_name, p.project_manager, p.delivery_status,
+                   NULL AS region
+            FROM content c
+            JOIN users u ON u.id = c.author_id
+            JOIN projects p ON p.content_id = c.id
+            WHERE c.module = 'projects' AND c.status = 'approved'
+            """
+        ).fetchall()
+    return len(enrich_project_rows(rows, catalog))
