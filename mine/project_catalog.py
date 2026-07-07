@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import re
+from datetime import date, datetime
 from pathlib import Path
 
 from flask import current_app
@@ -277,6 +279,116 @@ def enrich_project_rows(rows, catalog: dict | None = None) -> list[dict]:
         out.append(db_by_id[str(row["id"])])
 
     return out
+
+
+def _parse_date_part(raw: str) -> date | None:
+    text = (raw or "").strip()
+    if not text:
+        return None
+    for fmt in ("%d %B %Y", "%d %b %Y", "%B %Y", "%b %Y"):
+        try:
+            parsed = datetime.strptime(text, fmt).date()
+            if fmt in ("%B %Y", "%b %Y"):
+                return date(parsed.year, parsed.month, 1)
+            return parsed
+        except ValueError:
+            continue
+    if re.fullmatch(r"\d{4}", text):
+        return date(int(text), 1, 1)
+    return None
+
+
+def parse_duration_range(duration: str | None) -> dict:
+    """Parse overview duration text into ISO start/end dates."""
+    label = (duration or "").strip() or None
+    if not label:
+        return {"start": None, "end": None, "label": None}
+    parts = [p.strip() for p in re.split(r"\s*[–—-]\s*", label) if p.strip()]
+    if not parts:
+        return {"start": None, "end": None, "label": label}
+    start = _parse_date_part(parts[0])
+    end = _parse_date_part(parts[1]) if len(parts) > 1 else None
+    if start and not end:
+        end = date(start.year, 12, 31)
+    if end and not start:
+        start = date(end.year, 1, 1)
+    return {
+        "start": start.isoformat() if start else None,
+        "end": end.isoformat() if end else None,
+        "label": label,
+    }
+
+
+def build_portfolio_viz(rows: list[dict]) -> dict:
+    """Gantt + summary insights for the portfolio timeline view."""
+    projects: list[dict] = []
+
+    for idx, row in enumerate(rows):
+        pid = str(row.get("id") or f"project-{idx}")
+        title = (row.get("title") or "").strip() or "Untitled project"
+        overview = (row.get("section_views") or {}).get("overview") or {}
+        duration = parse_duration_range(overview.get("duration"))
+
+        projects.append(
+            {
+                "id": pid,
+                "title": title,
+                "order": idx,
+                "tone": idx % 3,
+                "duration": duration.get("label"),
+                "start": duration.get("start"),
+                "end": duration.get("end"),
+                "shortRange": (
+                    f"{_format_insight_date(duration.get('start'))} – {_format_insight_date(duration.get('end'))}"
+                    if duration.get("start") and duration.get("end")
+                    else None
+                ),
+            }
+        )
+
+    gantt_rows = [p for p in projects if p.get("start") and p.get("end")]
+    gantt_rows.sort(key=lambda p: p.get("order", 0))
+
+    starts = [p["start"] for p in gantt_rows]
+    ends = [p["end"] for p in gantt_rows]
+    range_start = min(starts) if starts else None
+    range_end = max(ends) if ends else None
+
+    today_iso = date.today().isoformat()
+    active_today = [
+        p
+        for p in projects
+        if p.get("start")
+        and p.get("end")
+        and p["start"] <= today_iso <= p["end"]
+    ]
+
+    return {
+        "gantt": {
+            "rangeStart": range_start,
+            "rangeEnd": range_end,
+            "rows": gantt_rows,
+        },
+        "insights": {
+            "projectCount": len(projects),
+            "activeTodayCount": len(active_today),
+            "rangeLabel": (
+                f"{_format_insight_date(range_start)} – {_format_insight_date(range_end)}"
+                if range_start and range_end
+                else None
+            ),
+        },
+    }
+
+
+def _format_insight_date(iso: str | None) -> str:
+    if not iso:
+        return ""
+    try:
+        parsed = datetime.strptime(iso, "%Y-%m-%d").date()
+    except ValueError:
+        return iso
+    return parsed.strftime("%b %Y")
 
 
 def count_portfolio_projects(db=None, rows=None, catalog: dict | None = None) -> int:

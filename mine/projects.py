@@ -3,7 +3,12 @@ from flask import Blueprint, render_template, request
 from mine.auth_utils import login_required
 from mine.content import run_project_create, run_project_edit
 from mine.db import get_db
-from mine.project_catalog import PROJECT_SECTION_ICONS, PROJECT_SECTIONS, enrich_project_rows
+from mine.project_catalog import (
+    PROJECT_SECTION_ICONS,
+    PROJECT_SECTIONS,
+    build_portfolio_viz,
+    enrich_project_rows,
+)
 
 bp = Blueprint("projects", __name__)
 
@@ -99,9 +104,11 @@ def project_list():
         ]
     if sort == "alpha":
         enriched.sort(key=lambda r: (r.get("title") or "").lower())
+    portfolio_viz = build_portfolio_viz(enriched)
     return render_template(
         "projects/list.html",
         rows=enriched,
+        portfolio_viz=portfolio_viz,
         project_sections=PROJECT_SECTIONS,
         project_section_icons=PROJECT_SECTION_ICONS,
         program=program,

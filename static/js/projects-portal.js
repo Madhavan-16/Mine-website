@@ -1,5 +1,5 @@
 /**
- * Programs & Projects — expandable cards + exclusive section tab explorer.
+ * Programs & Projects — view switcher, expandable cards + section tab explorer.
  */
 (function () {
   var root = document.querySelector("[data-projects-portal]");
@@ -47,6 +47,77 @@
       });
     });
   }
+
+  function expandCard(card) {
+    var toggle = card.querySelector("[data-project-card-toggle]");
+    if (!toggle || card.classList.contains("is-expanded")) return;
+    card.classList.add("is-expanded");
+    toggle.setAttribute("aria-expanded", "true");
+    var panel = card.querySelector("[data-project-card-panel]");
+    if (panel) panel.setAttribute("aria-hidden", "false");
+  }
+
+  function setView(viewKey) {
+    var buttons = root.querySelectorAll("[data-projects-view]");
+    var vizPanels = root.querySelectorAll("[data-projects-viz]");
+    var cardsPanel = root.querySelector('[data-projects-view-panel="cards"]');
+
+    buttons.forEach(function (btn) {
+      var active = btn.getAttribute("data-projects-view") === viewKey;
+      btn.classList.toggle("is-active", active);
+      btn.setAttribute("aria-selected", active ? "true" : "false");
+    });
+
+    vizPanels.forEach(function (panel) {
+      var show = panel.getAttribute("data-projects-viz") === viewKey;
+      if (show) panel.removeAttribute("hidden");
+      else panel.setAttribute("hidden", "");
+    });
+
+    if (cardsPanel) {
+      if (viewKey === "cards") cardsPanel.removeAttribute("hidden");
+      else cardsPanel.setAttribute("hidden", "");
+    }
+
+    root.setAttribute("data-active-view", viewKey);
+
+    if (viewKey === "gantt") {
+      if (window.MiNeProjectsViz && window.MiNeProjectsViz.ensure) {
+        window.MiNeProjectsViz.ensure(viewKey);
+      }
+      window.requestAnimationFrame(function () {
+        if (window.MiNeProjectsViz && window.MiNeProjectsViz.refresh) {
+          window.MiNeProjectsViz.refresh();
+        }
+      });
+    }
+  }
+
+  function openProjectCard(projectId) {
+    setView("cards");
+    var card = root.querySelector('[data-project-card][id="project-' + projectId + '"]');
+    if (!card) {
+      card = root.querySelector('[data-project-card][id="' + projectId + '"]');
+    }
+    if (!card) return;
+    expandCard(card);
+    window.setTimeout(function () {
+      card.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+      var toggle = card.querySelector("[data-project-card-toggle]");
+      if (toggle) toggle.focus({ preventScroll: true });
+    }, 60);
+  }
+
+  window.MiNeProjects = {
+    openProjectCard: openProjectCard,
+    setView: setView,
+  };
+
+  root.querySelectorAll("[data-projects-view]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      setView(btn.getAttribute("data-projects-view") || "cards");
+    });
+  });
 
   var cards = Array.prototype.slice.call(root.querySelectorAll("[data-project-card]"));
 

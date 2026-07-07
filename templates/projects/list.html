@@ -7,7 +7,7 @@
 {% endblock %}
 {% block page_header %}{% endblock %}
 {% block content %}
-<div class="portal-page projects-portal-page" data-projects-portal>
+  <div class="portal-page projects-portal-page" data-projects-portal data-active-view="cards" data-portfolio-viz='{{ portfolio_viz | tojson }}'>
   <header class="portal-hero">
     <div class="portal-hero__copy">
       <nav class="portal-breadcrumb" aria-label="Breadcrumb">
@@ -17,7 +17,7 @@
       </nav>
       <span class="portal-eyebrow">Delivery portfolio</span>
       <h1 class="portal-hero__title">Programs &amp; projects</h1>
-      <p class="portal-lede">Open a program to explore scope, applications, value chain, and technology — one insight panel at a time.</p>
+      <p class="portal-lede">Explore the Freeport delivery portfolio — open any engagement for scope and technology detail, or switch to the delivery runway to see how engagements overlap in time.</p>
     </div>
     <div class="portal-hero__aside">
       <div class="portal-stat" role="status">
@@ -72,7 +72,58 @@
   </form>
 
   {% if rows %}
-  <div class="projects-portal-stack" role="list">
+  {% set insights = portfolio_viz.insights %}
+
+  <div class="projects-view-switch projects-view-switch--duo" role="tablist" aria-label="Portfolio view">
+    <button type="button" class="projects-view-switch__btn is-active" role="tab" aria-selected="true" data-projects-view="cards" id="projects-view-cards">
+      <span class="projects-view-switch__label">Project cards</span>
+      <span class="projects-view-switch__desc">Scope, applications, value chain &amp; technology</span>
+    </button>
+    <button type="button" class="projects-view-switch__btn" role="tab" aria-selected="false" data-projects-view="gantt" id="projects-view-gantt">
+      <span class="projects-view-switch__label">Delivery runway</span>
+      <span class="projects-view-switch__desc">When engagements run &amp; what overlaps</span>
+    </button>
+  </div>
+
+  <section class="projects-viz-panel projects-viz-panel--gantt" data-projects-viz="gantt" hidden aria-labelledby="projects-view-gantt">
+    <header class="projects-viz-panel__head">
+      <div class="projects-viz-panel__intro">
+        <h2 class="projects-viz-panel__title" id="projects-view-gantt">Delivery runway</h2>
+        <p class="projects-viz-panel__lede">Timeline of all catalog engagements — live work, schedule overlap, and full portfolio span ({{ insights.rangeLabel or 'see chart' }}).</p>
+      </div>
+    </header>
+
+    <div class="projects-gantt-summary" role="list" aria-label="Portfolio timeline summary">
+      <article class="projects-gantt-summary__card" role="listitem">
+        <span class="projects-gantt-summary__value">{{ insights.rangeLabel or '—' }}</span>
+        <span class="projects-gantt-summary__label">Portfolio span</span>
+      </article>
+      <article class="projects-gantt-summary__card projects-gantt-summary__card--accent" role="listitem">
+        <span class="projects-gantt-summary__value">{{ insights.activeTodayCount }}</span>
+        <span class="projects-gantt-summary__label">Active today</span>
+      </article>
+      <article class="projects-gantt-summary__card" role="listitem">
+        <span class="projects-gantt-summary__value">{{ portfolio_viz.gantt.rows|length }}</span>
+        <span class="projects-gantt-summary__label">Dated engagements</span>
+      </article>
+    </div>
+
+    <div class="projects-gantt-legend" aria-hidden="true">
+      <span class="projects-gantt-legend__item"><span class="projects-gantt-legend__swatch projects-gantt-legend__swatch--bar"></span> Engagement period</span>
+      <span class="projects-gantt-legend__item"><span class="projects-gantt-legend__swatch projects-gantt-legend__swatch--live"></span> Live now</span>
+      <span class="projects-gantt-legend__item"><span class="projects-gantt-legend__swatch projects-gantt-legend__swatch--today"></span> Today</span>
+    </div>
+
+    <div class="projects-gantt-shell">
+      <div class="projects-gantt" data-projects-gantt role="group" aria-label="Portfolio timeline chart"></div>
+    </div>
+
+    <p class="projects-gantt-guide">Bars use catalog start/end dates. Click a name or bar to jump to that project’s full brief.</p>
+  </section>
+
+  <script type="application/json" id="portfolio-viz-data">{{ portfolio_viz | tojson }}</script>
+
+  <div class="projects-portal-stack" role="list" data-projects-view-panel="cards">
     {% for item in rows %}
     {% set tone = loop.index0 % 3 %}
     <article
@@ -159,6 +210,7 @@
   </div>
   {% endif %}
 
+  <script src="{{ url_for('static', filename='js/projects-portal-viz.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/projects-portal.js') }}" defer></script>
 </div>
 {% endblock %}
