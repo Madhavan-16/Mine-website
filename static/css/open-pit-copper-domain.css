@@ -6,7 +6,11 @@
   --fcx-teal:         var(--hex-teal);
   --fcx-copper:       var(--hex-blue);
   --fcx-copper-light: var(--hex-teal);
-  --fcx-copper-glow:  rgba(0, 174, 240, 0.24);
+  --fcx-copper-glow:  rgba(179, 119, 67, 0.18);
+  --hero-copper:      var(--hex-copper);
+  --hero-copper-light: var(--hex-copper-light);
+  --hero-copper-wash: #f7f0e8;
+  --hero-copper-mist: #faf6f1;
   --fcx-white:        var(--hex-white);
   --fcx-off-white:    var(--hex-grey-50);
   --fcx-gray-light:   var(--hex-grey-100);
@@ -29,16 +33,43 @@
 .domain-knowledge-page {font-family:'Inter','Segoe UI',sans-serif;color:var(--fcx-gray-dark);background:var(--fcx-white);line-height:1.6}
 
 /* ═══════ HERO ═══════ */
-.domain-knowledge-page .hero {position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:linear-gradient(135deg,var(--fcx-navy) 0%,var(--fcx-teal) 50%,var(--fcx-navy-mid) 100%);overflow:hidden}
-.domain-knowledge-page .hero::before {content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 35%,var(--fcx-copper-glow) 0%,transparent 50%),radial-gradient(ellipse at 20% 80%,rgba(27,58,75,0.6) 0%,transparent 40%);pointer-events:none}
+.domain-knowledge-page .hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: #ffffff;
+  overflow: hidden;
+}
+.domain-knowledge-page .hero::before {
+  display: none;
+}
 .domain-knowledge-page .hero-content {position:relative;z-index:2;max-width:1000px;padding:40px 20px}
-.domain-knowledge-page .hero .tagline {font-weight:500;font-size:12px;letter-spacing:7px;text-transform:uppercase;color:#d4b87a;margin-bottom:28px}
-.domain-knowledge-page .hero h1 {font-family:'Georgia','Times New Roman',serif;font-weight:400;font-size:48px;line-height:1.15;color:var(--fcx-white);margin-bottom:14px}
-.domain-knowledge-page .hero .subtitle {font-weight:300;font-size:17px;color:rgba(255,255,255,0.7);margin-bottom:52px;max-width:720px;margin-left:auto;margin-right:auto}
+.domain-knowledge-page .hero .tagline {font-weight:600;font-size:12px;letter-spacing:7px;text-transform:uppercase;color:var(--hero-copper);margin-bottom:28px}
+.domain-knowledge-page .hero h1 {font-family:'Georgia','Times New Roman',serif;font-weight:400;font-size:48px;line-height:1.15;color:var(--fcx-navy);margin-bottom:14px}
+.domain-knowledge-page .hero .subtitle {font-weight:400;font-size:17px;color:var(--fcx-gray-mid);margin-bottom:52px;max-width:720px;margin-left:auto;margin-right:auto}
 
 .domain-knowledge-page .domain-cards {display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:920px;width:100%;margin-bottom:20px}
-.domain-knowledge-page .domain-card {background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);border-radius:var(--section-radius);padding:32px 28px;text-align:left;text-decoration:none;color:var(--fcx-white);backdrop-filter:blur(8px);transition:background 0.25s,border-color 0.25s,transform 0.25s}
-.domain-knowledge-page .domain-card:hover {background:rgba(255,255,255,0.09);border-color:rgba(201,168,108,0.45);transform:translateY(-2px)}
+.domain-knowledge-page .domain-card {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(179, 119, 67, 0.18);
+  border-radius: var(--section-radius);
+  padding: 28px 24px;
+  text-align: left;
+  text-decoration: none;
+  color: var(--fcx-gray-dark);
+  box-shadow: var(--surface-shadow);
+  transition: background 0.25s, border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+}
+.domain-knowledge-page .domain-card:hover {
+  background: #fff;
+  border-color: rgba(179, 119, 67, 0.42);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(179, 119, 67, 0.12);
+}
 .domain-knowledge-page .domain-card .dc-icon {
   width: 44px;
   height: 44px;
@@ -63,9 +94,9 @@
 }
 
 .domain-knowledge-page .domain-card:nth-child(1) .dc-icon {
-  background: linear-gradient(145deg, #00c4ff, #0090c8);
-  border-color: rgba(125, 220, 255, 0.55);
-  box-shadow: 0 0 0 4px rgba(0, 196, 255, 0.22), 0 4px 14px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(145deg, var(--hero-copper-light), var(--hero-copper));
+  border-color: rgba(216, 123, 97, 0.45);
+  box-shadow: 0 0 0 4px rgba(179, 119, 67, 0.14), 0 4px 14px rgba(16, 63, 90, 0.1);
 }
 
 .domain-knowledge-page .domain-card:nth-child(2) .dc-icon {
@@ -79,22 +110,21 @@
 }
 
 .domain-knowledge-page .domain-card:nth-child(1):hover .dc-icon {
-  box-shadow: 0 0 0 5px rgba(0, 196, 255, 0.32), 0 6px 18px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 0 0 5px rgba(179, 119, 67, 0.22), 0 6px 18px rgba(16, 63, 90, 0.12);
 }
 
 .domain-knowledge-page .domain-card:nth-child(2):hover .dc-icon {
   box-shadow: 0 0 0 5px rgba(232, 201, 122, 0.34), 0 6px 18px rgba(0, 0, 0, 0.22);
 }
-.domain-knowledge-page .domain-card .dc-title {font-size:20px;font-weight:700;margin-bottom:8px;letter-spacing:0.01em}
-.domain-knowledge-page .domain-card .dc-desc {font-size:13px;color:rgba(255,255,255,0.58);line-height:1.55;margin-bottom:16px}
-.domain-knowledge-page .domain-card .dc-sections {display:flex;flex-wrap:wrap;gap:6px}
-.domain-knowledge-page .domain-card .dc-tag {font-size:10px;font-weight:500;padding:4px 10px;border-radius:20px;background:transparent;color:rgba(255,255,255,0.55);border:1px solid rgba(255,255,255,0.18);white-space:nowrap;transition:color 0.2s,border-color 0.2s}
-.domain-knowledge-page .domain-card:hover .dc-tag {color:rgba(255,255,255,0.72);border-color:rgba(201,168,108,0.35)}
+.domain-knowledge-page .domain-card .dc-title {font-size:20px;font-weight:700;margin-bottom:8px;letter-spacing:0.01em;color:var(--fcx-navy)}
+.domain-knowledge-page .domain-card .dc-desc {font-size:13px;color:var(--fcx-gray-mid);line-height:1.55;margin-bottom:16px}
+.domain-knowledge-page .domain-card .dc-sections {display:flex;flex-wrap:wrap;gap:5px}
+.domain-knowledge-page .domain-card .dc-tag {font-size:10px;font-weight:500;padding:2px 7px;border-radius:999px;background:rgba(179,119,67,0.06);color:var(--hero-copper);border:1px solid rgba(179,119,67,0.22);white-space:nowrap;transition:color 0.2s,border-color 0.2s,background 0.2s}
+.domain-knowledge-page .domain-card:hover .dc-tag {color:#8a5220;border-color:rgba(179,119,67,0.38);background:rgba(179,119,67,0.1)}
 
-.domain-knowledge-page .hero-footer {position:absolute;bottom:24px;left:40px;right:40px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,0.1);padding-top:14px;z-index:2}
-.domain-knowledge-page .hero-footer span {font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase}
-.domain-knowledge-page .hero-footer .brand {font-family:'Georgia',serif;font-size:13px;font-weight:700;color:var(--fcx-white);letter-spacing:2px}
-.domain-knowledge-page .hero-footer .brand-tag {font-size:7px;letter-spacing:3px;color:var(--fcx-copper);display:block;text-align:right}
+.domain-knowledge-page .hero-footer {position:absolute;bottom:24px;left:40px;right:40px;display:flex;justify-content:flex-end;align-items:center;border-top:1px solid rgba(179,119,67,0.16);padding-top:14px;z-index:2}
+.domain-knowledge-page .hero-footer .brand {font-family:'Georgia',serif;font-size:13px;font-weight:700;color:var(--fcx-navy);letter-spacing:2px}
+.domain-knowledge-page .hero-footer .brand-tag {font-size:7px;letter-spacing:3px;color:var(--hero-copper);display:block;text-align:right}
 
 /* ═══════ STICKY NAV ═══════ */
 .domain-knowledge-page .sticky-nav {position:sticky;top:0;z-index:100;background:var(--fcx-navy);border-bottom:3px solid var(--fcx-copper);display:flex;align-items:center;overflow-x:auto;white-space:nowrap;padding:0 20px;gap:0}
@@ -105,12 +135,12 @@
 
 /* ═══════ SECTIONS ═══════ */
 .domain-knowledge-page .section {max-width:1100px;margin:0 auto;padding:var(--space-section-y) var(--space-section-x) calc(var(--space-section-y) + 12px)}
-.domain-knowledge-page .section-divider {background:linear-gradient(135deg,var(--fcx-navy) 0%,var(--fcx-teal) 100%);padding:68px var(--space-section-x);text-align:center}
+.domain-knowledge-page .section-divider {background:linear-gradient(135deg,var(--fcx-navy) 0%,var(--fcx-teal) 100%);padding:20px clamp(20px,3vw,48px) 22px;text-align:center;border-radius:0;margin:0;width:100%;max-width:none}
 .domain-knowledge-page .section-divider.pa-theme {background:linear-gradient(135deg,var(--fcx-navy) 0%,var(--fcx-navy-mid) 58%,var(--fcx-teal) 100%)}
-.domain-knowledge-page .section-divider .sec-num {font-size:11px;letter-spacing:5px;color:var(--fcx-copper);text-transform:uppercase;margin-bottom:14px}
-.domain-knowledge-page .section-divider h2 {font-family:'Georgia','Times New Roman',serif;font-size:34px;font-weight:400;color:var(--fcx-white);margin-bottom:14px}
-.domain-knowledge-page .section-divider .sec-desc {font-size:14px;color:rgba(255,255,255,0.55);max-width:600px;margin:0 auto 16px}
-.domain-knowledge-page .section-divider .sec-line {width:80px;height:3px;background:var(--fcx-copper);margin:0 auto}
+.domain-knowledge-page .section-divider .sec-num {font-size:10px;letter-spacing:4px;color:var(--fcx-copper);text-transform:uppercase;margin-bottom:6px}
+.domain-knowledge-page .section-divider h2 {font-family:'Georgia','Times New Roman',serif;font-size:26px;font-weight:400;color:var(--fcx-white);margin-bottom:6px;line-height:1.2}
+.domain-knowledge-page .section-divider .sec-desc {font-size:13px;color:rgba(255,255,255,0.55);max-width:600px;margin:0 auto 8px;line-height:1.45}
+.domain-knowledge-page .section-divider .sec-line {width:56px;height:2px;background:var(--fcx-copper);margin:0 auto}
 
 .domain-knowledge-page h2.section-title {font-family:'Georgia',serif;font-size:26px;font-weight:400;color:var(--fcx-navy);margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--fcx-copper)}
 .domain-knowledge-page h3 {font-size:17px;font-weight:600;color:var(--fcx-navy);margin:30px 0 12px}
@@ -479,8 +509,12 @@
 
 .domain-knowledge-page .section-divider {
   width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
   padding-left: clamp(20px, 3vw, 48px);
   padding-right: clamp(20px, 3vw, 48px);
+  border-radius: 0;
 }
 
 .domain-knowledge-page .hero-content {
@@ -528,7 +562,7 @@
 .domain-knowledge-page .section-divider .sec-num,
 .domain-knowledge-page .hero-footer .brand-tag,
 .domain-knowledge-page .page-footer .tag {
-  color: var(--hex-blue);
+  color: var(--hex-copper);
 }
 
 .domain-knowledge-page h2.section-title {
@@ -537,8 +571,8 @@
 
 .domain-knowledge-page .section-divider .sec-line {
   background: var(--hex-blue);
-  height: 3px;
-  width: 80px;
+  height: 2px;
+  width: 56px;
   border-radius: 2px;
 }
 

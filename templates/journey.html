@@ -8,10 +8,10 @@
       <span>Freeport–Hexaware Journey</span>
     </nav>
     <h1 class="page-title">Freeport – Hexaware Journey</h1>
-    <p class="page-lede">Freeport–Hexaware partnership context and supporting program detail. For the company evolution spine timeline, see <a href="{{ url_for('reference.fmi_kyc') }}#kyc-evolution-timeline">Know your Customer — Freeport</a> (section&nbsp;2.2).</p>
   </div>
 {% endblock %}
 {% block content %}
+  <div class="journey-page">
   {% include "includes/back_program_map.html" %}
 
   <section class="card journey-digital" style="margin-top: 0;" aria-labelledby="freeport-story-h2">
@@ -35,10 +35,6 @@
         decoding="async"
         loading="lazy"
       />
-      <figcaption class="meta">
-        Static infographic reference (PNG) for print or offline viewing. For the interactive timeline, see
-        <a href="{{ url_for('reference.fmi_kyc') }}#kyc-evolution-timeline">Know your Customer — Freeport (§2.2 Evolution timeline)</a>.
-      </figcaption>
     </figure>
   </section>
 
@@ -88,9 +84,6 @@
         loading="lazy"
       />
     </figure>
-    <p class="meta" style="margin-bottom:0;">
-      For the full “Know your customer” tables (snapshot, leadership roster), see
-      <a href="{{ url_for('reference.fmi_kyc') }}">Freeport — Know your customer</a>.
-    </p>
+  </div>
   </div>
 {% endblock %}

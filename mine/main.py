@@ -1,7 +1,17 @@
 from flask import Blueprint, abort, redirect, render_template, request, send_file, url_for
 
 from mine.auth_utils import load_current_user, login_required, roles_required
-from mine.catalog_modules import KNOWLEDGE_SERIES_MODULES as KNOWLEDGE_MODULES
+from mine.catalog_modules import (
+    KNOWLEDGE_SERIES_MODULES as KNOWLEDGE_MODULES,
+    KNOWLEDGE_SERIES_MODULE_KEYS,
+    SEARCH_XP_CATEGORIES,
+)
+from mine.catalog_query import (
+    CATALOG_PAGE_SIZE_DEFAULT,
+    CATALOG_SORT_OPTIONS,
+    enrich_catalog_for_template,
+    query_catalog,
+)
 from mine.config import Config
 from mine.db import get_db
 from mine.hero_showcase import _hero_showcase_slides
@@ -120,7 +130,7 @@ def _serve_domain_infographic(filename: str):
     return resp
 
 
-def _approved_list(module: str | None = None, limit: int = 50):
+def _approved_list(module: str | None = None, limit: int = 50, qtext: str | None = None):
     db = get_db()
     q = """
         SELECT c.*, u.display_name AS author_name
@@ -132,6 +142,10 @@ def _approved_list(module: str | None = None, limit: int = 50):
     if module:
         q += " AND c.module = ?"
         args.append(module)
+    if qtext:
+        like = f"%{qtext}%"
+        q += " AND (c.title LIKE ? OR COALESCE(c.summary, '') LIKE ? OR COALESCE(c.body, '') LIKE ?)"
+        args.extend([like, like, like])
     q += " ORDER BY c.updated_at DESC LIMIT ?"
     args.append(limit)
     return db.execute(q, args).fetchall()
@@ -299,19 +313,9 @@ _FREEPORT_STORY = [
 
 SEARCH_XP_PLACEHOLDERS = [
     "Search programmes, case studies, and account briefings…",
-    "Try “Hidden Mine”, “copper demand”, “onboarding playbook”…",
+    "Try “case studies”, “programs and projects”, “Hidden Mine”…",
     "Find KYC entries, RFP snippets, and delivery artefacts…",
     "Explore innovation stories and Hall of Fame wins…",
-]
-
-SEARCH_XP_CATEGORIES = [
-    {"value": "", "label": "All catalogue"},
-    {"value": "kyc", "label": "KYC"},
-    {"value": "kya", "label": "KYA"},
-    {"value": "case_study", "label": "Case studies"},
-    {"value": "projects", "label": "Projects"},
-    {"value": "innovation", "label": "Innovation"},
-    {"value": "training", "label": "Training"},
 ]
 
 SEARCH_XP_FILTER_TAGS = [
@@ -391,7 +395,10 @@ def _landing_page_context(db, user):
     """Shared template context for marketing / platform overview (landing.html)."""
     featured = _approved_list(None, 6) if user else []
     knowledge_repo_n = _count_approved_knowledge_repo(db)
-    projects_n = count_portfolio_projects(db)
+    try:
+        projects_n = count_portfolio_projects(db, active_only=True)
+    except Exception:
+        projects_n = 0
     onboarding_n = _count_approved_module(db, "onboarding")
     innovation_n = _count_approved_module(db, "innovation")
     training_n = _count_approved_module(db, "training")
@@ -634,7 +641,7 @@ def dashboard():
     approved_total = int(
         db.execute("SELECT COUNT(*) AS c FROM content WHERE status = 'approved'").fetchone()["c"] or 0
     )
-    projects_n = count_portfolio_projects(db)
+    projects_n = count_portfolio_projects(db, active_only=True)
     innovation_n = _count_approved_module(db, "innovation")
     team_n = _active_team_count(db)
 
@@ -661,18 +668,34 @@ def dashboard():
     inn_entries = [{"label": b["label"], "value": int(b["count"])} for b in innov_buckets]
     _pct_for_bars(inn_entries, "value")
 
-    project_rows = db.execute(
-        """
-        SELECT c.*, u.display_name AS author_name,
-               p.program_name, p.project_manager, p.delivery_status
-        FROM content c
-        JOIN users u ON u.id = c.author_id
-        JOIN projects p ON p.content_id = c.id
-        WHERE c.module = 'projects' AND c.status = 'approved'
-        ORDER BY c.updated_at DESC
-        LIMIT 8
-        """
-    ).fetchall()
+    try:
+        project_rows = db.execute(
+            """
+            SELECT c.*, u.display_name AS author_name,
+                   p.program_name, p.project_manager, p.delivery_status,
+                   COALESCE(p.is_active, 1) AS is_active
+            FROM content c
+            JOIN users u ON u.id = c.author_id
+            JOIN projects p ON p.content_id = c.id
+            WHERE c.module = 'projects' AND c.status = 'approved' AND COALESCE(p.is_active, 1) = 1
+            ORDER BY c.updated_at DESC
+            LIMIT 8
+            """
+        ).fetchall()
+    except Exception:
+        project_rows = db.execute(
+            """
+            SELECT c.*, u.display_name AS author_name,
+                   p.program_name, p.project_manager, p.delivery_status,
+                   1 AS is_active
+            FROM content c
+            JOIN users u ON u.id = c.author_id
+            JOIN projects p ON p.content_id = c.id
+            WHERE c.module = 'projects' AND c.status = 'approved'
+            ORDER BY c.updated_at DESC
+            LIMIT 8
+            """
+        ).fetchall()
 
     feed_rows = _knowledge_repo_feed_recent(db, 36)
 
@@ -715,38 +738,34 @@ def knowledge():
     author = (request.args.get("author") or "").strip()
     counts = _knowledge_module_counts(db)
 
-    if not module and not qtext and not author:
-        recent = _approved_list(None, 8)
-        return render_template(
-            "knowledge.html",
-            landing=True,
-            module_counts=counts,
-            modules_meta=KNOWLEDGE_MODULES,
-            recent_rows=recent,
-            search_xp_placeholders=SEARCH_XP_PLACEHOLDERS,
-            search_xp_categories=SEARCH_XP_CATEGORIES,
-            search_xp_filter_tags=SEARCH_XP_FILTER_TAGS,
-        )
+    sort = (request.args.get("sort") or ("relevance" if qtext else "recent")).strip()
+    try:
+        page = max(1, int(request.args.get("page") or 1))
+    except (TypeError, ValueError):
+        page = 1
+    try:
+        per_page = int(request.args.get("per_page") or CATALOG_PAGE_SIZE_DEFAULT)
+    except (TypeError, ValueError):
+        per_page = CATALOG_PAGE_SIZE_DEFAULT
 
-    sql = """
-        SELECT c.*, u.display_name AS author_name
-        FROM content c
-        JOIN users u ON u.id = c.author_id
-        WHERE c.status = 'approved'
-    """
-    args: list = []
-    if module:
-        sql += " AND c.module = ?"
-        args.append(module)
-    if qtext:
-        sql += " AND (c.title LIKE ? OR COALESCE(c.summary, '') LIKE ?)"
-        like = f"%{qtext}%"
-        args.extend([like, like])
-    if author:
-        sql += " AND u.display_name = ?"
-        args.append(author)
-    sql += " ORDER BY c.updated_at DESC LIMIT 100"
-    rows = db.execute(sql, args).fetchall()
+    landing = not module and not qtext and not author
+
+    catalog = enrich_catalog_for_template(
+        query_catalog(
+            db,
+            q=qtext or None,
+            module=module,
+            modules=None if module else tuple(KNOWLEDGE_SERIES_MODULE_KEYS),
+            author=author or None,
+            approved_only=True,
+            sort=sort,
+            page=page,
+            per_page=per_page,
+        ),
+        q=qtext or None,
+        module=module,
+        author=author or None,
+    )
 
     author_options = db.execute(
         """
@@ -754,48 +773,64 @@ def knowledge():
         FROM users u
         JOIN content c ON c.author_id = u.id
         WHERE c.status = 'approved'
+          AND c.module IN ({})
         ORDER BY n COLLATE NOCASE
         LIMIT 100
-        """
+        """.format(",".join("?" * len(KNOWLEDGE_SERIES_MODULE_KEYS))),
+        tuple(KNOWLEDGE_SERIES_MODULE_KEYS),
     ).fetchall()
 
     mod_labels = dict(KNOWLEDGE_MODULES)
-    module_label = mod_labels.get(module, "Knowledge repository") if module else "Knowledge repository"
+    module_label_text = mod_labels.get(module, "All series") if module else "All series"
 
-    return render_template(
-        "knowledge.html",
-        landing=False,
-        rows=rows,
+    ctx = dict(
+        landing=landing,
+        rows=catalog["rows"],
+        catalog=catalog,
         module=module,
         q=qtext,
         author=author,
+        sort=catalog["sort"],
+        per_page=catalog["per_page"],
         module_counts=counts,
         modules_meta=KNOWLEDGE_MODULES,
         author_options=author_options,
-        module_label=module_label,
+        active_module_label=module_label_text,
+        sort_options=CATALOG_SORT_OPTIONS,
     )
+    if landing:
+        ctx.update(
+            search_xp_placeholders=SEARCH_XP_PLACEHOLDERS,
+            search_xp_categories=SEARCH_XP_CATEGORIES,
+            search_xp_filter_tags=SEARCH_XP_FILTER_TAGS,
+            hide_recent_catalog=True,
+        )
+    return render_template("knowledge.html", **ctx)
 
 
 @bp.route("/onboarding")
 @login_required
 def onboarding():
-    rows = _approved_list("onboarding", 100)
-    return render_template("onboarding.html", rows=rows)
+    qtext = (request.args.get("q") or "").strip() or None
+    rows = _approved_list("onboarding", 100, qtext)
+    return render_template("onboarding.html", rows=rows, q=qtext or "")
 
 
 @bp.route("/innovation")
 @login_required
 def innovation():
-    rows = _approved_list("innovation", 100)
+    qtext = (request.args.get("q") or "").strip() or None
+    rows = _approved_list("innovation", 100, qtext)
     stats = _innovation_bucket_counts(rows)
-    return render_template("innovation.html", rows=rows, innovation_stats=stats)
+    return render_template("innovation.html", rows=rows, innovation_stats=stats, q=qtext or "")
 
 
 @bp.route("/training")
 @login_required
 def training():
-    rows = _approved_list("training", 100)
-    return render_template("training.html", rows=rows)
+    qtext = (request.args.get("q") or "").strip() or None
+    rows = _approved_list("training", 100, qtext)
+    return render_template("training.html", rows=rows, q=qtext or "")
 
 
 @bp.route("/hall-of-fame")

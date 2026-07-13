@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "includes/status_badge.html" import status_badge %}
+{% from "includes/catalog_pagination.html" import catalog_pagination %}
 {% block title %}Content catalogue{% endblock %}
 {% block page_header %}{% endblock %}
 {% block content %}
@@ -13,20 +14,72 @@
       </nav>
       <span class="portal-eyebrow">Admin view</span>
       <h1 class="portal-hero__title">Content catalogue</h1>
-      <p class="portal-lede">All catalogue records across modules and statuses. Browse approved items in the <a href="{{ url_for('main.knowledge') }}">Knowledge repository</a>.</p>
+      <p class="portal-lede">Indexed, searchable catalogue across all modules and statuses. Browse approved items in the <a href="{{ url_for('main.knowledge') }}">Knowledge repository</a>.</p>
     </div>
     <div class="portal-hero__aside">
       <div class="portal-stat" role="status">
-        <span class="portal-stat__value">{{ rows|length }}</span>
-        <span class="portal-stat__label">Records</span>
+        <span class="portal-stat__value">{{ catalog.total }}</span>
+        <span class="portal-stat__label">Total records</span>
       </div>
       <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create content</a>
     </div>
   </header>
 
+  <form method="get" class="catalog-toolbar card" action="{{ url_for('content.content_list') }}">
+    <div class="catalog-toolbar__row">
+      <div class="field catalog-toolbar__search">
+        <label for="cat-q">Search</label>
+        <input id="cat-q" type="search" name="q" value="{{ q or '' }}" placeholder="Title, summary, body, tags…" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="cat-module">Module</label>
+        <select id="cat-module" name="module">
+          <option value="">All modules</option>
+          {% for value, label in module_options %}
+            <option value="{{ value }}" {% if module == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="cat-status">Status</label>
+        <select id="cat-status" name="status">
+          {% for value, label in status_options %}
+            <option value="{{ value }}" {% if status == value or (not status and not value) %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="cat-sort">Sort</label>
+        <select id="cat-sort" name="sort">
+          {% for value, label in sort_options %}
+            <option value="{{ value }}" {% if sort == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="cat-per-page">Per page</label>
+        <select id="cat-per-page" name="per_page">
+          {% for n in [10, 20, 50, 100] %}
+            <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>{{ n }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="catalog-toolbar__actions">
+        <button class="btn btn-primary" type="submit">Apply</button>
+        <a class="btn btn-secondary" href="{{ url_for('content.content_list') }}">Reset</a>
+      </div>
+    </div>
+    {% if catalog.total > 0 %}
+      <p class="catalog-toolbar__meta">
+        Showing <strong>{{ catalog.showing_from }}–{{ catalog.showing_to }}</strong> of <strong>{{ catalog.total }}</strong>
+        {% if catalog.used_fts %} · full-text index{% endif %}
+      </p>
+    {% endif %}
+  </form>
+
   {% if rows and rows|length > 0 %}
     <div class="portal-table-wrap">
-      <table class="portal-table">
+      <table class="portal-table catalog-table">
         <thead>
           <tr>
             <th scope="col">Title</th>
@@ -49,8 +102,9 @@
         </tbody>
       </table>
     </div>
+    {{ catalog_pagination('content.content_list', catalog) }}
   {% else %}
-    <p class="portal-empty">No content records yet.</p>
+    <p class="portal-empty">No content records match your filters.</p>
   {% endif %}
 </div>
 {% endblock %}

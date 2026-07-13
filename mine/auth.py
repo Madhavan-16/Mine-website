@@ -4,7 +4,7 @@ from flask_wtf import FlaskForm
 from wtforms import PasswordField, StringField
 from wtforms.validators import DataRequired, EqualTo, Length
 
-from mine.auth_utils import load_current_user, login_required
+from mine.auth_utils import load_current_user, login_required, safe_login_next
 from mine.db import get_db
 from mine.services import log_audit
 
@@ -37,7 +37,8 @@ class AccountPasswordChangeForm(FlaskForm):
 def login():
     if load_current_user():
         u = load_current_user()
-        return redirect(request.args.get("next") or post_login_redirect_url(u))
+        nxt = safe_login_next(request.args.get("next"))
+        return redirect(nxt or post_login_redirect_url(u))
     form = LoginForm()
     if form.validate_on_submit():
         db = get_db()
@@ -54,7 +55,8 @@ def login():
             session["user_id"] = user["id"]
             log_audit(user["id"], "login", "user", user["id"], None)
             db.commit()
-            return redirect(request.args.get("next") or post_login_redirect_url(user))
+            nxt = safe_login_next(request.form.get("next") or request.args.get("next"))
+            return redirect(nxt or post_login_redirect_url(user))
         flash("Invalid username or password.", "danger")
     return render_template("auth/login.html", form=form)
 

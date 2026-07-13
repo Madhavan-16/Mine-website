@@ -107,13 +107,11 @@
       <form class="search-form" method="get" action="{{ url_for('search.search') }}" role="search">
         <label class="visually-hidden" for="global-q">Search</label>
         <input id="global-q" type="search" name="q" placeholder="Search MiNe…" value="{{ request.args.get('q','') }}" />
-        <label class="visually-hidden" for="global-module">Module filter</label>
-        <select id="global-module" name="module" aria-label="Module filter">
-          <option value="">All modules</option>
-          <option value="kyc" {% if request.args.get('module')=='kyc' %}selected{% endif %}>KYC</option>
-          <option value="kya" {% if request.args.get('module')=='kya' %}selected{% endif %}>KYA</option>
-          <option value="case_study" {% if request.args.get('module')=='case_study' %}selected{% endif %}>Case study</option>
-          <option value="projects" {% if request.args.get('module')=='projects' %}selected{% endif %}>Projects</option>
+        <label class="visually-hidden" for="global-module">Section filter</label>
+        <select id="global-module" name="module" aria-label="Section filter">
+          {% for value, label in search_filter_modules %}
+            <option value="{{ value }}" {% if request.args.get('module') == value or (not request.args.get('module') and not value) %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
         </select>
         <button class="btn btn-primary" type="submit">Search</button>
       </form>

@@ -622,6 +622,51 @@
 
 .spec-article .kyc-snapshot__img {
   box-shadow: none;
+  border: none;
+  border-radius: 0;
+  background: #ffffff;
+}
+
+/* Know your Customer — Freeport: borderless infographic images blended with page */
+.main:has(.spec-article .kyc-hero) {
+  background: #ffffff;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+.spec-article:has(.kyc-hero) {
+  border: none;
+  box-shadow: none;
+  background: #ffffff;
+}
+
+#main .spec-article:has(.kyc-hero) .kyc-snapshot__figure,
+#main .spec-article:has(.kyc-hero) .journey-digital__figure,
+#main .spec-article:has(.kyc-hero) .kyc-leadership__figure {
+  margin: clamp(16px, 2.8vw, 24px) auto 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+#main .spec-article:has(.kyc-hero) .kyc-snapshot__figure {
+  max-width: min(1100px, 100%);
+}
+
+#main .spec-article:has(.kyc-hero) .kyc-snapshot__img,
+#main .spec-article:has(.kyc-hero) .journey-digital__img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: #ffffff;
+  outline: none;
 }
 
 /* KYC §2.3 Current management — reference graphic (May 2026 roster) */

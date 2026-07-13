@@ -13,6 +13,7 @@ from mine.db import (
     ensure_attachment_preview_column,
     ensure_attachment_slide_preview_column,
     ensure_notifications_scope,
+    ensure_projects_is_active_column,
     ensure_user_mail_tokens_table,
     get_db,
     init_app as db_init_app,
@@ -58,7 +59,7 @@ def create_app():
     @app.context_processor
     def inject_nav():
         from mine.auth_utils import load_current_user
-        from mine.catalog_modules import MODULE_LABELS, module_label
+        from mine.catalog_modules import MODULE_LABELS, SEARCH_FILTER_MODULES, module_label
         from mine.services import count_read_notifications, count_unread_notifications, get_user_notifications
 
         user = load_current_user()
@@ -86,6 +87,7 @@ def create_app():
             pending_moderation=pending_moderation,
             module_labels=MODULE_LABELS,
             module_label=module_label,
+            search_filter_modules=SEARCH_FILTER_MODULES,
         )
 
     with app.app_context():
@@ -99,6 +101,7 @@ def create_app():
         ensure_attachment_slide_preview_column()
         ensure_notifications_scope()
         ensure_user_mail_tokens_table()
+        ensure_projects_is_active_column()
         from mine.upload_paths import normalize_attachment_paths_in_db
 
         try:

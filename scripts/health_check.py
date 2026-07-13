@@ -63,7 +63,7 @@ def main() -> int:
     get("/welcome")
     get("/knowledge")
     get("/search")
-    get("/my-submissions", expect=(200, 302))
+    get("/my/submissions", expect=(200, 302))
 
     # Non-admin should not reach content catalogue directly (redirect)
     r_content = get("/content", expect=(200, 302))

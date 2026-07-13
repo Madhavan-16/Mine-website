@@ -11,8 +11,20 @@
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 18 9 6l3 5 3-3 5 10H4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4 18h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
   {% elif icon == 'tech-stack' %}
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M9 9.5h6M9 12.5h4.5M9 15.5h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12 5V3.5M8.5 3.5h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+  {% elif icon == 'business-benefits' %}
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 18V10M8 18V6M12 18v-4M16 18V8M20 18v-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4 18h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+  {% elif icon == 'tech-benefits' %}
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 7.5h8l-1 3H9l-1-3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7.5 10.5 6 19h12l-1.5-8.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="10" cy="19.5" r="1.2" fill="currentColor"/><circle cx="14" cy="19.5" r="1.2" fill="currentColor"/><path d="M9.5 7.5V5.5h5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
   {% else %}
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 4 8v8l8 5 8-5V8l-8-5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+  {% endif %}
+{% endmacro %}
+
+{% macro render_chip_icon(chip) %}
+  {% if chip.brand %}
+  <img class="project-chip__brand" src="{{ url_for('static', filename='img/app-brands/' ~ chip.brand ~ '.svg') }}" alt="" width="20" height="20" loading="lazy" decoding="async" />
+  {% else %}
+  <span class="project-chip__icon" aria-hidden="true">{{ chip_icon(chip.icon) }}</span>
   {% endif %}
 {% endmacro %}
 
@@ -64,6 +76,33 @@
     <span class="project-section-empty__icon" aria-hidden="true">{{ project_section_icon('overview') }}</span>
     <p class="project-section-panel__empty">Details will be added soon.</p>
   </div>
+  {% elif view.layout == 'value_chain_flow' %}
+  <div class="project-vc-flow">
+    <p class="project-vc-flow__lede">
+      Pit-to-port value chain — <strong>{{ view.activeCount }}</strong> of {{ view.stages|length }} stages supported by this engagement.
+    </p>
+    <div class="project-vc-flow__viewport">
+      <ol class="project-vc-flow__track" role="list" aria-label="Mining value chain from plan to report">
+        {% for stage in view.stages %}
+        <li class="project-vc-flow__stage{% if stage.active %} is-active{% endif %}" role="listitem">
+          <div class="project-vc-flow__node" aria-hidden="true">
+            <span class="project-vc-flow__node-icon">{{ chip_icon(stage.icon) }}</span>
+          </div>
+          <span class="project-vc-flow__stage-label">{{ stage.label }}</span>
+          {% if stage.active %}
+          <ul class="project-vc-flow__details" aria-label="{{ stage.label }} coverage">
+            {% for detail in stage.details %}
+            <li>{{ detail }}</li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <span class="project-vc-flow__muted">—</span>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
   {% elif view.layout == 'timeline' %}
   <ol class="project-value-chain" role="list">
     {% for chip in view.chips %}
@@ -80,28 +119,115 @@
     {% for chip in view.chips %}
     <li>
       <span class="project-chip">
-        <span class="project-chip__icon" aria-hidden="true">{{ chip_icon(chip.icon) }}</span>
+        <span class="project-chip__icon-wrap" aria-hidden="true">{{ render_chip_icon(chip) }}</span>
         <span class="project-chip__text">{{ chip.text }}</span>
       </span>
     </li>
     {% endfor %}
   </ul>
-  {% elif view.layout == 'overview' %}
-  {% if view.duration %}
-  <div class="project-duration" role="status">
-    <span class="project-duration__badge" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="5.5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 4v3M16 4v3M4 10h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-    </span>
-    <div class="project-duration__copy">
-      <span class="project-duration__label">Engagement window</span>
-      <span class="project-duration__value">{{ view.duration }}</span>
-    </div>
+  {% elif view.layout == 'function_cards' %}
+  <div class="project-function-cards" role="list" aria-label="Business functions by domain">
+    {% for card in view.cards %}
+    <article class="project-function-card" role="listitem">
+      <header class="project-function-card__head">
+        <span class="project-function-card__icon" aria-hidden="true">{{ chip_icon(card.icon) }}</span>
+        <h4 class="project-function-card__title">{{ card.title }}</h4>
+        <span class="project-function-card__count">{{ card.capabilities|length }}</span>
+      </header>
+      <ul class="project-function-card__items" role="list">
+        {% for item in card.capabilities %}
+        <li>{{ item.text }}</li>
+        {% endfor %}
+      </ul>
+    </article>
+    {% endfor %}
   </div>
-  {% endif %}
+  {% elif view.layout == 'overview' %}
   {% if view.body %}
   <div class="project-prose-card">
     <span class="project-prose-card__icon" aria-hidden="true">{{ project_section_icon('overview') }}</span>
     <div class="project-section-panel__prose">{{ view.body }}</div>
+  </div>
+  {% endif %}
+  {% if view.sowDetails %}
+  <div class="project-sow-details">
+    <header class="project-sow-details__head">
+      <h3 class="project-sow-details__title">{{ view.sowDetails.sow_title or 'Statement of Work highlights' }}</h3>
+      <p class="project-sow-details__source">Source: {{ view.sowDetails.source_document }}{% if view.sowDetails.signed %} · Signed {{ view.sowDetails.signed }}{% endif %}</p>
+    </header>
+    <dl class="project-sow-details__facts">
+      {% if view.sowDetails.client %}
+      <div class="project-sow-details__fact">
+        <dt>Client</dt>
+        <dd>{{ view.sowDetails.client }}</dd>
+      </div>
+      {% endif %}
+      {% if view.sowDetails.supplier %}
+      <div class="project-sow-details__fact">
+        <dt>Supplier</dt>
+        <dd>{{ view.sowDetails.supplier }}</dd>
+      </div>
+      {% endif %}
+      {% if view.sowDetails.contract_value %}
+      <div class="project-sow-details__fact">
+        <dt>Contract value</dt>
+        <dd>{{ view.sowDetails.contract_value }}</dd>
+      </div>
+      {% endif %}
+      {% if view.sowDetails.executing_model %}
+      <div class="project-sow-details__fact">
+        <dt>Executing model</dt>
+        <dd>{{ view.sowDetails.executing_model }}</dd>
+      </div>
+      {% endif %}
+      {% if view.sowDetails.service_model %}
+      <div class="project-sow-details__fact">
+        <dt>Service model</dt>
+        <dd>{{ view.sowDetails.service_model }}</dd>
+      </div>
+      {% endif %}
+      {% if view.sowDetails.monthly_value %}
+      <div class="project-sow-details__fact">
+        <dt>Monthly fixed price</dt>
+        <dd>{{ view.sowDetails.monthly_value }}</dd>
+      </div>
+      {% endif %}
+      {% if view.sowDetails.supported_systems %}
+      <div class="project-sow-details__fact">
+        <dt>Supported systems</dt>
+        <dd>{{ view.sowDetails.supported_systems }}</dd>
+      </div>
+      {% endif %}
+      {% if view.sowDetails.team_size %}
+      <div class="project-sow-details__fact project-sow-details__fact--wide">
+        <dt>Consultant team</dt>
+        <dd>{% if view.sowDetails.team_size.onsite %}{{ view.sowDetails.team_size.onsite }} onsite{% endif %}{% if view.sowDetails.team_size.nearshore %} · {{ view.sowDetails.team_size.nearshore }} nearshore{% endif %}{% if view.sowDetails.team_size.offshore %} · {{ view.sowDetails.team_size.offshore }} offshore{% endif %} <span class="project-sow-details__fact-note">({{ view.sowDetails.team_size.onsite + view.sowDetails.team_size.nearshore + view.sowDetails.team_size.offshore }} role types)</span></dd>
+      </div>
+      {% endif %}
+    </dl>
+    {% if view.sowDetails.investment_fund %}
+    <p class="project-sow-details__note">{{ view.sowDetails.investment_fund }} included in contract value for strategic Data &amp; Analytics goals.</p>
+    {% endif %}
+    {% if view.sowDetails.locations %}
+    <div class="project-sow-details__block">
+      <h4 class="project-sow-details__label">Delivery locations</h4>
+      <ul class="project-sow-details__list" role="list">
+        {% for location in view.sowDetails.locations %}
+        <li>{{ location }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+    {% if view.sowDetails.activities %}
+    <div class="project-sow-details__block">
+      <h4 class="project-sow-details__label">Core team activities</h4>
+      <ul class="project-sow-details__list project-sow-details__list--grid" role="list">
+        {% for activity in view.sowDetails.activities %}
+        <li>{{ activity }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
   </div>
   {% endif %}
   {% else %}

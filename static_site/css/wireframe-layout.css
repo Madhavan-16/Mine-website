@@ -352,6 +352,48 @@
   image-rendering: auto;
 }
 
+/* Freeport–Hexaware Journey page — borderless infographics blended with page background */
+.main:has(.journey-page) {
+  background: #ffffff;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+.journey-page {
+  background: #ffffff;
+}
+
+#main .journey-page .card.journey-digital,
+#main .journey-page .card.journey-digital:hover,
+#main .journey-page .card.journey-digital:focus-within {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  padding-inline: 0;
+  transform: none;
+}
+
+#main .journey-page .journey-digital__figure {
+  margin: 16px 0 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+#main .journey-page .journey-digital__img {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: #ffffff;
+  outline: none;
+}
+
+#main .journey-page .journey-digital__figure--sharp .journey-digital__img {
+  width: 1600px;
+  max-width: 100%;
+}
+
 /* ——— Freeport story — CSS horizontal journey timeline (Hexaware colors) ——— */
 .freeport-ht {
   margin: 0 0 8px;

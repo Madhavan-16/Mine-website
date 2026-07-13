@@ -23,7 +23,7 @@ from flask import (
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from itsdangerous import BadSignature, URLSafeTimedSerializer
-from wtforms import SelectField, StringField, TextAreaField
+from wtforms import BooleanField, SelectField, StringField, TextAreaField
 from wtforms.validators import DataRequired, Length, Optional
 
 from mine.auth_utils import load_current_user, login_required, roles_required
@@ -32,9 +32,17 @@ from mine.catalog_modules import (
     KNOWLEDGE_MODULES_WITHOUT_BODY,
     KNOWLEDGE_SERIES_MODULE_KEYS,
     KNOWLEDGE_SERIES_MODULES,
+    MODULE_LABELS,
     STANDALONE_MODULE_TO_SEGMENT,
     STANDALONE_REPO_MODULES,
     STANDALONE_REPO_UI,
+)
+from mine.catalog_query import (
+    CATALOG_PAGE_SIZE_DEFAULT,
+    CATALOG_SORT_OPTIONS_ADMIN,
+    CATALOG_STATUS_OPTIONS,
+    enrich_catalog_for_template,
+    query_catalog,
 )
 from mine.config import Config
 from mine.db import get_db
@@ -154,6 +162,7 @@ class ProjectContentForm(FlaskForm):
     program_name = StringField("Program name", validators=[Optional(), Length(max=200)])
     project_manager = StringField("Project manager", validators=[Optional(), Length(max=200)])
     delivery_status = StringField("Delivery status", validators=[Optional(), Length(max=120)])
+    is_active = BooleanField("Active engagement", default=True)
     region = StringField("Region", validators=[Optional(), Length(max=120)])
     attachment = FileField(
         "Attachment (optional)",
@@ -236,14 +245,15 @@ def _insert_new_content_from_form(user, form, module: str) -> int:
     if module == "projects":
         db.execute(
             """
-            INSERT INTO projects (content_id, program_name, project_manager, delivery_status)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO projects (content_id, program_name, project_manager, delivery_status, is_active)
+            VALUES (?, ?, ?, ?, ?)
             """,
             (
                 cid,
                 _str_or_none(getattr(form, "program_name").data),
                 _str_or_none(getattr(form, "project_manager").data),
                 _str_or_none(getattr(form, "delivery_status").data),
+                1 if getattr(form, "is_active", None) and form.is_active.data else 0,
             ),
         )
         reg = (getattr(form, "region").data or "").strip()
@@ -303,14 +313,15 @@ def _update_from_form(
     if module == "projects":
         db.execute(
             """
-            INSERT INTO projects (content_id, program_name, project_manager, delivery_status)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO projects (content_id, program_name, project_manager, delivery_status, is_active)
+            VALUES (?, ?, ?, ?, ?)
             """,
             (
                 cid,
                 _str_or_none(form.program_name.data),
                 _str_or_none(form.project_manager.data),
                 _str_or_none(form.delivery_status.data),
+                1 if form.is_active.data else 0,
             ),
         )
     db.execute("DELETE FROM content_meta WHERE content_id = ? AND meta_key = 'region'", (cid,))
@@ -483,6 +494,91 @@ def _safe_return_path(raw: str | None) -> str | None:
     return path
 
 
+def _normalize_display_text(value: str | None) -> str:
+    if not value:
+        return ""
+    return "\n".join(line.strip() for line in value.splitlines()).strip()
+
+
+def _content_series_neighbors(db, cid: int, module: str):
+    """Prev/next approved items in the same knowledge series (recent-first order)."""
+    rows = db.execute(
+        """
+        SELECT id, title
+        FROM content
+        WHERE status = 'approved' AND module = ?
+        ORDER BY datetime(updated_at) DESC, id DESC
+        """,
+        (module,),
+    ).fetchall()
+    if not rows:
+        return None, None, 0, 0
+    ids = [int(r["id"]) for r in rows]
+    try:
+        idx = ids.index(int(cid))
+    except ValueError:
+        return None, None, 0, len(rows)
+    prev_row = rows[idx + 1] if idx + 1 < len(rows) else None
+    next_row = rows[idx - 1] if idx > 0 else None
+    return prev_row, next_row, idx + 1, len(rows)
+
+
+def _resolve_view_section(row, files, requested: str | None) -> str:
+    mod = (row["module"] or "").strip()
+    has_summary = bool(_normalize_display_text(row["summary"]))
+    has_body = mod not in KNOWLEDGE_MODULES_WITHOUT_BODY and bool(
+        _normalize_display_text(row["body"])
+    )
+    has_attach = bool(files)
+    valid = {"summary", "body", "attachments"}
+
+    if requested in valid:
+        if requested == "body" and not has_body:
+            requested = None
+        elif requested == "summary" and not has_summary:
+            requested = None
+        elif requested == "attachments" and not has_attach:
+            requested = None
+        else:
+            return requested
+
+    if has_summary:
+        return "summary"
+    if has_body:
+        return "body"
+    if has_attach:
+        return "attachments"
+    return "summary"
+
+
+def _attach_page_bounds(files, requested_page) -> tuple[int, int, int]:
+    total = len(files)
+    if total == 0:
+        return 0, 1, 0
+    try:
+        page = int(requested_page or 1)
+    except (TypeError, ValueError):
+        page = 1
+    page = max(1, min(page, total))
+    return page - 1, page, total
+
+
+def _view_query_params(
+    *,
+    return_to: str | None,
+    section: str | None = None,
+    attach_page: int | None = None,
+) -> dict:
+    params: dict = {}
+    if return_to:
+        params["return_to"] = return_to
+    if section:
+        params["section"] = section
+    if attach_page and attach_page > 1:
+        params["attach_page"] = attach_page
+    return params
+
+
 def _attachment_manage_href(user, row) -> str | None:
     """URL to the editor where admins/moderators can upload an attachment (None if not allowed)."""
     # load_current_user() returns sqlite3.Row — supports row["key"] but not .get()
@@ -526,17 +622,51 @@ def content_list():
     user = load_current_user()
     if user["role"] not in ("admin", "moderator"):
         return redirect(url_for("main.knowledge"))
+
+    qtext = (request.args.get("q") or "").strip()
+    module = (request.args.get("module") or "").strip() or None
+    status = (request.args.get("status") or "").strip() or None
+    sort = (request.args.get("sort") or "recent").strip()
+    try:
+        page = max(1, int(request.args.get("page") or 1))
+    except (TypeError, ValueError):
+        page = 1
+    try:
+        per_page = int(request.args.get("per_page") or CATALOG_PAGE_SIZE_DEFAULT)
+    except (TypeError, ValueError):
+        per_page = CATALOG_PAGE_SIZE_DEFAULT
+
     db = get_db()
-    rows = db.execute(
-        """
-        SELECT c.*, u.display_name AS author_name
-        FROM content c
-        JOIN users u ON u.id = c.author_id
-        ORDER BY c.updated_at DESC
-        LIMIT 200
-        """
-    ).fetchall()
-    return render_template("content/list.html", rows=rows)
+    catalog = enrich_catalog_for_template(
+        query_catalog(
+            db,
+            q=qtext or None,
+            module=module,
+            status=status,
+            sort=sort,
+            page=page,
+            per_page=per_page,
+        ),
+        q=qtext or None,
+        module=module,
+        status=status,
+    )
+
+    module_options = sorted(MODULE_LABELS.items(), key=lambda pair: pair[1].lower())
+
+    return render_template(
+        "content/list.html",
+        catalog=catalog,
+        rows=catalog["rows"],
+        q=qtext,
+        module=module,
+        status=status,
+        sort=catalog["sort"],
+        per_page=catalog["per_page"],
+        module_options=module_options,
+        sort_options=CATALOG_SORT_OPTIONS_ADMIN,
+        status_options=CATALOG_STATUS_OPTIONS,
+    )
 
 
 @bp.route("/content/<int:cid>")
@@ -574,6 +704,33 @@ def content_view(cid: int):
         """,
         (cid, row["module"]),
     ).fetchall()
+    return_to = _safe_return_path(request.args.get("return_to"))
+    mod = (row["module"] or "").strip()
+    is_knowledge = mod in KNOWLEDGE_SERIES_MODULE_KEYS
+    section = None
+    attach_index = 0
+    attach_page = 1
+    attach_total = len(files)
+    prev_row = next_row = None
+    series_position = series_total = 0
+    summary_text = _normalize_display_text(row["summary"])
+    body_text = _normalize_display_text(row["body"])
+    view_params = _view_query_params(return_to=return_to)
+
+    if is_knowledge:
+        section = _resolve_view_section(row, files, (request.args.get("section") or "").strip() or None)
+        attach_index, attach_page, attach_total = _attach_page_bounds(
+            files, request.args.get("attach_page")
+        )
+        if section != "attachments":
+            attach_index, attach_page = 0, 1
+        prev_row, next_row, series_position, series_total = _content_series_neighbors(
+            db, cid, mod
+        )
+        view_params = _view_query_params(
+            return_to=return_to, section=section, attach_page=attach_page if attach_total > 1 else None
+        )
+
     return render_template(
         "content/view.html",
         row=row,
@@ -582,7 +739,20 @@ def content_view(cid: int):
         files=files,
         related_rows=related,
         attachment_manage_url=_attachment_manage_href(user, row),
-        return_to=_safe_return_path(request.args.get("return_to")),
+        return_to=return_to,
+        is_knowledge=is_knowledge,
+        section=section,
+        summary_text=summary_text,
+        body_text=body_text,
+        attach_index=attach_index,
+        attach_page=attach_page,
+        attach_total=attach_total,
+        prev_row=prev_row,
+        next_row=next_row,
+        series_position=series_position,
+        series_total=series_total,
+        view_params=view_params,
+        paginate_attachments=is_knowledge and attach_total > 1,
     )
 
 
@@ -766,6 +936,7 @@ def run_project_edit(cid: int):
         form.program_name.data = proj["program_name"] or ""
         form.project_manager.data = proj["project_manager"] or ""
         form.delivery_status.data = proj["delivery_status"] or ""
+        form.is_active.data = bool(proj["is_active"]) if "is_active" in proj.keys() else True
     reg = db.execute(
         "SELECT meta_value FROM content_meta WHERE content_id = ? AND meta_key = 'region' LIMIT 1",
         (cid,),

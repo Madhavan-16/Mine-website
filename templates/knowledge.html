@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "includes/catalog_pagination.html" import catalog_pagination %}
 {% block title %}Knowledge Repository{% endblock %}
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/knowledge-repo.css') }}" />
@@ -18,31 +19,52 @@
   'blog': '📄'
 } %}
 
-{% if landing %}
-<div class="krepo" data-krepo-landing>
+<div class="krepo{% if not landing %} krepo--list{% endif %}">
   <header class="krepo-hero">
     <div class="krepo-hero__copy">
       <nav class="krepo-breadcrumb" aria-label="Breadcrumb">
         <a href="{{ url_for('main.dashboard') }}">Home</a>
         <span class="krepo-breadcrumb__sep" aria-hidden="true">›</span>
-        <span aria-current="page">Knowledge repository</span>
+        {% if landing %}
+          <span aria-current="page">Knowledge repository</span>
+        {% else %}
+          <a href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
+          <span class="krepo-breadcrumb__sep" aria-hidden="true">›</span>
+          <span aria-current="page">
+            {% if module %}{{ active_module_label }}{% elif q %}Search{% elif author %}Author{% else %}Catalogue{% endif %}
+          </span>
+        {% endif %}
       </nav>
-      <span class="krepo-eyebrow">Approved catalogue</span>
-      <h1 class="krepo-hero__title">Knowledge repository</h1>
-      <p class="krepo-lede">Browse series and modules, run MiNe intelligence search, and open the latest approved artefacts.</p>
+      <span class="krepo-eyebrow">{% if landing %}Approved catalogue{% else %}Filtered catalogue{% endif %}</span>
+      <h1 class="krepo-hero__title">
+        {% if landing %}
+          Knowledge repository
+        {% elif module %}
+          {{ active_module_label }}
+        {% elif q %}
+          Search results
+        {% elif author %}
+          By {{ author }}
+        {% else %}
+          Knowledge catalogue
+        {% endif %}
+      </h1>
     </div>
     <div class="krepo-hero__aside">
-      {% set repo_total = module_counts.values()|sum %}
       <div class="krepo-stat" role="status">
-        <span class="krepo-stat__value">{{ repo_total }}</span>
-        <span class="krepo-stat__label">Series items</span>
+        <span class="krepo-stat__value">{{ catalog.total }}</span>
+        <span class="krepo-stat__label">{% if landing %}Total items{% else %}Matching{% endif %}</span>
       </div>
       {% if current_user.role in ['admin', 'moderator'] %}
-        <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create content</a>
+        <a class="btn btn-primary" href="{{ url_for('content.content_create', module=module) if module else url_for('content.content_create') }}">+ Create content</a>
+      {% endif %}
+      {% if not landing %}
+        <a class="btn btn-secondary" href="{{ url_for('main.knowledge') }}">← Overview</a>
       {% endif %}
     </div>
   </header>
 
+  {% if landing %}
   <section class="krepo-section" aria-labelledby="krepo-categories-title">
     <div class="krepo-section__head">
       <h2 id="krepo-categories-title" class="krepo-section__title">Browse by series</h2>
@@ -63,106 +85,134 @@
     </ul>
   </section>
 
-  <section class="krepo-section krepo-intelligence" aria-label="MiNe intelligence search and recent catalogue">
+  <section class="krepo-section krepo-intelligence" aria-label="MiNe intelligence search">
     {% include "includes/enterprise_search_xp.html" %}
   </section>
-</div>
-<script src="{{ url_for('static', filename='js/enterprise-search-xp.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/enterprise-search-xp.js') }}" defer></script>
+  {% else %}
+  <nav class="krepo-series-strip" aria-label="Knowledge series">
+    <span class="krepo-series-strip__label">Series</span>
+    <ul class="krepo-series-strip__list" role="list">
+      <li>
+        <a class="krepo-series-pill{% if not module %} is-active{% endif %}" href="{{ url_for('main.knowledge', q=q or none, author=author or none, sort=sort, per_page=per_page) }}">All</a>
+      </li>
+      {% for key, label in modules_meta %}
+        <li>
+          <a class="krepo-series-pill{% if module == key %} is-active{% endif %}" href="{{ url_for('main.knowledge', module=key, q=q or none, author=author or none, sort=sort, per_page=per_page) }}" data-module="{{ key }}">{{ label }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </nav>
+  {% endif %}
 
-{% else %}
-<div class="krepo krepo--list">
-  <header class="krepo-hero">
-    <div class="krepo-hero__copy">
-      <nav class="krepo-breadcrumb" aria-label="Breadcrumb">
-        <a href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
-        {% if module or q or author %}
-          <span class="krepo-breadcrumb__sep" aria-hidden="true">›</span>
-          <span aria-current="page">
-            {% if module %}{{ module_label }}{% elif q %}Search{% else %}Author{% endif %}
-          </span>
-        {% else %}
-          <span class="krepo-breadcrumb__sep" aria-hidden="true">›</span>
-          <span aria-current="page">All items</span>
-        {% endif %}
-      </nav>
-      <span class="krepo-eyebrow">Filtered view</span>
-      <h1 class="krepo-hero__title">
-        {% if module %}{{ module_label }}{% elif q %}Search results{% elif author %}By {{ author }}{% else %}All catalogue items{% endif %}
-      </h1>
-      <p class="krepo-lede">Refine with filters or open any approved item below.</p>
-    </div>
-    <div class="krepo-hero__aside">
-      <div class="krepo-stat" role="status">
-        <span class="krepo-stat__value">{{ rows|length }}</span>
-        <span class="krepo-stat__label">Showing</span>
+  <section class="krepo-catalog" aria-labelledby="krepo-catalog-title">
+    <div class="krepo-section__head krepo-catalog__head">
+      <div>
+        <h2 id="krepo-catalog-title" class="krepo-section__title">{% if landing %}Full catalogue{% else %}Results{% endif %}</h2>
+        <p class="krepo-section__hint">Indexed search · sortable · paginated</p>
       </div>
-      <a class="btn btn-secondary" href="{{ url_for('main.knowledge') }}">← Overview</a>
     </div>
-  </header>
 
-  <div class="krepo-list-layout">
-    <aside class="krepo-filters" aria-label="Filter catalogue">
-      <h2 class="krepo-filters__title">Filters</h2>
-      <form method="get" action="{{ url_for('main.knowledge') }}">
-        <div class="field">
-          <label for="flt-module">Module</label>
-          <select id="flt-module" name="module">
-            <option value="">All in repository</option>
-            {% for key, label in modules_meta %}
-              <option value="{{ key }}" {% if module == key %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="field">
-          <label for="flt-author">Author</label>
-          <select id="flt-author" name="author">
-            <option value="">All authors</option>
-            {% for opt in author_options %}
-              <option value="{{ opt.n }}" {% if author == opt.n %}selected{% endif %}>{{ opt.n }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="field">
-          <label for="flt-q">Keywords</label>
-          <input id="flt-q" type="search" name="q" placeholder="Title or summary…" value="{{ q or '' }}" />
-        </div>
-        <div class="krepo-filters__actions">
-          <button class="btn btn-primary" type="submit">Apply filters</button>
-          <a class="btn btn-secondary" href="{{ url_for('main.knowledge') }}">Clear</a>
-        </div>
-      </form>
-      {% if current_user.role in ['admin', 'moderator'] %}
-        <div class="krepo-filters__create">
-          <a class="btn btn-primary" href="{{ url_for('content.content_create', module=module) if module else url_for('content.content_create') }}">+ Create content</a>
-        </div>
-      {% endif %}
-    </aside>
+    <div class="krepo-list-layout">
+      <aside class="krepo-filters" aria-label="Filter catalogue">
+        <h3 class="krepo-filters__title">Refine</h3>
+        <form method="get" action="{{ url_for('main.knowledge') }}" class="krepo-filters__form">
+          <div class="field">
+            <label for="flt-module">Series</label>
+            <select id="flt-module" name="module">
+              <option value="">All series</option>
+              {% for key, label in modules_meta %}
+                <option value="{{ key }}" {% if module == key %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label for="flt-author">Author</label>
+            <select id="flt-author" name="author">
+              <option value="">All authors</option>
+              {% for opt in author_options %}
+                <option value="{{ opt.n }}" {% if author == opt.n %}selected{% endif %}>{{ opt.n }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label for="flt-q">Keywords</label>
+            <input id="flt-q" type="search" name="q" placeholder="Search title, summary, body…" value="{{ q or '' }}" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="flt-sort">Sort by</label>
+            <select id="flt-sort" name="sort">
+              {% for value, label in sort_options %}
+                <option value="{{ value }}" {% if sort == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label for="flt-per-page">Per page</label>
+            <select id="flt-per-page" name="per_page">
+              {% for n in [10, 20, 50] %}
+                <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>{{ n }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="krepo-filters__actions">
+            <button class="btn btn-primary" type="submit">Apply</button>
+            <a class="btn btn-secondary" href="{{ url_for('main.knowledge') }}">Reset</a>
+          </div>
+        </form>
+      </aside>
 
-    <div class="krepo-results">
-      <p class="krepo-results__count"><strong>{{ rows|length }}</strong> approved item{% if rows|length != 1 %}s{% endif %} match your filters.</p>
-      {% if rows and rows|length > 0 %}
-        <ul class="krepo-result-list">
-          {% for item in rows %}
-            <li>
-              <a class="krepo-result" href="{{ url_for('content.content_view', cid=item.id, return_to=request.full_path) }}">
-                <div class="krepo-result__top">
-                  <h2 class="krepo-result__title">{{ item.title }}</h2>
-                  <span class="krepo-result__badge">{{ item.module }}</span>
-                </div>
-                <p class="krepo-result__meta">{{ item.author_name }} · {{ item.updated_at }}</p>
-                {% if item.summary and item.summary.strip() %}
-                  <p class="krepo-result__excerpt">{{ item.summary|truncate(320)|e }}</p>
-                {% endif %}
-                <span class="krepo-result__link">Read article →</span>
-              </a>
-            </li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <p class="krepo-empty">No matching approved items. Try clearing filters or returning to the overview.</p>
-      {% endif %}
+      <div class="krepo-results-panel">
+        <header class="krepo-results__toolbar">
+          <p class="krepo-results__count">
+            {% if catalog.total > 0 %}
+              Showing <strong>{{ catalog.showing_from }}–{{ catalog.showing_to }}</strong> of <strong>{{ catalog.total }}</strong>
+              {% if catalog.used_fts %}<span class="krepo-results__index">Full-text index</span>{% endif %}
+            {% else %}
+              No items match the current filters.
+            {% endif %}
+          </p>
+          {% if catalog.total_pages > 1 %}
+            <p class="krepo-results__page-meta">Page {{ catalog.page }} of {{ catalog.total_pages }}</p>
+          {% endif %}
+        </header>
+
+        {% if rows and rows|length > 0 %}
+          <ul class="krepo-result-list" role="list">
+            {% for item in rows %}
+              <li>
+                <article class="krepo-result-card">
+                  <a class="krepo-result-card__link" href="{{ url_for('content.content_view', cid=item.id, return_to=request.full_path) }}">
+                    <div class="krepo-result-card__main">
+                      <div class="krepo-result-card__top">
+                        <h3 class="krepo-result-card__title">{{ item.title }}</h3>
+                        <span class="krepo-result-card__badge" data-module="{{ item.module }}">{{ module_label(item.module) }}</span>
+                      </div>
+                      <p class="krepo-result-card__meta">
+                        <span>{{ item.author_name }}</span>
+                        <span class="krepo-result-card__sep" aria-hidden="true">·</span>
+                        <time datetime="{{ item.updated_at }}">{{ item.updated_at }}</time>
+                      </p>
+                      {% if item.summary and item.summary.strip() %}
+                        <p class="krepo-result-card__excerpt">{{ item.summary|truncate(280)|e }}</p>
+                      {% endif %}
+                    </div>
+                    <span class="krepo-result-card__cta" aria-hidden="true">Read →</span>
+                  </a>
+                </article>
+              </li>
+            {% endfor %}
+          </ul>
+          <footer class="krepo-results__footer">
+            {{ catalog_pagination('main.knowledge', catalog) }}
+          </footer>
+        {% else %}
+          <div class="krepo-empty krepo-empty--panel">
+            <p>No matching approved items. Adjust filters or <a href="{{ url_for('main.knowledge') }}">return to the overview</a>.</p>
+          </div>
+        {% endif %}
+      </div>
     </div>
-  </div>
+  </section>
 </div>
-{% endif %}
 {% endblock %}

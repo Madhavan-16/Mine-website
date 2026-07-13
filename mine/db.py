@@ -140,6 +140,16 @@ def ensure_notifications_scope():
     db.commit()
 
 
+def ensure_projects_is_active_column():
+    """Existing DBs: flag whether a program/project is active on the portfolio."""
+    db = get_db()
+    cols = [row[1] for row in db.execute("PRAGMA table_info(projects)").fetchall()]
+    if "is_active" not in cols:
+        db.execute("ALTER TABLE projects ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1")
+        db.execute("UPDATE projects SET is_active = 1 WHERE is_active IS NULL")
+        db.commit()
+
+
 def init_app(app):
     app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command)

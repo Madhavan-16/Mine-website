@@ -1,6 +1,6 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 
-from mine.auth_utils import login_required
+from mine.auth_utils import login_required, roles_required
 from mine.content import run_project_create, run_project_edit
 from mine.db import get_db
 from mine.project_catalog import (
@@ -8,6 +8,11 @@ from mine.project_catalog import (
     PROJECT_SECTIONS,
     build_portfolio_viz,
     enrich_project_rows,
+    fetch_approved_project_rows,
+    filter_projects_by_active,
+    project_is_active,
+    set_catalog_project_active,
+    set_db_project_active,
 )
 
 bp = Blueprint("projects", __name__)
@@ -25,6 +30,38 @@ def project_edit(cid: int):
     return run_project_edit(cid)
 
 
+@bp.route("/projects/toggle-active", methods=["POST"])
+@login_required
+@roles_required("admin", "moderator")
+def toggle_project_active():
+    next_url = (request.form.get("next") or "").strip()
+    if not next_url.startswith("/"):
+        next_url = url_for("projects.project_list")
+
+    is_active = request.form.get("is_active") == "1"
+    catalog_key = (request.form.get("catalog_key") or "").strip() or None
+    title = (request.form.get("title") or "").strip() or None
+    content_id_raw = (request.form.get("content_id") or "").strip()
+
+    db = get_db()
+    ok = False
+    if content_id_raw.isdigit():
+        ok = set_db_project_active(db, int(content_id_raw), is_active)
+        if ok:
+            db.commit()
+    elif catalog_key or title:
+        ok = set_catalog_project_active(catalog_key=catalog_key, title=title, is_active=is_active)
+
+    if ok:
+        flash(
+            "Engagement marked as active." if is_active else "Engagement marked as ended (excluded from landing active-project count).",
+            "success",
+        )
+    else:
+        flash("Could not update the active flag for this project.", "danger")
+    return redirect(next_url)
+
+
 @bp.route("/projects")
 @login_required
 def project_list():
@@ -33,6 +70,9 @@ def project_list():
     region = (request.args.get("region") or "").strip()
     q = (request.args.get("q") or "").strip()
     sort = (request.args.get("sort") or "recent").strip()
+    active = (request.args.get("active") or "all").strip().lower()
+    if active not in ("1", "0", "all"):
+        active = "all"
     db = get_db()
 
     program_options = [
@@ -68,6 +108,7 @@ def project_list():
     sql = """
         SELECT c.*, u.display_name AS author_name,
                p.program_name, p.project_manager, p.delivery_status,
+               COALESCE(p.is_active, 1) AS is_active,
                (SELECT meta_value FROM content_meta m WHERE m.content_id = c.id AND m.meta_key = 'region' LIMIT 1) AS region
         FROM content c
         JOIN users u ON u.id = c.author_id
@@ -92,8 +133,15 @@ def project_list():
         sql += " ORDER BY c.title COLLATE NOCASE ASC"
     else:
         sql += " ORDER BY c.updated_at DESC"
-    rows = db.execute(sql, args).fetchall()
-    enriched = enrich_project_rows(rows)
+    try:
+        rows = db.execute(sql, args).fetchall()
+    except Exception:
+        sql = sql.replace("COALESCE(p.is_active, 1) AS is_active", "1 AS is_active")
+        rows = db.execute(sql, args).fetchall()
+    enriched_all = enrich_project_rows(rows)
+    portfolio_viz = build_portfolio_viz(enriched_all)
+
+    enriched = filter_projects_by_active(enriched_all, active)
     if q:
         ql = q.lower()
         enriched = [
@@ -104,7 +152,6 @@ def project_list():
         ]
     if sort == "alpha":
         enriched.sort(key=lambda r: (r.get("title") or "").lower())
-    portfolio_viz = build_portfolio_viz(enriched)
     return render_template(
         "projects/list.html",
         rows=enriched,
@@ -116,8 +163,10 @@ def project_list():
         region=region,
         q=q,
         sort=sort,
+        active=active,
         program_options=program_options,
         status_options=status_options,
+        project_is_active=project_is_active,
     )
 
 
@@ -131,37 +180,49 @@ def project_detail(cid: int):
 
     user = load_current_user()
     db = get_db()
-    row = db.execute(
-        """
-        SELECT c.*, u.display_name AS author_name,
-               p.program_name, p.project_manager, p.delivery_status
-        FROM content c
-        JOIN users u ON u.id = c.author_id
-        JOIN projects p ON p.content_id = c.id
-        WHERE c.id = ? AND c.module = 'projects'
-        """,
-        (cid,),
-    ).fetchone()
-    if not row or not content_visible(user, row):
+    row = None
+    try:
+        row = db.execute(
+            """
+            SELECT c.*, u.display_name AS author_name,
+                   p.program_name, p.project_manager, p.delivery_status,
+                   COALESCE(p.is_active, 1) AS is_active
+            FROM content c
+            JOIN users u ON u.id = c.author_id
+            JOIN projects p ON p.content_id = c.id
+            WHERE c.id = ? AND c.module = 'projects'
+            """,
+            (cid,),
+        ).fetchone()
+    except Exception:
+        row = db.execute(
+            """
+            SELECT c.*, u.display_name AS author_name,
+                   p.program_name, p.project_manager, p.delivery_status,
+                   1 AS is_active
+            FROM content c
+            JOIN users u ON u.id = c.author_id
+            JOIN projects p ON p.content_id = c.id
+            WHERE c.id = ? AND c.module = 'projects'
+            """,
+            (cid,),
+        ).fetchone()
+    if not row or not content_visible(row, user):
         abort(404)
-    region = db.execute(
+    region_row = db.execute(
         "SELECT meta_value FROM content_meta WHERE content_id = ? AND meta_key = 'region' LIMIT 1",
         (cid,),
     ).fetchone()
-    files = db.execute(
-        "SELECT * FROM attachments WHERE content_id = ? ORDER BY id DESC", (cid,)
-    ).fetchall()
+    region = region_row["meta_value"] if region_row else None
     ds = (row["delivery_status"] or "").lower()
-    status_class = "status-dot--risk" if "risk" in ds or "amber" in ds or "yellow" in ds else "status-dot--ok"
+    status_class = "status-ok"
     if not row["delivery_status"]:
-        status_class = "status-dot--na"
-    from mine.content import _attachment_manage_href
-
+        status_class = "status-na"
+    elif "risk" in ds or "at risk" in ds:
+        status_class = "status-risk"
     return render_template(
         "projects/detail.html",
         row=row,
-        region=region["meta_value"] if region else "",
-        files=files,
+        region=region,
         status_class=status_class,
-        attachment_manage_url=_attachment_manage_href(user, row),
     )

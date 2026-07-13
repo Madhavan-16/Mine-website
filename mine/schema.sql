@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS projects (
   program_name TEXT,
   project_manager TEXT,
   delivery_status TEXT,
+  is_active INTEGER NOT NULL DEFAULT 1,
   FOREIGN KEY (content_id) REFERENCES content(id) ON DELETE CASCADE
 );
 

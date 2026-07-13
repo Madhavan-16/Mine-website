@@ -34,6 +34,14 @@
 
   <form method="get" class="filters-bar" action="{{ url_for('projects.project_list') }}">
     <div class="field">
+      <label for="active">Engagement</label>
+      <select id="active" name="active" onchange="this.form.submit()">
+        <option value="all" {% if active == 'all' %}selected{% endif %}>All engagements</option>
+        <option value="1" {% if active == '1' %}selected{% endif %}>Active only</option>
+        <option value="0" {% if active == '0' %}selected{% endif %}>Ended only</option>
+      </select>
+    </div>
+    <div class="field">
       <label for="status">Status</label>
       <select id="status" name="status" onchange="this.form.submit()">
         <option value="">All</option>
@@ -127,7 +135,7 @@
     {% for item in rows %}
     {% set tone = loop.index0 % 3 %}
     <article
-      class="project-card project-card--tone-{{ tone }}"
+      class="project-card project-card--tone-{{ tone }}{% if not project_is_active(item) %} project-card--ended{% endif %}"
       role="listitem"
       data-project-card
       id="project-{{ item.id }}"
@@ -143,6 +151,11 @@
         <span class="project-card__accent" aria-hidden="true"></span>
         <span class="project-card__index" aria-hidden="true">{{ '%02d'|format(loop.index) }}</span>
         <h2 class="project-card__title">{{ item.title }}</h2>
+        {% if not project_is_active(item) %}
+          <span class="project-card__status project-card__status--ended">Ended</span>
+        {% else %}
+          <span class="project-card__status project-card__status--active">Active</span>
+        {% endif %}
         <span class="project-card__chev" aria-hidden="true"></span>
       </button>
       <div class="project-card__panel" id="project-panel-{{ item.id }}" data-project-card-panel aria-hidden="true">
@@ -185,9 +198,12 @@
                         {% if section_key == 'overview' %}Engagement summary and timeline
                         {% elif section_key == 'supported_applications' %}Platforms and applications in scope
                         {% elif section_key == 'scope_of_work' %}Delivery responsibilities
-                        {% elif section_key == 'business_functions' %}Business capabilities supported
-                        {% elif section_key == 'mining_value_chain' %}Mining operations across the value chain
-                        {% else %}Tools, platforms, and technical stack{% endif %}
+                        {% elif section_key == 'business_functions' %}Business capabilities grouped by domain
+                        {% elif section_key == 'mining_value_chain' %}Mining Operations supported
+                        {% elif section_key == 'technologies' %}Tools, platforms, and technical stack
+                        {% elif section_key == 'business_benefits' %}Business outcomes and value delivered
+                        {% elif section_key == 'tech_benefits' %}Technical capabilities and platform outcomes
+                        {% else %}Project section details{% endif %}
                       </p>
                     </div>
                   </header>

@@ -75,6 +75,26 @@ MODULE_LABELS.update(
     }
 )
 
+SEARCH_FILTER_MODULES: tuple[tuple[str, str], ...] = (
+    ("", "All catalogue"),
+    *KNOWLEDGE_SERIES_MODULES,
+    ("projects", "Programs & projects"),
+    ("onboarding", "Onboarding kit"),
+    ("innovation", "Innovation center"),
+    ("training", "Training corner"),
+    ("hall_of_fame", "Hall of Fame"),
+)
+
+SEARCH_XP_CATEGORIES: tuple[dict[str, str], ...] = tuple(
+    {"value": value, "label": label} for value, label in SEARCH_FILTER_MODULES
+)
+
+SEARCH_SORT_OPTIONS: tuple[tuple[str, str], ...] = (
+    ("relevance", "Relevance"),
+    ("recent", "Recently updated"),
+    ("alpha", "Title A–Z"),
+)
+
 
 def module_label(slug: str | None) -> str:
     key = (slug or "").strip()

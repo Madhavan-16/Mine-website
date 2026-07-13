@@ -1,112 +1,387 @@
 {
-  "_comment": "Match by content_id (MiNe record) and/or title. Projects here always appear on /projects.",
+  "_comment": "Match by content_id (MiNe record) and/or title. Set is_active false when an engagement ends to hide it from landing counts.",
   "projects": [
     {
       "title": "2024 Hexaware Continuous Delivery – Core Team",
       "content_id": null,
+      "engagement_details": {
+        "source_document": "2024 Hexaware Continious Delivery_Core Team SoW v1.0.docx.pdf",
+        "sow_title": "BI Support / Continuous Delivery / Core Team",
+        "client": "Freeport-McMoRan Inc.",
+        "supplier": "Hexaware Technologies Inc.",
+        "signed": "18–21 December 2023",
+        "contract_value": "USD 10,281,156",
+        "investment_fund": "USD 150,000 strategic investment fund",
+        "executing_model": "Fixed price",
+        "service_model": "Onsite, nearshore and offshore",
+        "monthly_value": "USD 281,421",
+        "supported_systems": "FCX EDW Systems, BI & Analytics",
+        "team_size": {
+          "onsite": 8,
+          "nearshore": 6,
+          "offshore": 5
+        },
+        "locations": [
+          "Phoenix, AZ — Freeport-McMoRan Inc. (onsite)",
+          "Saltillo, Monterrey & Guadalajara, Mexico (nearshore)",
+          "Chennai, India — Hexaware Technologies (offshore)"
+        ],
+        "activities": [
+          "Data services",
+          "Job scheduling",
+          "BI functional area support for operations",
+          "Production support for ETL and job restarts",
+          "Project work for various FMI initiatives",
+          "Other BI-related work"
+        ]
+      },
       "sections": {
-        "overview": "Duration: 1 January 2024 – 31 December 2026\n\nHexaware continuous delivery engagement for FCX's enterprise data warehouse and business intelligence core team — development, enhancement, maintenance, and production support across the analytics ecosystem.",
+        "overview": "Duration: 1 January 2024 – 31 December 2026\n\nThis engagement provides continuous delivery, enhancement, and production support for Freeport-McMoRan's Enterprise Data Warehouse (EDW) and Business Intelligence ecosystem. The team ensures reliable data integration, reporting, and analytics services that support mining operations, maintenance, logistics, finance, and executive decision-making. The engagement also focuses on system stability, issue resolution, performance optimization, and delivering new business reporting capabilities through an agile delivery model.",
         "supported_applications": "FCX Enterprise Data Warehouse (EDW)\nBusiness Intelligence (BI)\nEnterprise Reporting\nPower BI\nSAP BusinessObjects (SAP BO)",
         "scope_of_work": "Provide continuous development, enhancement, maintenance, and production support for FCX's Enterprise Data Warehouse and Business Intelligence ecosystem. The engagement includes ETL development, analytics solutions, application support, job monitoring, incident resolution, reporting enhancements, and continuous delivery of new business capabilities.",
         "business_functions": "Supports FCX's enterprise data and analytics platform by consolidating operational and business data from mining, processing, maintenance, logistics, finance, and supply chain systems. It enables business users to access reliable insights for monitoring production, equipment performance, operational efficiency, and strategic decision-making across mining operations.",
         "mining_value_chain": "Mine Planning\nProduction Operations\nOre Processing\nAsset & Equipment Maintenance\nSupply Chain & Logistics\nInventory Management\nProduction & Cost Reporting\nExecutive Performance Monitoring",
-        "technologies": "Enterprise Data Warehouse (EDW)\nMicrosoft Power BI\nSAP BusinessObjects (SAP BO)\nSQL\nETL/Data Integration\nBusiness Intelligence (BI)\nAnalytics Platform"
-      }
+        "technologies": "Enterprise Data Warehouse (EDW)\nMicrosoft Power BI\nSAP BusinessObjects (SAP BO)\nSQL\nETL/Data Integration\nBusiness Intelligence (BI)\nAnalytics Platform",
+        "business_benefits": "Reliable EDW and BI production support for FCX mining, maintenance, logistics, finance, and executive reporting\nContinuous delivery of new reporting and analytics for FMI initiatives\nProduction support for ETL jobs, scheduling, and job restarts to minimize pipeline downtime\nFixed-price predictability with USD 150,000 strategic investment fund for Data & Analytics goals\nDedicated onsite (8), nearshore (6), and offshore (5) MIS BI continuous delivery team",
+        "tech_benefits": "Data services and job scheduling across FCX EDW Systems, BI & Analytics\nBI functional area support for Operations\nProduction support for ETL and job restarts\nProject work for various FMI BI-related initiatives\nOnsite, nearshore, and offshore delivery with defined BI Developer, Data Engineering, and Architect skillsets"
+      },
+      "is_active": true
     },
     {
       "title": "PTFI T4V – Data & Reports Rewiring/Repointing for S/4HANA and HR Suite",
       "content_id": null,
+      "engagement_details": {
+        "source_document": "JK2400088-001-000-000_Hexaware_Technologies_Inc.pdf",
+        "sow_title": "PTFI T4V — Data & Reports Rewiring/Repointing for S/4HANA and HR Suite",
+        "client": "PT Freeport Indonesia",
+        "supplier": "Hexaware Technologies Inc.",
+        "signed": "23 October 2024",
+        "contract_value": "USD 1,750,000 (not-to-exceed)",
+        "executing_model": "Time & materials (unit rate)",
+        "service_model": "Offshore delivery (India) with onsite leadership in Phoenix, AZ",
+        "supported_systems": "SAP S/4HANA, SuccessFactors/HR suite, Snowflake, SAP BusinessObjects, Power BI, SQL Server",
+        "team_size": {
+          "onsite": 2,
+          "nearshore": 0,
+          "offshore": 8
+        },
+        "locations": [
+          "Phoenix, AZ — Engagement Manager & Technical Architect (onsite)",
+          "India — offshore delivery team (Snowflake, SAP CPI/DI, data engineering, reporting, PM)"
+        ],
+        "activities": [
+          "Planning workshops, architecture and tooling decisions",
+          "ETL/ELT migration and data pipeline rewiring for S/4HANA and HR suite",
+          "Snowflake and SQL Server extraction routines (initial and delta loads)",
+          "Repoint/convert BOBJ universes, BO reports, and Power BI reports",
+          "DevOps deployment, SIT, UAT, and performance optimization",
+          "Production cutover planning, training, and operational handover",
+          "2-month hyper care after each go-live milestone"
+        ]
+      },
       "sections": {
-        "overview": "Duration: 10 October 2024 – 31 July 2026\n\nT4V transformation support — rewiring and migrating enterprise data pipelines, reports, and analytics from legacy systems to SAP S/4HANA, SuccessFactors, and modern cloud reporting platforms.",
+        "overview": "Duration: 10 October 2024 – 31 July 2026\n\nThe T4V initiative focuses on modernizing enterprise reporting by rewiring and repointing existing data pipelines, reports, and dashboards from legacy platforms to SAP S/4HANA, SuccessFactors, and cloud-based reporting solutions. The engagement ensures seamless data migration, report validation, and minimal business disruption while improving data quality, reporting performance, and long-term maintainability. This transformation enables mining business users to access accurate and consistent operational, HR, and financial information from a unified enterprise platform.",
         "supported_applications": "SAP S/4HANA\nSAP SuccessFactors\nSnowflake\nSAP BusinessObjects (SAP BO)\nMicrosoft Power BI\nAzure Data Factory (ADF)\nEnterprise Data Warehouse (EDW)",
         "scope_of_work": "Support the T4V transformation program by rewiring and migrating enterprise data pipelines, reports, and analytics from legacy systems to SAP S/4HANA and modern cloud platforms. The engagement includes ETL/ELT migration, report redevelopment, data validation, testing, deployment, documentation, user training, and post-go-live support to ensure a seamless transition to the new enterprise reporting environment.",
         "business_functions": "Enterprise Reporting\nFinance & Cost Management\nHuman Resources\nSupply Chain Management\nEnterprise Asset Management (EAM)\nWarehouse Management\nBusiness Intelligence & Analytics\nMaster Data Management\nESG & Sustainability Reporting\nExecutive Reporting",
         "mining_value_chain": "Mine Planning\nProduction Operations\nOre Processing\nEquipment Maintenance\nInventory & Warehouse Management\nProcurement & Supply Chain\nWorkforce Management\nFinancial Reporting\nProduction Performance Monitoring\nBusiness Analytics",
-        "technologies": "SAP S/4HANA\nSAP SuccessFactors\nSnowflake\nMicrosoft Power BI\nSAP BusinessObjects (SAP BO)\nAzure Data Factory (ADF)\nSQL\nETL/ELT\nEnterprise Data Warehouse (EDW)"
+        "technologies": "SAP S/4HANA\nSAP SuccessFactors\nSnowflake\nMicrosoft Power BI\nSAP BusinessObjects (SAP BO)\nAzure Data Factory (ADF)\nSQL\nETL/ELT\nEnterprise Data Warehouse (EDW)",
+        "business_benefits": "Unified enterprise reporting on SAP S/4HANA and HR suite data for PTFI finance, EAM, GSC, and HR domains\nPhased go-live with training, operational handover, and 2-month hyper care after each milestone\nRepointed BO and Power BI assets for accurate operational, HR, and financial information\nReuse of proven North America ETL patterns to accelerate greenfield module delivery\nMinimal business disruption through SIT, UAT, performance optimization, and production cutover planning",
+        "tech_benefits": "ETL/ELT migration: initial and delta extraction pipelines for S/4HANA and SuccessFactors to Snowflake and SQL Server\nBOBJ universe conversion and Power BI report repointing to new S/4HANA consumption layer\nDevOps deployment of artefacts across dev, test, and production environments\nSystem integration testing, defect resolution, and performance optimization vs. legacy landscape\nScope: ~864 tables, 56 BO universes, 167 BO reports, 600+ Power BI reports across HR, non-HR, and greenfield modules"
       }
     },
     {
       "title": "NOLA Execution Improvements",
       "content_id": null,
+      "engagement_details": {
+        "source_document": "NO2400053_001_000_000 - Hexaware Technologies Inc..pdf",
+        "sow_title": "NOLA Execution Improvements",
+        "client": "PT Freeport Indonesia",
+        "supplier": "Hexaware Technologies Inc.",
+        "signed": "6 March 2025",
+        "contract_value": "USD 700,000 (not-to-exceed)",
+        "executing_model": "Time & materials (unit rate)",
+        "service_model": "Onsite, nearshore and offshore",
+        "supported_systems": "Power BI, Snowflake, Azure ADF, SharePoint, NOLA DATA, SaaS integrations (Aconex, SCM, Oracle P6, EcoSys)",
+        "team_size": {
+          "onsite": 1,
+          "nearshore": 1,
+          "offshore": 2
+        },
+        "locations": [
+          "New Orleans, LA — FM Services Company / NOLA Strategic Planning (Company administration)",
+          "Papua, Indonesia — PTFI mining operations (Contract of Work Area)",
+          "Nearshore and offshore — Hexaware delivery team"
+        ],
+        "activities": [
+          "Re-engineer data workflows and align Power BI reports with MIS patterns",
+          "Transition sourcing from SharePoint Excel/Dataflow to SharePoint–Snowflake via Azure ADF",
+          "Standardize NOLA DATA architecture, semantic models, and Snowflake schema",
+          "CI/CD, testing, UAT, and production rollout of updated reports",
+          "Ongoing report enhancement per NOLA team direction",
+          "SaaS integrations using approved Freeport patterns (Aconex, SCM, Oracle P6, EcoSys)"
+        ]
+      },
       "sections": {
         "overview": "Duration: 13 November 2024 – 30 November 2025\n\nNOLA Execution Improvements for Freeport Indonesia — optimizing operational workflows, engineering processes, and execution strategies to strengthen project delivery and mine operations performance.",
         "supported_applications": "NOLA Execution Platform\nBusiness Intelligence (BI)\nEnterprise Reporting Systems\nProject Management Tools\nOperational Analytics",
         "scope_of_work": "Support the NOLA Execution Improvements initiative by enhancing operational workflows, engineering processes, and execution strategies for Freeport Indonesia's mining operations. The engagement includes business process optimization, performance monitoring, reporting enhancements, technical consulting, and implementation support to improve project execution and operational efficiency.",
         "business_functions": "Strategic Planning\nProject Management\nMine Operations\nEngineering Services\nProduction Management\nBusiness Intelligence & Analytics\nPerformance Monitoring\nExecutive Reporting\nContinuous Improvement\nOperational Excellence",
         "mining_value_chain": "Mine Planning\nProduction Scheduling\nEngineering Execution\nResource Planning\nEquipment Utilization\nProduction Monitoring\nOperational Performance Analysis\nContinuous Process Improvement\nBusiness Performance Reporting",
-        "technologies": "Business Intelligence (BI)\nMicrosoft Power BI\nSQL\nEnterprise Reporting Tools\nData Analytics\nProject Management Solutions"
-      }
+        "technologies": "Business Intelligence (BI)\nMicrosoft Power BI\nSQL\nEnterprise Reporting Tools\nData Analytics\nProject Management Solutions",
+        "business_benefits": "Simplified data management supporting stage-gate delivery of NOLA self-perform Mega Projects\nEnhanced planning, execution, and reporting for PTFI's diverse project portfolio\nPower BI reports standardized to MIS patterns with ongoing enhancements per NOLA team direction\nBusiness user feedback addressed through testing and production rollout cycles\nSaaS integration support for Aconex, Current SCM, Oracle P6, and EcoSys using approved Freeport patterns",
+        "tech_benefits": "Data workflow re-engineering: SharePoint Excel/Dataflow to SharePoint–Snowflake via Azure ADF\nStandardized NOLA DATA architecture — base tables, collections, views, Snowflake DB, and schema\nNew semantic model with Power BI reports connected to Snowflake as primary data source\nCI/CD process with testing, UAT, and production rollout\nGovernance: daily scrum, weekly status reviews, and monthly steering committee with SAP and Data CoEs"
+      },
+      "is_active": false
     },
     {
       "title": "2025–2026 SIMS Extension",
       "content_id": null,
+      "engagement_details": {
+        "source_document": "Hexaware-SOWSIMS_Extension_2026.pdf",
+        "sow_title": "SIMS Project Team — Hexaware Extension",
+        "client": "Freeport-McMoRan Inc.",
+        "supplier": "Hexaware Technologies Inc.",
+        "signed": "4 December 2025",
+        "contract_value": "USD 150,000 (not-to-exceed)",
+        "executing_model": "Time & materials (T&M)",
+        "service_model": "Onsite, nearshore and offshore",
+        "supported_systems": "SIMS",
+        "team_size": {
+          "onsite": 0,
+          "nearshore": 2,
+          "offshore": 1
+        },
+        "locations": [
+          "Phoenix, AZ — Freeport-McMoRan Inc. (onsite)",
+          "Saltillo, Monterrey & Guadalajara, Mexico (nearshore)",
+          "Chennai, India — Hexaware Technologies (offshore)"
+        ],
+        "activities": [
+          "Skilled consultant support for the SIMS project",
+          "Data architecture and data engineering services",
+          "Senior data engineering and BI development",
+          "BizTalk development as applicable",
+          "Scrum master / project management for SIMS delivery"
+        ]
+      },
       "sections": {
         "overview": "Duration: 1 October 2025 – 31 March 2026\n\nExtension engagement for the SIMS platform — data engineering, BI development, data architecture, and project management to integrate mining operational data and strengthen analytics for Freeport-McMoRan.",
         "supported_applications": "SIMS Platform\nEnterprise Data Warehouse (EDW)\nMicrosoft Power BI\nBusiness Intelligence (BI)\nData Integration Platform\nEnterprise Reporting Systems",
         "scope_of_work": "Provide development, enhancement, and support for the SIMS platform by delivering data engineering, BI development, data architecture, and project management services. The project focuses on integrating mining operational data, enhancing reporting capabilities, improving data quality, and maintaining analytics solutions to support Freeport-McMoRan's mining operations.",
         "business_functions": "Mine Operations Management\nProduction Monitoring\nAsset & Equipment Management\nMaintenance Management\nBusiness Intelligence & Analytics\nOperational Reporting\nData Management\nPerformance Monitoring\nProject Management\nExecutive Reporting",
         "mining_value_chain": "Mine Planning\nDrilling & Blasting\nOre Extraction\nHaulage Operations\nOre Processing\nEquipment Maintenance\nProduction Monitoring\nOperational Analytics\nPerformance Reporting",
-        "technologies": "SIMS Platform\nEnterprise Data Warehouse (EDW)\nMicrosoft Power BI\nSQL\nETL/Data Integration\nBusiness Intelligence (BI)\nData Engineering"
-      }
+        "technologies": "SIMS Platform\nEnterprise Data Warehouse (EDW)\nMicrosoft Power BI\nSQL\nETL/Data Integration\nBusiness Intelligence (BI)\nData Engineering",
+        "business_benefits": "Continued skilled consultant capacity for SIMS project delivery through Mar 2026\nData architecture and engineering support to integrate mining operational data into SIMS\nScrum master / project management for structured SIMS delivery continuity\nFlexible T&M engagement enabling SIMS platform enhancement and support",
+        "tech_benefits": "Nearshore (2) and offshore (1) team: Data Architect, Sr Data Engineer, Data Engineer, BizTalk developer\nSIMS as supported application platform\nData architecture, data engineering, and BI development services\nT&M model capped at USD 150,000 with change-order governance"
+      },
+      "is_active": false
     },
     {
       "title": "PTFI Strategic Planning BI Development",
       "content_id": null,
+      "engagement_details": {
+        "source_document": "NO2500108_001_000_000 - Hexaware Technologies Inc..pdf",
+        "sow_title": "PTFI Strategic Planning BI Development",
+        "client": "PT Freeport Indonesia",
+        "supplier": "Hexaware Technologies Inc.",
+        "signed": "14 November 2025",
+        "contract_value": "USD 100,000 (not-to-exceed)",
+        "executing_model": "Time & materials (T&M)",
+        "service_model": "Offshore",
+        "supported_systems": "Power BI, Snowflake, SQL Server (Xeras), SAP BusinessObjects, SharePoint/Teams, OneStream",
+        "team_size": {
+          "onsite": 0,
+          "nearshore": 0,
+          "offshore": 1
+        },
+        "locations": [
+          "Papua, Indonesia — PTFI strategic planning operations",
+          "India — offshore BI developer (shift)"
+        ],
+        "activities": [
+          "Consolidate Xeras, SAP BO, SharePoint, and Teams data sources into Snowflake",
+          "Build semantic layer and Power BI dashboards for operational and executive reporting",
+          "Testing, UAT, and production rollout of strategic planning dashboards",
+          "OneStream integration — views, exports, and automated refresh pipelines",
+          "Trend, scope, timing reporting and variance dashboards (cost, quantities, mine groups)",
+          "Reconciliation and validation with Finance & Accounting stakeholders"
+        ]
+      },
       "sections": {
         "overview": "Duration: 6 October 2025 – 6 November 2026\n\nModernize Freeport Indonesia's strategic planning reporting — replacing legacy Excel-based reports with interactive Power BI dashboards backed by a Snowflake data foundation and OneStream integration.",
         "supported_applications": "Microsoft Power BI\nSnowflake\nSQL Server (Xeras Replication)\nSAP BusinessObjects (SAP BO)\nMicrosoft Teams / SharePoint\nOneStream\nExcel",
         "scope_of_work": "Modernize Freeport Indonesia's strategic planning reporting platform by replacing legacy Excel-based reports with interactive Power BI dashboards. The project includes consolidating data from multiple enterprise sources, developing a Snowflake-based data foundation, creating semantic data models, implementing OneStream integration, automating data refresh pipelines, developing executive dashboards, performing testing and UAT, and deploying the solution into production.",
         "business_functions": "Strategic Planning\nFinancial Planning & Analysis\nCorporate Reporting\nBudget & Cost Management\nBusiness Intelligence & Analytics\nExecutive Reporting\nPerformance Management\nData Management\nOperational Planning\nDecision Support",
         "mining_value_chain": "Strategic Mine Planning\nProduction Forecasting\nCost & Budget Planning\nCapital & Operational Expenditure Monitoring\nResource Planning\nProduction Performance Analysis\nFinancial Performance Reporting\nExecutive Decision Support\nBusiness Performance Monitoring",
-        "technologies": "Microsoft Power BI\nSnowflake\nSQL Server\nSAP BusinessObjects (SAP BO)\nMicrosoft Teams\nSharePoint\nOneStream\nSQL\nETL/ELT Pipelines\nExcel"
+        "technologies": "Microsoft Power BI\nSnowflake\nSQL Server\nSAP BusinessObjects (SAP BO)\nMicrosoft Teams\nSharePoint\nOneStream\nSQL\nETL/ELT Pipelines\nExcel",
+        "business_benefits": "Replace legacy Excel reports with interactive Power BI dashboards featuring enhanced KPIs and executive reporting\nTrend, Scope, Timing variance analysis with drill-down to report group, subgroup, and AG code\nOneStream integration with Finance & Accounting reconciliation and automated data refresh\nCentralized Snowflake platform consolidating Xeras, SAP BO, SharePoint, Teams, and GAFE AFE sources\nWaterfall charts, variance reports, scorecards, and custom amendable tables for strategic planning decisions",
+        "tech_benefits": "Snowflake ELT loading from Xeras (SQL Server), SAP Capex/Opex (SAP BO), SharePoint quantity/CR files, and GAFE AFE data\nSemantic layer and Power BI dashboards for operational and executive reporting\nOneStream views, export formats, and automated refresh pipelines\nDocumented data transformations, mappings, allocations, and calculations for audit traceability\nUAT and production rollout across data foundation, F&A integration, and reporting enhancement phases"
       }
     },
     {
       "title": "Snowflake OpenFlow Migration",
       "content_id": null,
+      "engagement_details": {
+        "source_document": "SnowflakeOpenflowSOWv01.docx.pdf",
+        "sow_title": "Snowflake OpenFlow — ADF Replacement PoC & Migration",
+        "client": "Freeport-McMoRan Inc.",
+        "supplier": "Hexaware Technologies Inc.",
+        "signed": "20 January 2026",
+        "contract_value": "USD 200,000 (not-to-exceed)",
+        "investment_fund": "USD 100,000 funded by Freeport (T&M); USD 100,000 funded by Snowflake upon Phase 1 completion",
+        "executing_model": "Time & materials (T&M)",
+        "service_model": "Onsite, nearshore and offshore",
+        "supported_systems": "Snowflake OpenFlow, Azure Data Factory (ADF), SharePoint, REST/SOAP APIs, Cosmos DB, OData",
+        "team_size": {
+          "onsite": 0,
+          "nearshore": 1,
+          "offshore": 2
+        },
+        "locations": [
+          "Phoenix, AZ — Freeport-McMoRan Inc. (onsite)",
+          "Saltillo, Monterrey & Guadalajara, Mexico (nearshore)",
+          "Chennai, India — Hexaware Technologies (offshore)"
+        ],
+        "activities": [
+          "Phase 1 PoC — validate OpenFlow as ADF replacement for SharePoint, API, Cosmos, and OData",
+          "SharePoint ingestion (files, lists, event-driven flows, batch/control tables)",
+          "API pipelines — REST, SOAP, JSON/XML, pagination, Azure and Power BI metadata sources",
+          "Cosmos DB and OData batch pipeline validation",
+          "Cost comparison, feature-fit assessment, and orchestration/monitoring strategy",
+          "Phase 2 — migrate agreed SharePoint and API sources to OpenFlow for North America"
+        ]
+      },
       "sections": {
         "overview": "Duration: 1 December 2025 – 31 December 2026\n\nProof of concept and migration program replacing Azure Data Factory with Snowflake OpenFlow — moving pipelines from SharePoint, APIs, Cosmos DB, and OData into a scalable Snowflake-based integration platform.",
         "supported_applications": "Snowflake OpenFlow\nAzure Data Factory (ADF)\nSnowflake Data Cloud\nSharePoint\nCosmos DB\nREST APIs\nOData Services",
         "scope_of_work": "Develop and validate a Proof of Concept (PoC) for Snowflake OpenFlow as a replacement for Azure Data Factory (ADF). Upon successful validation, migrate approved data pipelines from SharePoint, APIs, Cosmos DB, and OData sources into Snowflake OpenFlow. The engagement includes pipeline development, migration, testing, deployment, monitoring, documentation, and production support to establish a scalable enterprise data integration platform.",
         "business_functions": "Enterprise Data Integration\nBusiness Intelligence & Analytics\nProduction Reporting\nSupply Chain Analytics\nMaintenance Analytics\nData Engineering\nOperational Reporting\nIT Operations\nDigital Transformation\nExecutive Reporting",
         "mining_value_chain": "Production Data Collection\nMine Operations Monitoring\nEquipment Performance Monitoring\nOre Production Reporting\nMaintenance Planning\nSupply Chain & Inventory Reporting\nOperational Analytics\nExecutive Decision Support\nEnterprise Data Management",
-        "technologies": "Snowflake OpenFlow\nSnowflake Data Cloud\nAzure Data Factory (ADF)\nSharePoint\nAzure Cosmos DB\nREST APIs\nOData\nSQL\nEnterprise Data Pipelines"
+        "technologies": "Snowflake OpenFlow\nSnowflake Data Cloud\nAzure Data Factory (ADF)\nSharePoint\nAzure Cosmos DB\nREST APIs\nOData\nSQL\nEnterprise Data Pipelines",
+        "business_benefits": "Proof of Concept validating Snowflake OpenFlow as ADF replacement with documented cost comparison\nPhase 2 production migration of agreed SharePoint and API sources for North America\nFeature-fit assessment and orchestration/monitoring strategy for enterprise integration\nCo-funded engagement: USD 100,000 Freeport (T&M) plus USD 100,000 Snowflake upon Phase 1 completion\nConsolidated SharePoint, API, Cosmos, and OData ingestion on a Snowflake-based platform",
+        "tech_benefits": "SharePoint PoC: files (xls, xlsx, CSV), lists, event-driven flows, batch/control tables, dynamic files and Excel tabs\nAPI PoC: REST, SOAP, JSON/XML, pagination, delta loads, Power BI metadata, Azure Resource List, App Insights, ADO\nCosmos DB and OData batch pipeline validation\nSuccess criteria: ADF vs OpenFlow cost comparison, feature-fit conclusions, orchestration and monitoring strategy\nPhase 2: migrate mutually agreed SharePoint and API sources from ADF to OpenFlow in production"
       }
     },
     {
       "title": "2026 SAP CPI Development & Support",
       "content_id": null,
+      "engagement_details": {
+        "source_document": "2026HexawareSAPCPISOWv1.docx.pdf",
+        "sow_title": "SAP CPI Development and Support — CustomApps",
+        "client": "Freeport-McMoRan Inc.",
+        "supplier": "Hexaware Technologies Inc.",
+        "signed": "23–27 January 2026",
+        "contract_value": "USD 660,000 (not-to-exceed)",
+        "executing_model": "Time & materials (T&M)",
+        "service_model": "Offshore",
+        "supported_systems": "SAP Cloud Platform Integration (CPI), CustomApps projects and initiatives",
+        "team_size": {
+          "onsite": 0,
+          "nearshore": 0,
+          "offshore": 7
+        },
+        "locations": [
+          "Chennai, India — Hexaware Technologies (offshore)"
+        ],
+        "activities": [
+          "SAP CPI development and support for FMI CustomApps teams",
+          "Design, develop, test, and deploy CPI integration flows and APIs",
+          "Maintain interfaces connecting SAP and enterprise applications",
+          "Production support, issue resolution, and integration enhancements",
+          "Ongoing integration maintenance across CustomApps initiatives"
+        ]
+      },
       "sections": {
         "overview": "Duration: 1 January 2026 – 31 December 2026\n\nSAP Cloud Platform Integration development and support for Freeport-McMoRan's CustomApps — integration flows, APIs, and interfaces connecting SAP S/4HANA with enterprise applications.",
         "supported_applications": "SAP Cloud Platform Integration (SAP CPI)\nSAP S/4HANA\nCustomApps\nEnterprise Integration Platform\nEnterprise Applications",
         "scope_of_work": "Provide SAP CPI development and support services for Freeport-McMoRan's CustomApps initiatives. The project includes designing, developing, testing, deploying, and maintaining SAP CPI integration flows, APIs, and interfaces to enable seamless communication between SAP and enterprise applications. It also includes production support, issue resolution, system enhancements, and ongoing integration maintenance.",
         "business_functions": "Enterprise Application Integration\nProduction Operations\nProcurement\nSupply Chain Management\nFinance\nAsset & Equipment Management\nMaintenance Management\nBusiness Process Automation\nIT Operations\nEnterprise Data Exchange",
         "mining_value_chain": "Material Procurement\nInventory & Warehouse Management\nEquipment Maintenance\nProduction Operations\nSupply Chain Logistics\nFinancial Processing\nEnterprise Data Integration\nOperational Reporting",
-        "technologies": "SAP Cloud Platform Integration (SAP CPI)\nSAP S/4HANA\nREST APIs\nSOAP Web Services\nXML\nJSON\nEnterprise Integration Services\nSAP Integration Technologies"
+        "technologies": "SAP Cloud Platform Integration (SAP CPI)\nSAP S/4HANA\nREST APIs\nSOAP Web Services\nXML\nJSON\nEnterprise Integration Services\nSAP Integration Technologies",
+        "business_benefits": "SAP CPI development and support for FMI CustomApps teams and integration initiatives\nSeamless communication between SAP S/4HANA and enterprise applications\nDedicated offshore CPI capacity (7 consultants) for year-round integration delivery\nProduction support, issue resolution, and ongoing integration maintenance",
+        "tech_benefits": "Design, develop, test, deploy, and maintain SAP CPI integration flows, APIs, and interfaces\nOffshore SAP CPI consultant team with optional overlapping shift window\nSupported scope: SAP CPI projects and initiatives for CustomApps\nT&M model capped at USD 660,000 with 30-day payment terms"
       }
     },
     {
       "title": "2026 Hexaware Flexi Team",
       "content_id": null,
+      "engagement_details": {
+        "source_document": "2026HexawareFlexiSOWV10.pdf",
+        "sow_title": "FMI Flexi Team",
+        "client": "Freeport-McMoRan Inc.",
+        "supplier": "Hexaware Technologies Inc.",
+        "signed": "10–21 November 2025",
+        "contract_value": "USD 4,500,000 (not-to-exceed)",
+        "executing_model": "Time & materials (T&M)",
+        "service_model": "Onsite, nearshore and offshore",
+        "supported_systems": "FCX EDW, Analytics, Power BI, SAP BusinessObjects, and other FMI projects",
+        "locations": [
+          "Phoenix, AZ — Freeport-McMoRan Inc. (onsite)",
+          "Saltillo, Monterrey & Guadalajara, Mexico (nearshore)",
+          "Chennai, India — Hexaware Technologies (offshore)"
+        ],
+        "activities": [
+          "Flexible skilled consultants for FMI projects and initiatives",
+          "Data architecture, data engineering, and BI development",
+          "DevOps architecture and engineering support",
+          "SAP CPI integration resources as required",
+          "Project management and BI administration",
+          "EDW, Power BI, and SAP BO analytics across transformation programs"
+        ]
+      },
       "sections": {
         "overview": "Duration: 1 January 2026 – 31 December 2026\n\nHexaware flexi-team engagement delivering skilled consultants across onsite, nearshore, and offshore models to support Freeport-McMoRan's digital transformation, enterprise analytics, and integration initiatives.",
         "supported_applications": "Enterprise Data Warehouse (EDW)\nMicrosoft Power BI\nSAP BusinessObjects (SAP BO)\nSAP Cloud Platform Integration (SAP CPI)\nBusiness Intelligence & Analytics Platforms\nEnterprise Reporting Systems",
         "scope_of_work": "Provide skilled consultants through onsite, nearshore, and offshore delivery models to support Freeport-McMoRan's digital transformation initiatives. The engagement includes Business Intelligence development, Data Engineering, Data Architecture, SAP CPI integration, DevOps support, Project Management, Enterprise Data Warehouse support, analytics development, and ongoing technical consulting for enterprise applications.",
         "business_functions": "Business Intelligence & Analytics\nEnterprise Data Management\nDigital Transformation\nProduction Reporting\nSupply Chain Management\nAsset & Equipment Management\nMaintenance Planning\nProject Management\nExecutive Reporting\nIT Operations",
         "mining_value_chain": "Mine Planning\nDrilling & Blasting\nOre Extraction\nHaulage Operations\nCrushing & Processing\nEquipment Maintenance\nInventory & Warehouse Management\nSupply Chain & Procurement\nProduction Monitoring\nBusiness Performance Analytics",
-        "technologies": "Microsoft Power BI\nEnterprise Data Warehouse (EDW)\nSAP BusinessObjects (SAP BO)\nSAP CPI\nSQL\nData Engineering\nDevOps\nBusiness Intelligence Platforms\nEnterprise Analytics"
+        "technologies": "Microsoft Power BI\nEnterprise Data Warehouse (EDW)\nSAP BusinessObjects (SAP BO)\nSAP CPI\nSQL\nData Engineering\nDevOps\nBusiness Intelligence Platforms\nEnterprise Analytics",
+        "business_benefits": "Flexible skilled consultant capacity for FMI projects and digital transformation initiatives across 2026\nOn-demand BI, data engineering, data architecture, DevOps, SAP CPI, and project management resources\nMulti-location delivery (onsite, nearshore, offshore) supporting EDW, Power BI, and SAP BO programs\nT&M scalability for diverse FMI initiatives without fixed team composition",
+        "tech_benefits": "Supported applications: FCX EDW Systems, Analytics, Power BI, SAP BO, and other FMI projects\nRate-card roles: Data Architect, Sr BI/Data Engineer, BI Developer/Admin, PM, DevOps Architect/Engineer, SAP CPI\nOnsite, nearshore, and offshore service model with defined hourly rates\nDeliverables agreed with FCX project managers; 10-day acceptance window\nT&M engagement capped at USD 4.5M with change-order governance"
       }
     },
     {
       "title": "2026 GSC / Inventory Optimization",
       "content_id": null,
+      "engagement_details": {
+        "source_document": "2026Hexaware_GSC_SOWJantoDec2026.docx.pdf",
+        "sow_title": "GSC / Inventory Optimization",
+        "client": "Freeport-McMoRan Inc.",
+        "supplier": "Hexaware Technologies Inc.",
+        "signed": "5 January 2026",
+        "contract_value": "USD 937,440 (not-to-exceed)",
+        "monthly_value": "USD 78,120 / month (fixed capacity)",
+        "executing_model": "Fixed capacity",
+        "service_model": "Onsite, nearshore and offshore",
+        "supported_systems": "Global Supply Chain (GSC), SAP Ariba, BI & inventory optimization",
+        "team_size": {
+          "onsite": 3,
+          "nearshore": 1,
+          "offshore": 1
+        },
+        "locations": [
+          "Phoenix, AZ — Freeport-McMoRan Inc. (onsite)",
+          "Mexico (nearshore)",
+          "Chennai, India — Hexaware Technologies (offshore)"
+        ],
+        "activities": [
+          "BI lead and senior BI development for GSC reporting",
+          "SAP Ariba functional support for procurement and supply chain",
+          "Inventory analysis, dashboards, and supply chain reporting",
+          "Process optimization for material planning and inventory visibility",
+          "Fixed-capacity delivery across onsite, nearshore, and offshore team"
+        ]
+      },
       "sections": {
         "overview": "Duration: 1 January 2026 – 31 December 2026\n\nConsulting and technical services for Freeport-McMoRan's Global Supply Chain (GSC) and Inventory Optimization programs — improving material planning, procurement visibility, and inventory performance across mining operations.",
         "supported_applications": "SAP Ariba\nBusiness Intelligence (BI) Platform\nInventory Optimization Solutions\nSupply Chain Analytics\nEnterprise Reporting Systems",
         "scope_of_work": "Provide consulting and technical services to support Freeport-McMoRan's Global Supply Chain (GSC) and Inventory Optimization initiatives. The project includes Business Intelligence development, SAP Ariba functional support, inventory analysis, supply chain reporting, dashboard development, and process optimization to improve material planning, procurement, and inventory visibility across mining operations.",
         "business_functions": "Global Supply Chain Management\nInventory Management\nProcurement\nWarehouse Management\nMaterials Management\nBusiness Intelligence & Analytics\nOperational Reporting\nVendor & Supplier Management\nCost Optimization\nExecutive Reporting",
         "mining_value_chain": "Material Planning\nProcurement & Sourcing\nWarehouse Operations\nInventory Replenishment\nEquipment Maintenance Support\nSpare Parts Management\nSupply Chain Logistics\nProduction Support\nOperational Performance Monitoring",
-        "technologies": "SAP Ariba\nMicrosoft Power BI\nBusiness Intelligence (BI)\nSQL\nEnterprise Reporting Tools\nAnalytics Platforms"
+        "technologies": "SAP Ariba\nMicrosoft Power BI\nBusiness Intelligence (BI)\nSQL\nEnterprise Reporting Tools\nAnalytics Platforms",
+        "business_benefits": "Dedicated BI and SAP Ariba functional capacity for Global Supply Chain and Inventory Optimization programs\nImproved material planning, procurement visibility, and inventory performance across mining operations\nFixed monthly capacity (USD 78,120) for predictable year-round GSC delivery\nNamed onsite BI lead, Sr BI developer, and SAP Ariba functional lead for continuity",
+        "tech_benefits": "Supported application: GSC (Global Supply Chain)\nTeam: BI Lead and Sr BI Developer (onsite), SAP Ariba Functional Lead (onsite), BI Developers (nearshore/offshore)\nFixed-capacity engagement model Jan – Dec 2026 (USD 937,440 not-to-exceed)\nOnsite, nearshore, and offshore delivery with 30-day payment terms"
       }
     }
   ]

@@ -7,14 +7,7 @@ from wtforms.validators import DataRequired, Email, EqualTo, Length
 
 from mine.auth_utils import load_current_user, login_required, roles_required
 from mine.db import get_db
-from mine.services import (
-    clear_all_read_notifications,
-    clear_notification,
-    log_audit,
-    mark_all_notifications_read,
-    moderation_entry,
-    notify,
-)
+from mine.services import clear_all_read_notifications, clear_notification, log_audit, mark_all_notifications_read, moderation_entry, notify
 from mine.team_roster import import_roster_users, load_team_roster, save_roster_workbook
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")

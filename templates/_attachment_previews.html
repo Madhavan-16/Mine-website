@@ -1,11 +1,23 @@
 {# Expects: files (attachment rows). Optional: attachment_manage_url for empty-state CTA. #}
+{# Optional pagination: paginate_attachments, attach_index, attach_page, attach_total, row, return_to, section #}
+{% set show_files = files %}
+{% if paginate_attachments|default(false) and files and files|length > 0 %}
+  {% set show_files = [files[attach_index|default(0)]] %}
+{% endif %}
 <section class="card attach-previews-card" aria-label="Attachments">
   <h2 style="margin-top: 0;">Attachments</h2>
   {% if files and files|length > 0 %}
+    {% if paginate_attachments|default(false) and attach_total|default(0) > 1 %}
+      <p class="meta attach-preview-index" style="margin: 0 0 14px;">
+        File <strong>{{ attach_page }}</strong> of <strong>{{ attach_total }}</strong> —
+        previews when available. <strong>Download original</strong> always gives the file as uploaded.
+      </p>
+    {% else %}
     <p class="meta" style="margin: 0 0 14px;">
       Previews when available. <strong>Download original</strong> always gives the file as uploaded.
     </p>
-    {% for f in files %}
+    {% endif %}
+    {% for f in show_files %}
       {% set name = f.file_name or "" %}
       {% set parts = name.split(".") %}
       {% set ext = parts[-1]|lower if parts|length > 1 else "" %}
@@ -101,6 +113,19 @@
         {% endif %}
       </div>
     {% endfor %}
+    {% if paginate_attachments|default(false) and attach_total|default(0) > 1 and row is defined %}
+      <nav class="kview-attach-pager" aria-label="Attachment pagination">
+        <p class="kview-attach-pager__meta">Attachment {{ attach_page }} of {{ attach_total }}</p>
+        <div class="kview-attach-pager__nav">
+          {% if attach_page > 1 %}
+            <a class="btn btn-secondary" href="{{ url_for('content.content_view', cid=row.id, section=section|default('attachments'), attach_page=attach_page - 1, return_to=return_to or none) }}">Previous file</a>
+          {% endif %}
+          {% if attach_page < attach_total %}
+            <a class="btn btn-secondary" href="{{ url_for('content.content_view', cid=row.id, section=section|default('attachments'), attach_page=attach_page + 1, return_to=return_to or none) }}">Next file</a>
+          {% endif %}
+        </div>
+      </nav>
+    {% endif %}
   {% else %}
     <p class="meta attach-preview-empty" style="margin: 0 0 10px;">
       No files are attached to this record yet. After you upload a file on the edit screen (for example an Excel workbook),

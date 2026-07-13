@@ -29,6 +29,7 @@
       data-search-xp-form
     >
       <input type="hidden" name="module" value="" data-search-module-input />
+      <input type="hidden" name="sort" value="relevance" data-search-sort-input />
       <div class="enterprise-search-xp__bar-wrap">
         <label class="visually-hidden" for="enterprise-search-q">Search query</label>
         <span class="enterprise-search-xp__bar-icon" aria-hidden="true">
@@ -89,7 +90,7 @@
       </div>
 
       <p id="search-xp-hint" class="enterprise-search-xp__hint">
-        Full-text retrieval uses the same approved catalogue index as the header search bar.
+        Type a section name — even one word like <strong>training</strong> or <strong>projects</strong> — to see related pages in your results, or search catalogue content with scope and signals.
       </p>
     </form>
 
@@ -103,6 +104,7 @@
     </div>
 
     <div class="enterprise-search-xp__catalog" aria-labelledby="search-xp-recent-added">
+      {% if not hide_recent_catalog|default(false) %}
       <header class="enterprise-search-xp__catalog-head">
         <h3 id="search-xp-recent-added" class="enterprise-search-xp__col-title">Recently added</h3>
         <p class="enterprise-search-xp__col-note">Latest approved artefacts from the catalogue.</p>
@@ -128,6 +130,7 @@
         <div class="krepo-cta-row">
           <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create knowledge content</a>
         </div>
+      {% endif %}
       {% endif %}
     </div>
   </div>

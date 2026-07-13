@@ -38,6 +38,11 @@
     {{ form.project_manager(placeholder="Name or email") }}
     <label for="delivery_status">Delivery status</label>
     {{ form.delivery_status(placeholder="e.g. On track, At risk, Complete") }}
+    <div class="field field--checkbox">
+      {{ form.is_active() }}
+      <label for="is_active">Active engagement</label>
+    </div>
+    <p class="help">Uncheck when the program has ended — it will be hidden from the landing page and default portfolio view.</p>
     <label for="region">Region</label>
     {{ form.region(placeholder="e.g. North America, APAC") }}
     <label for="title">Project name (title in catalog)</label>

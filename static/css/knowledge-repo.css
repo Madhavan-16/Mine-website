@@ -358,21 +358,85 @@
 
 /* ——— List / filter view ——— */
 .krepo--list .krepo-hero {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   padding: clamp(18px, 2.5vw, 24px);
+}
+
+.krepo-catalog {
+  margin-top: clamp(8px, 1.5vw, 16px);
+}
+
+.krepo-catalog__head {
+  margin-bottom: 16px;
+}
+
+/* Series quick-nav (filtered view) */
+.krepo-series-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-bottom: 18px;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(189, 191, 192, 0.38);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.krepo-series-strip__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--hex-grey-600);
+}
+
+.krepo-series-strip__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.krepo-series-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(189, 191, 192, 0.45);
+  background: var(--hex-white);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--hex-grey-800);
+  text-decoration: none;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.krepo-series-pill:hover {
+  border-color: rgba(0, 174, 240, 0.35);
+  color: var(--hex-blue-dark);
+  text-decoration: none;
+}
+
+.krepo-series-pill.is-active {
+  border-color: var(--hex-blue);
+  background: rgba(0, 174, 240, 0.1);
+  color: var(--hex-blue-dark);
 }
 
 .krepo-list-layout {
   display: grid;
-  grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
-  gap: clamp(16px, 2.5vw, 24px);
+  grid-template-columns: minmax(0, 248px) minmax(0, 1fr);
+  gap: clamp(18px, 2.5vw, 28px);
   align-items: start;
 }
 
 .krepo-filters {
   position: sticky;
   top: calc(var(--portal-header-offset, 72px) + 12px);
-  padding: 16px;
+  padding: 18px 16px;
   border-radius: calc(var(--radius-lg) + 2px);
   border: 1px solid rgba(189, 191, 192, 0.42);
   background: var(--hex-white);
@@ -388,17 +452,13 @@
   color: var(--hex-grey-600);
 }
 
-.krepo-filters .field {
+.krepo-filters__form .field {
   margin-bottom: 12px;
-}
-
-.krepo-filters .field:last-of-type {
-  margin-bottom: 0;
 }
 
 .krepo-filters label {
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
   font-size: 12px;
   font-weight: 600;
   color: var(--hex-grey-600);
@@ -414,6 +474,7 @@
   font: inherit;
   font-size: 14px;
   background: var(--hex-white);
+  box-sizing: border-box;
 }
 
 .krepo-filters select:focus,
@@ -432,35 +493,204 @@
   border-top: 1px solid var(--hex-grey-100);
 }
 
-.krepo-filters__create {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--hex-grey-100);
+.krepo-filters__actions .btn {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
 }
 
-.krepo-filters__create .btn {
-  width: 100%;
-  text-align: center;
-  justify-content: center;
+/* Results panel */
+.krepo-results-panel {
+  min-width: 0;
+  padding: clamp(16px, 2vw, 20px);
+  border-radius: calc(var(--radius-lg) + 4px);
+  border: 1px solid rgba(189, 191, 192, 0.4);
+  background: var(--hex-white);
+  box-shadow: 0 8px 24px rgba(16, 63, 90, 0.05);
+}
+
+.krepo-results__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--hex-grey-100);
 }
 
 .krepo-results__count {
-  margin: 0 0 12px;
+  margin: 0;
   font-size: 13px;
+  line-height: 1.5;
   color: var(--hex-grey-600);
 }
 
 .krepo-results__count strong {
   color: var(--hex-grey-900);
+  font-weight: 700;
+}
+
+.krepo-results__index {
+  display: inline-flex;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--hex-teal-dark);
+  background: rgba(35, 152, 138, 0.1);
+  border: 1px solid rgba(35, 152, 138, 0.18);
+  vertical-align: middle;
+}
+
+.krepo-results__page-meta {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--hex-grey-500);
 }
 
 .krepo-result-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.krepo-result-card {
+  margin: 0;
+}
+
+.krepo-result-card__link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(189, 191, 192, 0.38);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.92));
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.krepo-result-card__link:hover {
+  border-color: rgba(0, 174, 240, 0.28);
+  box-shadow: 0 10px 22px rgba(16, 63, 90, 0.07);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.krepo-result-card__main {
+  min-width: 0;
+}
+
+.krepo-result-card__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.krepo-result-card__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--hex-blue-dark);
+}
+
+.krepo-result-card__badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 999px;
+  color: var(--hex-teal-dark);
+  background: rgba(2, 159, 215, 0.1);
+  border: 1px solid rgba(2, 159, 215, 0.16);
+}
+
+.krepo-result-card__badge[data-module="kyc"] { color: #007aa8; background: rgba(0, 174, 240, 0.1); border-color: rgba(0, 174, 240, 0.2); }
+.krepo-result-card__badge[data-module="kya"] { color: #027aa8; background: rgba(2, 159, 215, 0.1); border-color: rgba(2, 159, 215, 0.2); }
+.krepo-result-card__badge[data-module="domain_term"] { color: #1a7a6e; background: rgba(35, 152, 138, 0.1); border-color: rgba(35, 152, 138, 0.2); }
+.krepo-result-card__badge[data-module="newsletter"] { color: #4a55a0; background: rgba(92, 107, 192, 0.1); border-color: rgba(92, 107, 192, 0.2); }
+.krepo-result-card__badge[data-module="case_study"] { color: #8f5f36; background: rgba(179, 119, 67, 0.1); border-color: rgba(179, 119, 67, 0.2); }
+.krepo-result-card__badge[data-module="rfp_snippet"] { color: #103f5a; background: rgba(16, 63, 90, 0.08); border-color: rgba(16, 63, 90, 0.16); }
+.krepo-result-card__badge[data-module="blog"] { color: #464545; background: rgba(70, 69, 69, 0.08); border-color: rgba(70, 69, 69, 0.16); }
+
+.krepo-result-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--hex-grey-600);
+}
+
+.krepo-result-card__sep {
+  opacity: 0.5;
+}
+
+.krepo-result-card__excerpt {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--hex-grey-700);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.krepo-result-card__cta {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--hex-copper);
+  white-space: nowrap;
+}
+
+.krepo-results__footer {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hex-grey-100);
+}
+
+.krepo-results__footer .catalog-pagination,
+.krepo-results__footer .pagination {
+  margin-top: 0;
+  justify-content: center;
+}
+
+.krepo-empty--panel {
+  margin: 0;
+  padding: 32px 20px;
+  text-align: center;
+}
+
+.krepo-empty--panel a {
+  font-weight: 600;
+}
+
+/* Legacy result classes (other pages) */
+.krepo-results__count strong {
+  color: var(--hex-grey-900);
 }
 
 .krepo-result {
@@ -547,12 +777,22 @@
   .krepo-filters {
     position: static;
   }
+
+  .krepo-result-card__link {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .krepo-result-card__cta {
+    justify-self: start;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .krepo-cat:hover,
   .krepo-artifact:hover,
-  .krepo-result:hover {
+  .krepo-result:hover,
+  .krepo-result-card__link:hover {
     transform: none;
   }
 }

@@ -1,0 +1,25 @@
+{% macro catalog_pagination(endpoint, catalog) %}
+  {% if catalog.total_pages > 1 %}
+    <nav class="pagination catalog-pagination" aria-label="Catalogue pagination">
+      {% if catalog.page > 1 %}
+        <a href="{{ url_for(endpoint, page=catalog.page - 1, **catalog.query_params) }}">Previous</a>
+      {% else %}
+        <span aria-hidden="true">Previous</span>
+      {% endif %}
+      {% for p in catalog.page_numbers %}
+        {% if p is none %}
+          <span class="pagination__ellipsis" aria-hidden="true">…</span>
+        {% elif p == catalog.page %}
+          <span class="is-current" aria-current="page">{{ p }}</span>
+        {% else %}
+          <a href="{{ url_for(endpoint, page=p, **catalog.query_params) }}">{{ p }}</a>
+        {% endif %}
+      {% endfor %}
+      {% if catalog.page < catalog.total_pages %}
+        <a href="{{ url_for(endpoint, page=catalog.page + 1, **catalog.query_params) }}">Next</a>
+      {% else %}
+        <span aria-hidden="true">Next</span>
+      {% endif %}
+    </nav>
+  {% endif %}
+{% endmacro %}

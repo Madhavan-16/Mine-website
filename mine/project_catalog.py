@@ -16,6 +16,8 @@ PROJECT_SECTIONS: tuple[tuple[str, str], ...] = (
     ("business_functions", "Business Functions Supported"),
     ("mining_value_chain", "Mining Value Chain Supported"),
     ("technologies", "Technologies"),
+    ("business_benefits", "Business Benefits"),
+    ("tech_benefits", "Tech. Benefits"),
 )
 
 PROJECT_SECTION_ICONS: dict[str, str] = {
@@ -25,9 +27,70 @@ PROJECT_SECTION_ICONS: dict[str, str] = {
     "business_functions": "functions",
     "mining_value_chain": "value-chain",
     "technologies": "tech-stack",
+    "business_benefits": "business-benefits",
+    "tech_benefits": "tech-benefits",
 }
 
 _CHIP_SECTIONS = frozenset({"supported_applications", "technologies", "mining_value_chain"})
+
+_APP_BRAND_RULES: tuple[tuple[str, str], ...] = (
+    ("snowflake openflow", "snowflake"),
+    ("snowflake data cloud", "snowflake"),
+    ("snowflake", "snowflake"),
+    ("microsoft power bi", "microsoft-power-bi"),
+    ("power bi", "microsoft-power-bi"),
+    ("microsoft teams", "microsoft-teams"),
+    ("sharepoint", "microsoft-sharepoint"),
+    ("excel", "microsoft-excel"),
+    ("azure data factory", "microsoft-azure"),
+    ("cosmos db", "microsoft-azure"),
+    ("sql server", "microsoft-sql-server"),
+    ("odata", "odata"),
+    ("rest api", "rest-api"),
+    ("sap cloud platform integration", "sap-cpi"),
+    ("sap cpi", "sap-cpi"),
+    ("sap ariba", "sap-ariba"),
+    ("ariba", "sap-ariba"),
+    ("successfactors", "sap-successfactors"),
+    ("businessobjects", "sap-businessobjects"),
+    ("sap bo", "sap-businessobjects"),
+    ("s/4hana", "sap-s4hana"),
+    ("s4hana", "sap-s4hana"),
+    ("onestream", "onestream"),
+    ("sims", "sims"),
+    ("nola", "nola"),
+    ("enterprise data warehouse", "fcx-edw"),
+    (" edw", "fcx-edw"),
+    ("customapps", "customapps"),
+    ("enterprise integration platform", "enterprise-integration"),
+    ("enterprise integration", "enterprise-integration"),
+    ("enterprise applications", "enterprise-applications"),
+    ("data integration", "data-integration"),
+    ("project management", "project-management"),
+    ("inventory optimization", "inventory-optimization"),
+    ("supply chain", "supply-chain"),
+    ("operational analytics", "operational-analytics"),
+    ("enterprise reporting", "enterprise-reporting"),
+    ("business intelligence", "business-intelligence"),
+)
+
+
+def _app_brand_slug(label: str) -> str | None:
+    """Map supported-application label to a brand icon asset slug."""
+    t = (label or "").lower()
+    for needle, slug in _APP_BRAND_RULES:
+        if needle in t:
+            return slug
+    return None
+
+
+def _build_chip(label: str, section_key: str) -> dict:
+    chip = {"text": label, "icon": _chip_icon(label, section_key)}
+    if section_key == "supported_applications":
+        brand = _app_brand_slug(label)
+        if brand:
+            chip["brand"] = brand
+    return chip
 
 
 def _chip_icon(label: str, section_key: str) -> str:
@@ -118,6 +181,369 @@ def _empty_sections() -> dict[str, str]:
     return {key: "" for key in _SECTION_KEYS}
 
 
+_VALUE_CHAIN_STAGES: tuple[dict[str, str], ...] = (
+    {"id": "plan", "label": "Plan", "icon": "plan"},
+    {"id": "extract", "label": "Extract", "icon": "production"},
+    {"id": "haul", "label": "Haul", "icon": "logistics"},
+    {"id": "process", "label": "Process", "icon": "process"},
+    {"id": "maintain", "label": "Maintain", "icon": "maintenance"},
+    {"id": "supply", "label": "Supply", "icon": "inventory"},
+    {"id": "report", "label": "Report", "icon": "dashboard"},
+)
+
+_BUSINESS_FUNCTION_GROUPS: tuple[dict[str, str | tuple[str, ...]], ...] = (
+    {
+        "id": "operations",
+        "title": "Mine Operations",
+        "icon": "production",
+        "keywords": (
+            "mine operation",
+            "production operation",
+            "production monitor",
+            "maintenance",
+            "equipment",
+            "asset &",
+            "asset and",
+            "engineering",
+            "operational excellence",
+            "continuous improvement",
+            "ore ",
+            "haul",
+            "drill",
+            "blast",
+            "processing",
+            "mining",
+        ),
+    },
+    {
+        "id": "planning",
+        "title": "Planning & Finance",
+        "icon": "plan",
+        "keywords": (
+            "strategic plan",
+            "financial plan",
+            "operational plan",
+            "finance",
+            "financial",
+            "budget",
+            "cost optim",
+            "cost management",
+            "corporate report",
+            "decision support",
+            "capital",
+            "human resource",
+            "workforce",
+        ),
+    },
+    {
+        "id": "analytics",
+        "title": "Analytics & BI",
+        "icon": "analytics",
+        "keywords": (
+            "business intelligence",
+            "analytics",
+            "data engineering",
+            "digital transformation",
+            "insight",
+        ),
+    },
+    {
+        "id": "reporting",
+        "title": "Reporting & Performance",
+        "icon": "report",
+        "keywords": (
+            "reporting",
+            "executive",
+            "performance monitor",
+            "performance management",
+            "operational report",
+            "production report",
+            "esg",
+            "sustainability",
+            "master data",
+            "data management",
+            "monitoring",
+        ),
+    },
+    {
+        "id": "supply_chain",
+        "title": "Supply Chain & Materials",
+        "icon": "logistics",
+        "keywords": (
+            "supply chain",
+            "procurement",
+            "inventory",
+            "warehouse",
+            "material",
+            "vendor",
+            "supplier",
+            "logistics",
+            "sourcing",
+            "replenish",
+            "global supply",
+        ),
+    },
+    {
+        "id": "technology",
+        "title": "Technology & Integration",
+        "icon": "pipeline",
+        "keywords": (
+            "integration",
+            "it operation",
+            "automation",
+            "enterprise application",
+            "enterprise data",
+            "data exchange",
+            "project management",
+            "data platform",
+            "consolidat",
+            "process automation",
+        ),
+    },
+)
+
+
+def _classify_business_function(label: str) -> str:
+    """Assign a business-function label to one of five domain cards."""
+    t = (label or "").lower()
+    for group in _BUSINESS_FUNCTION_GROUPS:
+        if any(keyword in t for keyword in group["keywords"]):
+            return str(group["id"])
+    return "analytics"
+
+
+def _extract_business_function_lines(text: str) -> list[str]:
+    """Normalize prose or line-list copy into function labels for card grouping."""
+    text = (text or "").strip()
+    if not text:
+        return []
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    if len(lines) > 1:
+        return lines
+
+    extracted: list[str] = []
+    domain_match = re.search(
+        r"\bfrom\s+((?:[a-z/&\-\s]+?(?:,\s*|\s+and\s+))+[a-z/&\-\s]+)\s+(?:systems?|sources?|platforms?)",
+        text,
+        re.I,
+    )
+    if domain_match:
+        for part in re.split(r",\s*|\s+and\s+", domain_match.group(1)):
+            part = part.strip()
+            if len(part) > 2:
+                extracted.append(part.title() if part.islower() else part)
+
+    t = text.lower()
+    theme_labels = (
+        (("production", "equipment performance", "operational efficiency"), "Production & Equipment Performance"),
+        (("strategic decision", "executive", "decision-making"), "Strategic Decision-Making"),
+        (("insight", "analytics", "reporting"), "Enterprise Analytics & Reporting"),
+        (("data integration", "consolidat", "data platform"), "Enterprise Data Consolidation"),
+    )
+    for keywords, label in theme_labels:
+        if any(keyword in t for keyword in keywords) and label not in extracted:
+            extracted.append(label)
+
+    if extracted:
+        return extracted
+
+    sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", text) if len(s.strip()) > 20]
+    if sentences:
+        return sentences[:5]
+    return [text]
+
+
+def _split_function_card(card: dict) -> list[dict]:
+    """Split an oversized function card using concise labels from each half."""
+    items = card["capabilities"]
+    if len(items) < 2:
+        return [card]
+    mid = (len(items) + 1) // 2
+    left, right = items[:mid], items[mid:]
+    return [
+        {
+            **card,
+            "id": f"{card['id']}-a",
+            "title": left[0]["text"] if len(left) == 1 else f"{card['title']} · Focus",
+            "capabilities": left,
+        },
+        {
+            **card,
+            "id": f"{card['id']}-b",
+            "title": right[0]["text"] if len(right) == 1 else f"{card['title']} · Extended",
+            "capabilities": right,
+        },
+    ]
+
+
+def _ensure_function_card_count(cards: list[dict], *, minimum: int = 4, maximum: int = 5) -> list[dict]:
+    """Expand or trim cards so the section reads as four or five domain groupings."""
+    cards = list(cards)
+    total_items = sum(len(card["capabilities"]) for card in cards)
+    if total_items < minimum:
+        return cards
+
+    while len(cards) < minimum:
+        largest = max(cards, key=lambda card: len(card["capabilities"]))
+        if len(largest["capabilities"]) < 2:
+            break
+        idx = cards.index(largest)
+        cards = cards[:idx] + _split_function_card(largest) + cards[idx + 1 :]
+        if len(cards) >= maximum:
+            break
+
+    while len(cards) > maximum:
+        smallest = min(cards, key=lambda card: len(card["capabilities"]))
+        if len(smallest["capabilities"]) == 0:
+            cards.remove(smallest)
+            continue
+        merge_target = min(
+            (card for card in cards if card is not smallest),
+            key=lambda card: len(card["capabilities"]),
+        )
+        merge_target["capabilities"] = merge_target["capabilities"] + smallest["capabilities"]
+        cards.remove(smallest)
+
+    return cards
+
+
+def _build_business_function_cards(lines: list[str]) -> dict:
+    """Group business-function labels into four or five thematic cards."""
+    buckets: dict[str, list[dict]] = {str(group["id"]): [] for group in _BUSINESS_FUNCTION_GROUPS}
+    for line in lines:
+        group_id = _classify_business_function(line)
+        buckets[group_id].append(_build_chip(line, "business_functions"))
+
+    cards: list[dict] = []
+    for group in _BUSINESS_FUNCTION_GROUPS:
+        items = buckets[str(group["id"])]
+        if items:
+            cards.append(
+                {
+                    "id": group["id"],
+                    "title": group["title"],
+                    "icon": group["icon"],
+                    "capabilities": items,
+                }
+            )
+
+    cards = _ensure_function_card_count(cards)
+    return {"layout": "function_cards", "cards": cards}
+
+
+def _value_chain_stage_id(label: str) -> str:
+    """Map catalog value-chain label to a canonical pit-to-port stage."""
+    t = (label or "").lower()
+    if any(
+        k in t
+        for k in (
+            "mine plan",
+            "strategic mine",
+            "strategic plan",
+            "resource plan",
+            "engineering execution",
+            "production schedul",
+            "material plan",
+            "cost & budget",
+            "cost and budget",
+            "capital & operational",
+            "production forecast",
+        )
+    ):
+        return "plan"
+    if "haul" in t or "haulage" in t:
+        return "haul"
+    if any(
+        k in t
+        for k in (
+            "supply chain",
+            "logistic",
+            "procurement",
+            "inventory",
+            "warehouse",
+            "sourcing",
+            "replenish",
+            "material procurement",
+        )
+    ):
+        return "supply"
+    if any(
+        k in t
+        for k in (
+            "maintenance",
+            "equipment",
+            "asset &",
+            "asset and",
+            "spare part",
+            "utilization",
+        )
+    ):
+        return "maintain"
+    if any(
+        k in t
+        for k in (
+            "reporting",
+            " monitoring",
+            "analytics",
+            "performance monitoring",
+            "performance analysis",
+            "financial",
+            "executive",
+            "business performance",
+            "workforce",
+            "data integration",
+            "data management",
+            "decision support",
+            "continuous process",
+            "operational reporting",
+        )
+    ) or t.endswith(" reporting"):
+        return "report"
+    if any(
+        k in t
+        for k in (
+            "drill",
+            "blast",
+            "ore extraction",
+            "production operation",
+            "production data collection",
+            "production support",
+        )
+    ):
+        return "extract"
+    if any(k in t for k in ("ore process", "crushing")):
+        return "process"
+    return "report"
+
+
+def _build_value_chain_flow(chips: list[dict]) -> dict:
+    """Horizontal pit-to-port stages with catalog labels grouped under each."""
+    buckets: dict[str, list[dict]] = {stage["id"]: [] for stage in _VALUE_CHAIN_STAGES}
+    for chip in chips:
+        stage_id = _value_chain_stage_id(chip["text"])
+        buckets[stage_id].append(chip)
+
+    stages: list[dict] = []
+    for stage in _VALUE_CHAIN_STAGES:
+        items = buckets[stage["id"]]
+        stages.append(
+            {
+                "id": stage["id"],
+                "label": stage["label"],
+                "icon": stage["icon"],
+                "active": bool(items),
+                "details": [item["text"] for item in items],
+            }
+        )
+
+    return {
+        "layout": "value_chain_flow",
+        "stages": stages,
+        "activeCount": sum(1 for stage in stages if stage["active"]),
+        "chips": chips,
+    }
+
+
 def parse_section_display(section_key: str, text: str) -> dict:
     """Shape section text for interactive portal layouts (chips, duration badge, prose)."""
     text = (text or "").strip()
@@ -125,14 +551,19 @@ def parse_section_display(section_key: str, text: str) -> dict:
         return {"empty": True}
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
     if section_key in _CHIP_SECTIONS:
-        chips = [{"text": line, "icon": _chip_icon(line, section_key)} for line in lines]
-        layout = "timeline" if section_key == "mining_value_chain" else "chips"
-        return {"layout": layout, "chips": chips}
-    if section_key == "business_functions" and len(lines) > 1:
+        chips = [_build_chip(line, section_key) for line in lines]
+        if section_key == "mining_value_chain":
+            return _build_value_chain_flow(chips)
+        return {"layout": "chips", "chips": chips}
+    if section_key in ("business_benefits", "tech_benefits") and len(lines) > 1:
         return {
             "layout": "chips",
-            "chips": [{"text": line, "icon": _chip_icon(line, section_key)} for line in lines],
+            "chips": [_build_chip(line, section_key) for line in lines],
         }
+    if section_key == "business_functions":
+        function_lines = _extract_business_function_lines(text)
+        if function_lines:
+            return _build_business_function_cards(function_lines)
     if section_key == "overview":
         duration = None
         body_lines = lines
@@ -147,8 +578,14 @@ def parse_section_display(section_key: str, text: str) -> dict:
     return {"layout": "prose", "body": text}
 
 
-def build_section_views(sections: dict[str, str]) -> dict[str, dict]:
-    return {key: parse_section_display(key, sections.get(key, "")) for key in _SECTION_KEYS}
+def build_section_views(
+    sections: dict[str, str], engagement_details: dict | None = None
+) -> dict[str, dict]:
+    views = {key: parse_section_display(key, sections.get(key, "")) for key in _SECTION_KEYS}
+    overview = views.get("overview")
+    if overview and not overview.get("empty") and engagement_details:
+        overview["sowDetails"] = engagement_details
+    return views
 
 
 def _config_path() -> Path:
@@ -159,6 +596,76 @@ def _config_path() -> Path:
             p = (Path(current_app.config["BASE_DIR"]) / p).resolve()
         return p
     return _CONFIG_PATH
+
+
+def _normalize_active(value) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return int(value) != 0
+    if isinstance(value, str):
+        return value.strip().lower() in ("1", "true", "yes", "on", "active")
+    return bool(value)
+
+
+def project_is_active(row: dict) -> bool:
+    return _normalize_active(row.get("is_active", True))
+
+
+def filter_projects_by_active(rows: list[dict], active: str = "1") -> list[dict]:
+    mode = (active or "1").strip().lower()
+    if mode == "all":
+        return rows
+    want_active = mode != "0"
+    return [row for row in rows if project_is_active(row) is want_active]
+
+
+def _config_path_unsafe() -> Path:
+    """Config path without Flask request context (for catalog writes)."""
+    return _CONFIG_PATH
+
+
+def set_catalog_project_active(*, catalog_key: str | None = None, title: str | None = None, is_active: bool = True) -> bool:
+    """Persist active flag for a catalog-only portfolio entry in program_project_sections.json."""
+    path = _config_path()
+    if not path.is_file():
+        path = _config_path_unsafe()
+    if not path.is_file():
+        return False
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, TypeError):
+        return False
+
+    updated = False
+    for idx, entry in enumerate(data.get("projects") or []):
+        if not isinstance(entry, dict):
+            continue
+        key = f"cfg-{idx}"
+        entry_title = (entry.get("title") or "").strip()
+        if catalog_key and key == catalog_key:
+            entry["is_active"] = bool(is_active)
+            updated = True
+            break
+        if title and entry_title == title.strip():
+            entry["is_active"] = bool(is_active)
+            updated = True
+            break
+
+    if not updated:
+        return False
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return True
+
+
+def set_db_project_active(db, content_id: int, is_active: bool) -> bool:
+    cur = db.execute(
+        "UPDATE projects SET is_active = ? WHERE content_id = ?",
+        (1 if is_active else 0, content_id),
+    )
+    return cur.rowcount > 0
 
 
 def load_project_section_catalog() -> dict:
@@ -187,19 +694,24 @@ def load_project_section_catalog() -> dict:
 
         title = (entry.get("title") or "").strip()
         cid = entry.get("content_id")
+        engagement_details = entry.get("engagement_details")
+        if not isinstance(engagement_details, dict):
+            engagement_details = None
 
         if cid is not None:
             by_id[str(cid)] = sections
         if title:
             by_title[title.lower()] = sections
-            entries.append(
-                {
-                    "catalog_key": f"cfg-{idx}",
-                    "title": title,
-                    "content_id": cid,
-                    "sections": sections,
-                }
-            )
+            catalog_entry = {
+                "catalog_key": f"cfg-{idx}",
+                "title": title,
+                "content_id": cid,
+                "sections": sections,
+                "is_active": _normalize_active(entry.get("is_active", True)),
+            }
+            if engagement_details:
+                catalog_entry["engagement_details"] = engagement_details
+            entries.append(catalog_entry)
 
     return {"by_content_id": by_id, "by_title": by_title, "entries": entries}
 
@@ -227,6 +739,8 @@ def enrich_project_rows(rows, catalog: dict | None = None) -> list[dict]:
 
     for row in rows:
         item = dict(row)
+        if "is_active" not in item or item.get("is_active") is None:
+            item["is_active"] = 1
         item["sections"] = sections_for_project(
             content_id=int(row["id"]),
             title=row["title"] or "",
@@ -247,7 +761,10 @@ def enrich_project_rows(rows, catalog: dict | None = None) -> list[dict]:
         key = title.lower()
         cid = entry.get("content_id")
         if cid is not None and str(cid) in db_by_id:
-            out.append(db_by_id[str(cid)])
+            item = db_by_id[str(cid)]
+            if "is_active" not in entry:
+                item["is_active"] = entry.get("is_active", item.get("is_active", 1))
+            out.append(item)
             used_ids.add(str(cid))
             used_titles.add(key)
             continue
@@ -258,16 +775,21 @@ def enrich_project_rows(rows, catalog: dict | None = None) -> list[dict]:
             used_titles.add(key)
             continue
         sections = dict(entry.get("sections") or _empty_sections())
+        engagement_details = entry.get("engagement_details")
+        if not isinstance(engagement_details, dict):
+            engagement_details = None
         out.append(
             {
                 "id": entry.get("catalog_key") or title,
+                "catalog_key": entry.get("catalog_key"),
                 "title": title,
                 "program_name": None,
                 "project_manager": None,
                 "delivery_status": None,
                 "region": None,
+                "is_active": entry.get("is_active", True),
                 "sections": sections,
-                "section_views": build_section_views(sections),
+                "section_views": build_section_views(sections, engagement_details),
                 "catalog_only": True,
             }
         )
@@ -391,21 +913,47 @@ def _format_insight_date(iso: str | None) -> str:
     return parsed.strftime("%b %Y")
 
 
-def count_portfolio_projects(db=None, rows=None, catalog: dict | None = None) -> int:
+def fetch_approved_project_rows(db):
+    """Approved project content rows; tolerates DBs before projects.is_active migration."""
+    sql_with_active = """
+        SELECT c.*, u.display_name AS author_name,
+               p.program_name, p.project_manager, p.delivery_status,
+               p.is_active,
+               (SELECT meta_value FROM content_meta m
+                WHERE m.content_id = c.id AND m.meta_key = 'region' LIMIT 1) AS region
+        FROM content c
+        JOIN users u ON u.id = c.author_id
+        JOIN projects p ON p.content_id = c.id
+        WHERE c.module = 'projects' AND c.status = 'approved'
+    """
+    sql_legacy = """
+        SELECT c.*, u.display_name AS author_name,
+               p.program_name, p.project_manager, p.delivery_status,
+               1 AS is_active,
+               (SELECT meta_value FROM content_meta m
+                WHERE m.content_id = c.id AND m.meta_key = 'region' LIMIT 1) AS region
+        FROM content c
+        JOIN users u ON u.id = c.author_id
+        JOIN projects p ON p.content_id = c.id
+        WHERE c.module = 'projects' AND c.status = 'approved'
+    """
+    try:
+        return db.execute(sql_with_active).fetchall()
+    except Exception:
+        return db.execute(sql_legacy).fetchall()
+
+
+def count_portfolio_projects(db=None, rows=None, catalog: dict | None = None, *, active_only: bool = False) -> int:
     """Projects visible on /projects — catalog entries plus approved DB rows, deduplicated."""
     if rows is None:
         if db is None:
             catalog = catalog if catalog is not None else load_project_section_catalog()
-            return len(catalog.get("entries") or [])
-        rows = db.execute(
-            """
-            SELECT c.*, u.display_name AS author_name,
-                   p.program_name, p.project_manager, p.delivery_status,
-                   NULL AS region
-            FROM content c
-            JOIN users u ON u.id = c.author_id
-            JOIN projects p ON p.content_id = c.id
-            WHERE c.module = 'projects' AND c.status = 'approved'
-            """
-        ).fetchall()
-    return len(enrich_project_rows(rows, catalog))
+            entries = catalog.get("entries") or []
+            if active_only:
+                return sum(1 for entry in entries if project_is_active(entry))
+            return len(entries)
+        rows = fetch_approved_project_rows(db)
+    enriched = enrich_project_rows(rows, catalog)
+    if active_only:
+        enriched = filter_projects_by_active(enriched, "1")
+    return len(enriched)

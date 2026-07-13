@@ -6,6 +6,9 @@
     <p class="meta">Use your MiNe account credentials.</p>
     <form method="post" class="form" action="{{ url_for('auth.login') }}">
       {{ form.hidden_tag() }}
+      {% if request.args.get('next') %}
+        <input type="hidden" name="next" value="{{ request.args.get('next') }}" />
+      {% endif %}
       {% if form.errors %}
         <ul class="form-errors" style="margin-bottom:12px;">
           {% for field, errs in form.errors.items() %}

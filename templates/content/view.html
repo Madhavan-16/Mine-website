@@ -9,7 +9,13 @@
   'rfp_snippet': 'RFP snippets',
   'blog': 'Blogs & whitepapers'
 } %}
+{% block head_extra %}
+  {% if is_knowledge|default(false) %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/content-view.css') }}" />
+  {% endif %}
+{% endblock %}
 {% block page_header %}
+  {% if not is_knowledge|default(false) %}
   <div class="page-head">
     <nav class="breadcrumb" aria-label="Breadcrumb">
       {% if row.module == 'projects' %}
@@ -49,8 +55,12 @@
     {% endif %}
     <h1 class="page-title" style="text-transform:none;">{{ row.title }}</h1>
   </div>
+  {% endif %}
 {% endblock %}
 {% block content %}
+  {% if is_knowledge|default(false) %}
+    {% include "content/_view_knowledge.html" %}
+  {% else %}
   <div class="content-view-reading">
     {% if current_user and current_user.role in ['admin','moderator'] %}
       {% if row.status != 'pending' or current_user.role in ['admin','moderator'] %}
@@ -77,6 +87,7 @@
           <div><dt>Program</dt><dd>{{ project.program_name or "—" }}</dd></div>
           <div><dt>Project manager</dt><dd>{{ project.project_manager or "—" }}</dd></div>
           <div><dt>Delivery status</dt><dd>{{ project.delivery_status or "—" }}</dd></div>
+          <div><dt>Engagement</dt><dd>{% if project.is_active is not defined or project.is_active %}Active{% else %}Ended{% endif %}</dd></div>
           {% if project_region %}
           <div><dt>Region</dt><dd>{{ project_region|e }}</dd></div>
           {% endif %}
@@ -88,7 +99,9 @@
       {% if row.module == 'case_study' %}
         <h2 style="margin-top:0;">Business challenge</h2>
         <div class="body-rich content-summary-text">
-          {% if row.summary and row.summary.strip() %}
+          {% if summary_text|default('') and summary_text.strip() %}
+            {{ summary_text|e }}
+          {% elif row.summary and row.summary.strip() %}
             {{ row.summary|e }}
           {% else %}
             <span class="meta">No business challenge provided.</span>
@@ -97,7 +110,9 @@
       {% else %}
         <h2 style="margin-top:0;">Summary</h2>
         <div class="body-rich content-summary-text">
-          {% if row.summary and row.summary.strip() %}
+          {% if summary_text|default('') and summary_text.strip() %}
+            {{ summary_text|e }}
+          {% elif row.summary and row.summary.strip() %}
             {{ row.summary|e }}
           {% else %}
             <span class="meta">No summary provided.</span>
@@ -109,12 +124,12 @@
     {% if row.module != 'case_study' and row.module not in ['kyc', 'domain_term'] %}
     <div class="card">
       <h2 style="margin-top:0;">Body</h2>
-      <div class="body-rich">{% if row.body and row.body.strip() %}{{ row.body|e }}{% else %}<span class="meta">—</span>{% endif %}</div>
+      <div class="body-rich">{% if body_text|default('') and body_text.strip() %}{{ body_text|e }}{% elif row.body and row.body.strip() %}{{ row.body|e }}{% else %}<span class="meta">—</span>{% endif %}</div>
     </div>
     {% elif row.module == 'case_study' %}
     <div class="card">
       <h2 style="margin-top:0;">Solution</h2>
-      <div class="body-rich">{% if row.body and row.body.strip() %}{{ row.body|e }}{% else %}<span class="meta">No solution provided.</span>{% endif %}</div>
+      <div class="body-rich">{% if body_text|default('') and body_text.strip() %}{{ body_text|e }}{% elif row.body and row.body.strip() %}{{ row.body|e }}{% else %}<span class="meta">No solution provided.</span>{% endif %}</div>
     </div>
     {% endif %}
 
@@ -134,4 +149,5 @@
       </section>
     {% endif %}
   </div>
+  {% endif %}
 {% endblock %}

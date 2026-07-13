@@ -1,36 +1,242 @@
 {% extends "base.html" %}
-{% block title %}Search{% endblock %}
-{% block content %}
-  <h1>Search</h1>
-  <p class="meta">Full-text search across approved knowledge (FTS5).</p>
 
-  <form method="get" class="search-form" action="{{ url_for('search.search') }}" style="margin-top: 12px; max-width: 920px;">
-    <input type="search" name="q" value="{{ q }}" placeholder="Search…" />
-    <select name="module" aria-label="Module filter">
-      <option value="" {% if not module %}selected{% endif %}>All modules</option>
-      <option value="kyc" {% if module=='kyc' %}selected{% endif %}>KYC</option>
-      <option value="kya" {% if module=='kya' %}selected{% endif %}>KYA</option>
-      <option value="case_study" {% if module=='case_study' %}selected{% endif %}>Case study</option>
-      <option value="projects" {% if module=='projects' %}selected{% endif %}>Projects</option>
-    </select>
-    <button class="btn btn-primary" type="submit">Search</button>
+{% block title %}Search{% endblock %}
+
+{% block head_extra %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}" />
+
+{% endblock %}
+
+{% block content %}
+
+<div class="search-page">
+
+  <header class="search-page__hero">
+
+    <span class="search-page__eyebrow">Universal catalogue search</span>
+
+    <h1 class="search-page__title">Search MiNe</h1>
+
+  </header>
+
+
+
+  <form method="get" class="search-page__form" action="{{ url_for('search.search') }}" role="search">
+
+    <div class="search-page__bar">
+
+      <label class="visually-hidden" for="search-q">Search query</label>
+
+      <input id="search-q" type="search" name="q" value="{{ q }}" placeholder="Search knowledge, sections, tags…" autocomplete="off" />
+
+      <button class="btn btn-primary" type="submit">Search</button>
+
+    </div>
+
+
+
+    <div class="search-page__filters" aria-label="Search filters">
+
+      <div class="field">
+
+        <label for="search-module">Section</label>
+
+        <select id="search-module" name="module">
+
+          {% for value, label in filter_modules %}
+
+            <option value="{{ value }}" {% if module == value or (not module and not value) %}selected{% endif %}>{{ label }}</option>
+
+          {% endfor %}
+
+        </select>
+
+      </div>
+
+      <div class="field">
+
+        <label for="search-author">Author</label>
+
+        <select id="search-author" name="author">
+
+          <option value="">All authors</option>
+
+          {% for name in author_options %}
+
+            <option value="{{ name }}" {% if author == name %}selected{% endif %}>{{ name }}</option>
+
+          {% endfor %}
+
+        </select>
+
+      </div>
+
+      <div class="field">
+
+        <label for="search-sort">Sort</label>
+
+        <select id="search-sort" name="sort">
+
+          {% for value, label in sort_options %}
+
+            <option value="{{ value }}" {% if sort == value %}selected{% endif %}>{{ label }}</option>
+
+          {% endfor %}
+
+        </select>
+
+      </div>
+
+    </div>
+
   </form>
 
+
+
   {% if not q %}
-    <div class="card meta" style="margin-top: 12px;">Enter a query to search.</div>
-  {% elif rows and rows|length > 0 %}
-    <div class="card-grid" style="margin-top: 12px;">
-      {% for item in rows %}
-        <article class="card">
-          <h2 style="margin:0; font-size:16px;"><a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a></h2>
-          <p class="meta" style="margin: 8px 0 0;">{{ item.summary or "—" }}</p>
-          {% if item.rank is not none %}
-            <p class="meta" style="margin: 8px 0 0;">rank: {{ "%.3f"|format(item.rank) }}</p>
-          {% endif %}
-        </article>
-      {% endfor %}
+
+    <div class="search-page__empty card">
+
+      <p>Enter a query to search the approved catalogue and MiNe sections — try <strong>case studies</strong>, <strong>training</strong>, or <strong>programs and projects</strong>.</p>
+
     </div>
+
   {% else %}
-    <div class="card meta" style="margin-top: 12px;">No matches (try simpler keywords).</div>
+
+    <section class="search-page__results" aria-label="Search results">
+
+      <p class="search-page__count">
+
+        Results for <strong>{{ q }}</strong>
+
+        {% if section_shortcuts or rows %}
+
+          —
+
+          {% if section_shortcuts %}{{ section_shortcuts|length }} related page{% if section_shortcuts|length != 1 %}s{% endif %}{% endif %}
+
+          {% if section_shortcuts and rows %} · {% endif %}
+
+          {% if rows %}{{ rows|length }} catalogue item{% if rows|length != 1 %}s{% endif %}{% endif %}
+
+        {% endif %}
+
+      </p>
+
+
+
+      {% if section_shortcuts and section_shortcuts|length > 0 %}
+
+        <h2 class="search-page__results-subtitle">Related pages</h2>
+
+        <ul class="search-page__result-list" role="list">
+
+          {% for hit in section_shortcuts %}
+
+            <li>
+
+              <article class="search-page__result search-page__result--section">
+
+                <div class="search-page__result-top">
+
+                  <h3 class="search-page__result-title">
+
+                    <a href="{{ hit.url }}">{{ hit.section.label }}</a>
+
+                  </h3>
+
+                  <span class="search-page__result-badge search-page__result-badge--section">{{ hit.kind_label }}</span>
+
+                </div>
+
+                <p class="search-page__result-meta">Matched your search for &ldquo;{{ q }}&rdquo;</p>
+
+                <a class="search-page__result-link" href="{{ hit.url }}">Open page →</a>
+
+              </article>
+
+            </li>
+
+          {% endfor %}
+
+        </ul>
+
+      {% endif %}
+
+
+
+      {% if rows and rows|length > 0 %}
+
+        <h2 class="search-page__results-subtitle">Catalogue items</h2>
+
+        <ul class="search-page__result-list" role="list">
+
+          {% for item in rows %}
+
+            <li>
+
+              <article class="search-page__result">
+
+                <div class="search-page__result-top">
+
+                  <h3 class="search-page__result-title">
+
+                    <a href="{{ item.result_url }}">{{ item.title }}</a>
+
+                  </h3>
+
+                  <span class="search-page__result-badge">{{ item.module_label }}</span>
+
+                </div>
+
+                <p class="search-page__result-meta">{{ item.author_name }} · {{ item.updated_at }}</p>
+
+                {% if item.summary and item.summary.strip() %}
+
+                  <p class="search-page__result-excerpt">{{ item.summary|truncate(320)|e }}</p>
+
+                {% endif %}
+
+                <a class="search-page__result-link" href="{{ item.result_url }}">
+
+                  {% if item.module == 'projects' %}Open in Programs &amp; projects →{% else %}Read item →{% endif %}
+
+                </a>
+
+              </article>
+
+            </li>
+
+          {% endfor %}
+
+        </ul>
+
+      {% elif not section_shortcuts %}
+
+        <div class="search-page__empty card">
+
+          <p>No related pages or catalogue matches for <strong>{{ q }}</strong>. Try simpler keywords or change the section filter.</p>
+
+          <p class="search-page__empty-links">
+
+            <a href="{{ url_for('main.knowledge', module='case_study') }}">Case studies</a> ·
+
+            <a href="{{ url_for('projects.project_list') }}">Programs &amp; projects</a> ·
+
+            <a href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
+
+          </p>
+
+        </div>
+
+      {% endif %}
+
+    </section>
+
   {% endif %}
+
+</div>
+
 {% endblock %}
+

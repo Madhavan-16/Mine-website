@@ -1,0 +1,157 @@
+{# Knowledge-series content view — professional layout with sections + catalogue pagination #}
+{% set series_label = knowledge_module_labels[row.module] %}
+{% set is_case_study = row.module == 'case_study' %}
+{% set has_summary = summary_text and summary_text.strip() %}
+{% set has_body = row.module not in ['kyc', 'domain_term'] and body_text and body_text.strip() %}
+{% set has_attach = files and files|length > 0 %}
+{% set list_href = return_to or url_for('main.knowledge', module=row.module) %}
+
+<article class="kview" data-section="{{ section }}">
+  <header class="kview-hero">
+    <div class="kview-hero__main">
+      <nav class="kview-breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
+        <span class="kview-breadcrumb__sep" aria-hidden="true">›</span>
+        <a href="{{ list_href }}">{{ series_label }}</a>
+        <span class="kview-breadcrumb__sep" aria-hidden="true">›</span>
+        <span aria-current="page">{{ row.title }}</span>
+      </nav>
+      <div class="kview-hero__badges">
+        <span class="kview-badge" data-module="{{ row.module }}">{{ module_label(row.module) }}</span>
+        {% if series_total > 0 %}
+          <span class="kview-badge kview-badge--muted">{{ series_position }} of {{ series_total }} in series</span>
+        {% endif %}
+      </div>
+      <h1 class="kview-hero__title">{{ row.title }}</h1>
+      <p class="kview-hero__meta">
+        <span>{{ row.author_name }}</span>
+        <span class="kview-hero__sep" aria-hidden="true">·</span>
+        <time datetime="{{ row.updated_at }}">Updated {{ row.updated_at }}</time>
+      </p>
+    </div>
+    <div class="kview-hero__aside">
+      <a class="btn btn-secondary kview-hero__back" href="{{ list_href }}">← {{ series_label }}</a>
+      {% if current_user and current_user.role in ['admin', 'moderator'] %}
+        <div class="kview-hero__admin">
+          <a class="btn btn-secondary" href="{{ url_for('content.content_edit', cid=row.id) }}">Edit</a>
+          {% if current_user.id == row.author_id or current_user.role == 'admin' %}
+            <form method="post" action="{{ url_for('content.content_delete', cid=row.id) }}" onsubmit="return confirm('Delete this content permanently?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+              <button type="submit" class="btn btn-secondary kview-btn-danger">Delete</button>
+            </form>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </header>
+
+  <nav class="kview-tabs" aria-label="Content sections">
+    <ul class="kview-tabs__list" role="list">
+      {% if has_summary %}
+        <li>
+          <a class="kview-tabs__tab{% if section == 'summary' %} is-active{% endif %}"
+             href="{{ url_for('content.content_view', cid=row.id, section='summary', return_to=return_to or none) }}"
+             {% if section == 'summary' %}aria-current="page"{% endif %}>
+            {% if is_case_study %}Business challenge{% else %}Summary{% endif %}
+          </a>
+        </li>
+      {% endif %}
+      {% if has_body %}
+        <li>
+          <a class="kview-tabs__tab{% if section == 'body' %} is-active{% endif %}"
+             href="{{ url_for('content.content_view', cid=row.id, section='body', return_to=return_to or none) }}"
+             {% if section == 'body' %}aria-current="page"{% endif %}>
+            {% if is_case_study %}Solution{% else %}Body{% endif %}
+          </a>
+        </li>
+      {% endif %}
+      {% if has_attach %}
+        <li>
+          <a class="kview-tabs__tab{% if section == 'attachments' %} is-active{% endif %}"
+             href="{{ url_for('content.content_view', cid=row.id, section='attachments', return_to=return_to or none) }}"
+             {% if section == 'attachments' %}aria-current="page"{% endif %}>
+            Attachments{% if attach_total > 1 %} ({{ attach_total }}){% endif %}
+          </a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <div class="kview-body">
+    {% if section == 'summary' %}
+      <section class="kview-panel" aria-labelledby="kview-summary-title">
+        <header class="kview-panel__head">
+          <h2 id="kview-summary-title" class="kview-panel__title">
+            {% if is_case_study %}Business challenge{% else %}Summary{% endif %}
+          </h2>
+        </header>
+        <div class="kview-prose">
+          {% if has_summary %}
+            {{ summary_text|e }}
+          {% else %}
+            <p class="kview-empty-inline">No summary provided.</p>
+          {% endif %}
+        </div>
+      </section>
+    {% elif section == 'body' %}
+      <section class="kview-panel" aria-labelledby="kview-body-title">
+        <header class="kview-panel__head">
+          <h2 id="kview-body-title" class="kview-panel__title">
+            {% if is_case_study %}Solution{% else %}Body{% endif %}
+          </h2>
+        </header>
+        <div class="kview-prose">
+          {% if has_body %}
+            {{ body_text|e }}
+          {% else %}
+            <p class="kview-empty-inline">No content provided.</p>
+          {% endif %}
+        </div>
+      </section>
+    {% elif section == 'attachments' %}
+      <section class="kview-panel kview-panel--attachments" aria-label="Attachments">
+        {% include "_attachment_previews.html" %}
+      </section>
+    {% endif %}
+
+    {% if related_rows and related_rows|length > 0 %}
+      <aside class="kview-related" aria-labelledby="kview-related-title">
+        <h2 id="kview-related-title" class="kview-related__title">Related in {{ series_label }}</h2>
+        <ul class="kview-related__list" role="list">
+          {% for r in related_rows %}
+            <li>
+              <a class="kview-related__card" href="{{ url_for('content.content_view', cid=r.id, return_to=return_to or none) }}">
+                <span class="kview-related__card-title">{{ r.title }}</span>
+                <time class="kview-related__card-meta" datetime="{{ r.updated_at }}">{{ r.updated_at }}</time>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </aside>
+    {% endif %}
+  </div>
+
+  {% if prev_row or next_row %}
+    <footer class="kview-pager" aria-label="Catalogue navigation">
+      {% if prev_row %}
+        <a class="kview-pager__link kview-pager__link--prev"
+           href="{{ url_for('content.content_view', cid=prev_row.id, section=section, return_to=return_to or none) }}">
+          <span class="kview-pager__dir">Previous</span>
+          <span class="kview-pager__title">{{ prev_row.title }}</span>
+        </a>
+      {% else %}
+        <span class="kview-pager__spacer" aria-hidden="true"></span>
+      {% endif %}
+      <a class="kview-pager__hub" href="{{ list_href }}">All {{ series_label }}</a>
+      {% if next_row %}
+        <a class="kview-pager__link kview-pager__link--next"
+           href="{{ url_for('content.content_view', cid=next_row.id, section=section, return_to=return_to or none) }}">
+          <span class="kview-pager__dir">Next</span>
+          <span class="kview-pager__title">{{ next_row.title }}</span>
+        </a>
+      {% else %}
+        <span class="kview-pager__spacer" aria-hidden="true"></span>
+      {% endif %}
+    </footer>
+  {% endif %}
+</article>

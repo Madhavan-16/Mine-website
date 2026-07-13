@@ -3,7 +3,7 @@
  * Does not target header shell, navbar, sidebar, or global typography reset.
  */
 
-#main .card:not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card) {
+#main .card:not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):not(.journey-digital) {
   border: 1px solid rgba(189, 191, 192, 0.38);
   border-radius: calc(var(--radius-lg) + 2px);
   box-shadow:
@@ -17,7 +17,7 @@
     transform var(--transition-ui);
 }
 
-#main .card:not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):hover {
+#main .card:not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):not(.journey-digital):hover {
   border-color: rgba(0, 174, 240, 0.22);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.98) inset,
@@ -25,7 +25,7 @@
     0 20px 46px rgba(16, 63, 90, 0.1);
 }
 
-#main .card:not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):focus-within {
+#main .card:not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):not(.journey-digital):focus-within {
   border-color: rgba(0, 174, 240, 0.26);
   box-shadow:
     0 0 0 3px rgba(0, 174, 240, 0.11),
@@ -34,7 +34,7 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  #main .card:not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):hover {
+  #main .card:not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):not(.journey-digital):hover {
     transform: translateY(-3px);
   }
 
@@ -104,7 +104,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #main .card:not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):hover {
+  #main .card:not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):not(.journey-digital):hover {
     transform: none;
   }
 }

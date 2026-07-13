@@ -93,7 +93,7 @@
     }
   }
 
-  function openProjectCard(projectId) {
+  function openProjectCard(projectId, sectionKey) {
     setView("cards");
     var card = root.querySelector('[data-project-card][id="project-' + projectId + '"]');
     if (!card) {
@@ -101,11 +101,21 @@
     }
     if (!card) return;
     expandCard(card);
+    if (sectionKey) {
+      activateTab(card, sectionKey);
+    }
     window.setTimeout(function () {
       card.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
       var toggle = card.querySelector("[data-project-card-toggle]");
       if (toggle) toggle.focus({ preventScroll: true });
     }, 60);
+  }
+
+  function initDeepLink() {
+    var params = new URLSearchParams(window.location.search);
+    var openId = params.get("open");
+    if (!openId) return;
+    openProjectCard(openId, params.get("section"));
   }
 
   window.MiNeProjects = {
@@ -136,4 +146,6 @@
       }
     });
   });
+
+  initDeepLink();
 })();
