@@ -1,236 +1,129 @@
-# Azure App Service — persistent data & deployments
-
-
+# Azure App Service — deployments & data policy
 
 Your MiNe app URL (example):  
-
 `https://mine-ffffhrdahfdhdcbx.centralindia-01.azurewebsites.net`
 
+## Data policy (important)
 
+| What | How it updates |
+|------|----------------|
+| UI, CSS/JS, images, journey assets, projects config, users, non-knowledge content | **Local → git push only** (wwwroot) |
+| Knowledge repository artefacts (KYC, KYA, term of the week, newsletter, case studies, RFP snippets, blogs & files) | **Both ways** — local push *and* durable mirror of website uploads |
 
-**Default workflow:** upload content locally → commit `mine.db` + `uploads/` → `git push` → Azure shows the same catalogue.
+Live catalogue paths on Azure:
 
+| Item | Path |
+|------|------|
+| Database | `/home/site/wwwroot/mine.db` |
+| Uploads | `/home/site/wwwroot/uploads/` |
+| Knowledge mirror (Azure only) | `/home/data/mine/knowledge/` |
 
+Website knowledge uploads are mirrored under `/home/data/mine/knowledge` and merged back into wwwroot after each deploy so they are not wiped by a UI-only push.
 
 ---
-
-
 
 ## Local upload → Azure deploy workflow
 
-
-
 ### 1. Create content locally
 
-
-
 1. Run `python run.py` and open `http://127.0.0.1:5000`
-
-2. Sign in → **Create content** (e.g. module **Case study**)
-
-3. Upload files, fill fields, **Submit for review**, then **approve** as admin
-
-
+2. Sign in → create / edit content and assets as usual
 
 Data is saved to:
 
-
-
 | Item | Local path |
-
 |------|------------|
-
 | Database | `mine.db` (project root) |
-
 | Attachments | `uploads/` |
 
-
-
-### 2. Commit and push data with code
-
-
+### 2. Commit and push (code + any catalogue data you want on Azure)
 
 ```powershell
-
 cd c:\Users\2000137443\Desktop\MiNe
-
 git add mine.db uploads/
-
 git status
-
-git commit -m "Add case studies and attachments"
-
+git commit -m "Add catalogue / attachments"
 git push origin main
-
 ```
 
-
-
-GitHub Actions deploys the whole project to Azure (`/home/site/wwwroot/`). The live site reads the same `mine.db` and `uploads/` from that folder.
-
-
+GitHub Actions deploys to `/home/site/wwwroot/`. That is the live source of truth for UI and non-knowledge content.
 
 ### 3. Verify on Azure
 
-
-
 1. Open `/knowledge` (sign in if prompted)
-
-2. Browse **Case studies** or other modules
-
-3. Open a record and confirm **Download original** works
-
-
+2. Confirm records and **Download original**
 
 ---
 
-
-
 ## Azure portal settings
-
-
 
 **Configuration → Application settings**
 
-
-
 | Name | Value |
-
 |------|--------|
-
 | `FLASK_SECRET_KEY` | Long random secret (keep stable across deploys) |
+| `MINE_KNOWLEDGE_PERSIST` | `1` (default) |
+| `MINE_KNOWLEDGE_PERSIST_ROOT` | `/home/data/mine/knowledge` |
 
-
-
-**Do not set** `DATABASE_PATH` or `UPLOAD_FOLDER`. The app uses `mine.db` and `uploads/` in the deployed project folder (same as local).
-
-The latest code **automatically ignores** legacy portal values such as `/home/data/mine.db` on Azure. Still remove them in the portal for clarity — see [azure-portal-checklist.md](azure-portal-checklist.md).
+**Do not set** `DATABASE_PATH` or `UPLOAD_FOLDER` to `/home/data/mine`. Those legacy settings are ignored; the live site uses the git-deployed wwwroot DB/uploads.
 
 **One-time fix (Azure Cloud Shell):** `bash scripts/azure_fix_portal.sh`
 
 **General settings → Startup Command:**
 
-
-
 ```
-
 bash startup.sh
-
 ```
-
-
 
 ---
-
-
 
 ## What gets deployed
 
-
-
 | Included in git deploy | Path on Azure |
-
 |------------------------|---------------|
-
 | `mine.db` | `/home/site/wwwroot/mine.db` |
-
 | `uploads/*` (except `.slide_previews/`) | `/home/site/wwwroot/uploads/` |
+| Application code / static images / UI | `/home/site/wwwroot/` |
 
-| Application code | `/home/site/wwwroot/` |
-
-
-
-| Not in git (by design) | Notes |
-
-|------------------------|--------|
-
+| Durable outside git | Notes |
+|---------------------|--------|
+| `/home/data/mine/knowledge/` | Knowledge artefacts uploaded on the website; merged into wwwroot on startup |
 | `.env` / secrets | Use Azure Application settings |
-
 | `uploads/.slide_previews/` | Regenerated on first preview view |
 
-| Uploads done only on Azure | Lost on next deploy unless you download and commit |
-
-
-
 ---
 
-
-
-## Deploy workflow diagram
-
-
+## Deploy workflow
 
 ```
+Local UI / assets / non-knowledge content
+        ↓ git push
+   Azure wwwroot (source of truth)
 
-Local: create content → mine.db + uploads/
-
-              ↓
-
-        git add + commit + push
-
-              ↓
-
-   GitHub Actions → Azure wwwroot (code + data)
-
-              ↓
-
-   https://…azurewebsites.net/knowledge
-
+Knowledge on website  ↔  /home/data/mine/knowledge  ↔  wwwroot after deploy
+Knowledge on local    →  git push mine.db + uploads (and/or merge tool)
 ```
 
+| Action | Result |
+|--------|--------|
+| Push UI / images / code | Website UI updates; knowledge mirror preserved |
+| Upload knowledge on Azure | Survives next deploy (knowledge mirror) |
+| Upload knowledge locally + push `mine.db` / `uploads/` | Appears on Azure |
+| Push without `mine.db` / `uploads/` | Code/UI only; existing wwwroot catalogue unchanged until next data push |
 
-
-| Action | Updates Azure catalogue? |
-
-|--------|--------------------------|
-
-| Upload locally + `git push` | **Yes** |
-
-| Upload only on Azure site (no git commit) | Yes until next deploy, then **lost** |
-
-| `git push` without `mine.db` / `uploads/` | Code only — catalogue unchanged |
-
-
+Optional: `python tools/merge_catalog_into.py --modules knowledge --help`
 
 ---
-
-
 
 ## Troubleshooting
 
-
-
 | Symptom | Likely cause |
-
 |---------|----------------|
-
-| Case studies missing after deploy | Forgot `git add mine.db uploads/` before push |
-
-| Still empty after push | Forgot `git add mine.db uploads/` before push |
-| Still empty after push (rare) | Stale `/home/data` DB on disk — run `scripts/azure_fix_portal.sh` and redeploy with data in git |
-
-| Download original 404 | File missing from `uploads/` in git |
-
-| Preview empty | `.pptx` not committed; slide previews rebuild on first view |
-
-
+| UI not updating | Code not pushed / Actions failed |
+| Case studies missing after deploy | Forgot `git add mine.db uploads/` *and* no knowledge mirror yet |
+| Still reading old `/home/data` catalogue | Run `scripts/azure_fix_portal.sh` to clear legacy `DATABASE_PATH` |
+| Download original 404 | File missing from `uploads/` in git (or knowledge mirror for Azure-only uploads) |
 
 **Log stream:** App Service → **Monitoring → Log stream**
 
-
-
----
-
-
-
-## Optional: Azure-only uploads (not recommended)
-
-
-
-If you create content directly on Azure without committing to git, it will be **overwritten** on the next deploy from GitHub. Prefer the local → git → deploy workflow above.
-
-
-
-See also: [README.md](../README.md)
-
-
+See also: [azure-portal-checklist.md](azure-portal-checklist.md) · [README.md](../README.md)

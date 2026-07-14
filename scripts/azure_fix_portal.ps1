@@ -1,10 +1,5 @@
-# One-time Azure portal fix: persistent data under /home/data/mine (survives git deploy).
-# Prefer bash in Cloud Shell:
-#   bash scripts/azure_fix_portal.sh
-
-param(
-    [string]$AppName = "Mine"
-)
+# Align Azure App Service with MiNe data policy (PowerShell wrapper).
+# Prefer scripts/azure_fix_portal.sh in Azure Cloud Shell (Bash).
 
 Write-Host "This script requires Azure CLI (az). Prefer scripts/azure_fix_portal.sh in Cloud Shell." -ForegroundColor Yellow
 
@@ -13,23 +8,24 @@ if (-not (Get-Command az -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-$rg = az webapp list --query "[?name=='$AppName'].resourceGroup | [0]" -o tsv
-if (-not $rg) {
+$AppName = if ($env:MINE_APP_NAME) { $env:MINE_APP_NAME } else { "Mine" }
+Write-Host "Looking up resource group for App Service: $AppName"
+$Rg = az webapp list --query "[?name=='$AppName'].resourceGroup | [0]" -o tsv
+if (-not $Rg -or $Rg -eq "null") {
     Write-Host "ERROR: App Service '$AppName' not found." -ForegroundColor Red
     exit 1
 }
 
-Write-Host "Resource group: $rg"
-Write-Host "Setting persistent DATABASE_PATH / UPLOAD_FOLDER..."
-az webapp config appsettings set --name $AppName --resource-group $rg --settings `
-  DATABASE_PATH="/home/data/mine/mine.db" `
-  UPLOAD_FOLDER="/home/data/mine/uploads" `
-  MINE_AZURE_DATA_ROOT="/home/data/mine"
+Write-Host "Clearing legacy DATABASE_PATH / UPLOAD_FOLDER..."
+az webapp config appsettings delete --name $AppName --resource-group $Rg --setting-names DATABASE_PATH UPLOAD_FOLDER MINE_AZURE_DATA_ROOT -o none 2>$null
 
-Write-Host "Setting startup command..."
-az webapp config set --name $AppName --resource-group $rg --startup-file "bash startup.sh"
+Write-Host "Enabling knowledge-artefact mirror..."
+az webapp config appsettings set --name $AppName --resource-group $Rg --settings `
+  MINE_KNOWLEDGE_PERSIST="1" `
+  MINE_KNOWLEDGE_PERSIST_ROOT="/home/data/mine/knowledge" `
+  -o table
 
-Write-Host "Restarting app..."
-az webapp restart --name $AppName --resource-group $rg
+az webapp config set --name $AppName --resource-group $Rg --startup-file "bash startup.sh"
+az webapp restart --name $AppName --resource-group $Rg
 
-Write-Host "Done. Live data persists under /home/data/mine." -ForegroundColor Green
+Write-Host "Done. Live catalogue = wwwroot from local git push; knowledge also mirrors under /home/data/mine/knowledge." -ForegroundColor Green

@@ -1,105 +1,55 @@
-"""Azure App Service: persistent data outside wwwroot so git deploys don't wipe content."""
+"""Azure App Service layout: wwwroot from git push; knowledge artefacts dual-persisted.
+
+UI, static assets, images, projects config, and the live wwwroot DB/uploads come
+from local ``git push``. Knowledge-repository artefacts also mirror under
+``/home/data/mine/knowledge`` so website uploads survive the next deploy.
+"""
 
 from __future__ import annotations
 
 import os
-import shutil
 from pathlib import Path
 
 _AZURE_WWWROOT = Path("/home/site/wwwroot")
-# /home persists across App Service git/zip deploys; wwwroot is replaced.
-_AZURE_PERSIST_ROOT = Path("/home/data/mine")
+_LEGACY_HOME_DATA_PREFIXES = (
+    "/home/data/mine",
+    "/home/data/mine/",
+)
 
 
 def is_azure_app_service() -> bool:
     return bool((os.environ.get("WEBSITE_SITE_NAME") or "").strip())
 
 
-def azure_persist_root() -> Path:
-    raw = (os.environ.get("MINE_AZURE_DATA_ROOT") or "").strip()
-    if raw:
-        return Path(raw)
-    return _AZURE_PERSIST_ROOT
-
-
-def azure_default_database_path() -> Path:
-    return azure_persist_root() / "mine.db"
-
-
-def azure_default_upload_folder() -> Path:
-    return azure_persist_root() / "uploads"
-
-
-def _copy_file_if_needed(src: Path, dest: Path) -> bool:
-    if not src.is_file():
+def is_legacy_home_data_path(raw: str | None) -> bool:
+    """True when portal still points at the old full-store under /home/data/mine."""
+    text = (raw or "").strip().replace("\\", "/").rstrip("/")
+    if not text:
         return False
-    if dest.is_file() and dest.stat().st_size > 0:
-        return False
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(src, dest)
-    return True
+    lowered = text.lower()
+    return lowered == "/home/data/mine" or lowered.startswith("/home/data/mine/")
 
 
-def _merge_tree(src: Path, dest: Path) -> int:
-    """Copy files from src into dest without overwriting existing files. Returns files copied."""
-    if not src.is_dir():
-        return 0
-    dest.mkdir(parents=True, exist_ok=True)
-    copied = 0
-    for root, _dirs, files in os.walk(src):
-        rel = Path(root).relative_to(src)
-        target_dir = dest / rel
-        target_dir.mkdir(parents=True, exist_ok=True)
-        for name in files:
-            s = Path(root) / name
-            d = target_dir / name
-            if d.exists():
-                continue
-            shutil.copy2(s, d)
-            copied += 1
-    return copied
+def wwwroot_database_path() -> Path:
+    return _AZURE_WWWROOT / "mine.db"
 
 
-def migrate_wwwroot_data_into_persistent(app) -> None:
-    """
-    One-time / safe catch-up: if persistent store is empty, seed from wwwroot
-    (git-deployed or previously live site data under the app folder).
-    Never overwrites an existing persistent database.
-    """
-    if not is_azure_app_service():
-        return
-
-    db_path = Path(app.config["DATABASE"])
-    upload_dir = Path(app.config["UPLOAD_FOLDER"])
-    www_db = _AZURE_WWWROOT / "mine.db"
-    www_uploads = _AZURE_WWWROOT / "uploads"
-
-    migrated = []
-    if _copy_file_if_needed(www_db, db_path):
-        migrated.append(f"database from {www_db}")
-
-    n_files = _merge_tree(www_uploads, upload_dir)
-    if n_files:
-        migrated.append(f"{n_files} upload file(s) from {www_uploads}")
-
-    if migrated:
-        app.logger.info("Azure persistent data seeded: %s", "; ".join(migrated))
+def wwwroot_upload_folder() -> Path:
+    return _AZURE_WWWROOT / "uploads"
 
 
 def ensure_azure_persistent_storage(app) -> None:
-    """Ensure persistent directories exist and seed from wwwroot when appropriate."""
+    """Prepare knowledge sidecar dirs; live DB/uploads stay on wwwroot (git)."""
     if not is_azure_app_service():
         return
 
-    db_path = Path(app.config["DATABASE"])
-    upload_dir = Path(app.config["UPLOAD_FOLDER"])
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-    upload_dir.mkdir(parents=True, exist_ok=True)
+    from mine.knowledge_persist import ensure_knowledge_persist_dirs, knowledge_persist_root
 
-    migrate_wwwroot_data_into_persistent(app)
-
+    ensure_knowledge_persist_dirs()
     app.logger.info(
-        "Azure persistent data: DATABASE=%s UPLOAD_FOLDER=%s (survives git deploy)",
-        db_path,
-        upload_dir,
+        "Azure data policy: live DATABASE=%s UPLOAD_FOLDER=%s (from git deploy); "
+        "knowledge artefacts also mirrored at %s",
+        app.config.get("DATABASE"),
+        app.config.get("UPLOAD_FOLDER"),
+        knowledge_persist_root(),
     )

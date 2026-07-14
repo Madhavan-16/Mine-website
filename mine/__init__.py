@@ -109,6 +109,13 @@ def create_app():
         except Exception:
             app.logger.exception("Attachment path normalization failed on startup")
 
+        try:
+            from mine.knowledge_persist import merge_knowledge_persist_into_live
+
+            merge_knowledge_persist_into_live(app)
+        except Exception:
+            app.logger.exception("Knowledge persist merge failed on startup")
+
         if app.config.get("BACKFILL_ATTACHMENT_PREVIEWS", True):
             try:
                 from mine.preview_backfill import (

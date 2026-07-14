@@ -66,6 +66,29 @@ _OFFICE_PREVIEW_SALT = "mine-attachment-office-preview-v1"
 _ALLOWED_UPLOAD_EXTS = sorted(Config.ALLOWED_EXTENSIONS)
 
 
+def _sync_knowledge_persist(cid: int | None = None, *, module: str | None = None, title: str | None = None, deleted: bool = False) -> None:
+    """Mirror knowledge artefacts to Azure durable store (no-op off Azure / for non-knowledge)."""
+    try:
+        from mine.knowledge_persist import (
+            delete_knowledge_from_persist,
+            is_knowledge_module,
+            sync_knowledge_item_to_persist,
+        )
+
+        if deleted:
+            if is_knowledge_module(module):
+                delete_knowledge_from_persist(module, title)
+            return
+        if cid is None:
+            return
+        sync_knowledge_item_to_persist(current_app._get_current_object(), int(cid))
+    except Exception:
+        try:
+            current_app.logger.exception("Knowledge persist sync failed for content #%s", cid)
+        except Exception:
+            pass
+
+
 def _office_preview_serializer(secret: str) -> URLSafeTimedSerializer:
     return URLSafeTimedSerializer(secret, salt=_OFFICE_PREVIEW_SALT)
 
@@ -822,6 +845,7 @@ def content_create():
                 return render_template("content/form.html", form=form, mode="create")
         cid = _insert_new_content_from_form(user, form, mod_sl)
         get_db().commit()
+        _sync_knowledge_persist(cid)
         flash("Content saved.", "success")
         return redirect(url_for("content.content_view", cid=cid))
     if request.method == "POST" and not form.validate_on_submit():
@@ -935,6 +959,7 @@ def content_edit(cid: int):
                 existing_files=existing_files,
             )
         get_db().commit()
+        _sync_knowledge_persist(cid)
         flash("Knowledge content updated.", "success")
         return redirect(url_for("content.content_view", cid=cid))
     if request.method == "POST" and not form.validate_on_submit():
@@ -1104,9 +1129,12 @@ def content_delete(cid: int):
     if row["author_id"] != user["id"] and user["role"] != "admin":
         abort(403)
     _delete_content_attachments(db, cid)
+    module = row["module"]
+    title = row["title"]
     db.execute("DELETE FROM content WHERE id = ?", (cid,))
     log_audit(user["id"], "content_delete", "content", cid, None)
     db.commit()
+    _sync_knowledge_persist(deleted=True, module=module, title=title)
     flash("Content deleted.", "info")
     return redirect(url_for("content.content_list"))
 
@@ -1452,5 +1480,6 @@ def upload():
     _insert_attachment_from_upload(db, cid, f)
     log_audit(user["id"], "attachment_upload", "content", cid, orig)
     db.commit()
+    _sync_knowledge_persist(cid)
     flash("File uploaded.", "success")
     return redirect(url_for("content.content_view", cid=cid))

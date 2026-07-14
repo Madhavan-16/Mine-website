@@ -5,32 +5,26 @@ _BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def _default_data_path(env_key: str) -> Path:
-    """Local defaults; on Azure use /home/data/mine so deploys don't wipe live content."""
-    try:
-        from mine.azure_persist import (
-            azure_default_database_path,
-            azure_default_upload_folder,
-            is_azure_app_service,
-        )
-    except ImportError:
-        is_azure_app_service = lambda: False  # noqa: E731
-        azure_default_database_path = lambda: _BASE_DIR / "mine.db"  # noqa: E731
-        azure_default_upload_folder = lambda: _BASE_DIR / "uploads"  # noqa: E731
-
-    if is_azure_app_service():
-        if env_key == "DATABASE_PATH":
-            return azure_default_database_path()
-        return azure_default_upload_folder()
-
+    """Local and Azure defaults: project root (wwwroot on App Service = git deploy)."""
     if env_key == "DATABASE_PATH":
         return _BASE_DIR / "mine.db"
     return _BASE_DIR / "uploads"
 
 
 def _resolve_path(env_key: str, default: Path) -> str:
-    """Honor DATABASE_PATH / UPLOAD_FOLDER env when set; otherwise use environment defaults."""
+    """Honor DATABASE_PATH / UPLOAD_FOLDER when set; ignore legacy /home/data/mine paths on Azure."""
     raw = (os.environ.get(env_key) or "").strip()
-    p = Path(raw) if raw else default
+    try:
+        from mine.azure_persist import is_azure_app_service, is_legacy_home_data_path
+    except ImportError:
+        is_azure_app_service = lambda: False  # noqa: E731
+        is_legacy_home_data_path = lambda _p: False  # noqa: E731
+
+    if is_azure_app_service() and is_legacy_home_data_path(raw):
+        # Old portal settings pointed the whole site at /home/data — ignore so local push wins.
+        p = default
+    else:
+        p = Path(raw) if raw else default
     if not p.is_absolute():
         p = (_BASE_DIR / p).resolve()
     else:

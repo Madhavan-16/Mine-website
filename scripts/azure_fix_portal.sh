@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Apply Azure App Service settings so live content survives git deploy.
-# Data lives under /home/data/mine (persistent). Code stays in wwwroot.
+# Align Azure App Service with MiNe data policy:
+#   - UI / images / non-knowledge content: from local git push (wwwroot)
+#   - Knowledge artefacts: bidirectional via /home/data/mine/knowledge
+#
 # Run in Azure Cloud Shell: https://shell.azure.com
 set -euo pipefail
 
@@ -14,14 +16,21 @@ if [[ -z "$RG" || "$RG" == "null" ]]; then
 fi
 echo "Resource group: $RG"
 
-echo "Setting persistent DATABASE_PATH and UPLOAD_FOLDER under /home/data/mine..."
+echo "Clearing legacy full-store DATABASE_PATH / UPLOAD_FOLDER (git wwwroot is the live catalogue)..."
+# delete if present (ignore errors when already absent)
+az webapp config appsettings delete \
+  --name "$APP_NAME" \
+  --resource-group "$RG" \
+  --setting-names DATABASE_PATH UPLOAD_FOLDER MINE_AZURE_DATA_ROOT \
+  -o none 2>/dev/null || true
+
+echo "Enabling knowledge-artefact mirror under /home/data/mine/knowledge..."
 az webapp config appsettings set \
   --name "$APP_NAME" \
   --resource-group "$RG" \
   --settings \
-    DATABASE_PATH="/home/data/mine/mine.db" \
-    UPLOAD_FOLDER="/home/data/mine/uploads" \
-    MINE_AZURE_DATA_ROOT="/home/data/mine" \
+    MINE_KNOWLEDGE_PERSIST="1" \
+    MINE_KNOWLEDGE_PERSIST_ROOT="/home/data/mine/knowledge" \
   -o table
 
 echo "Setting startup command to bash startup.sh..."
@@ -34,13 +43,13 @@ echo "Current data-related app settings:"
 az webapp config appsettings list \
   --name "$APP_NAME" \
   --resource-group "$RG" \
-  --query "[?name=='DATABASE_PATH' || name=='UPLOAD_FOLDER' || name=='MINE_AZURE_DATA_ROOT' || name=='FLASK_SECRET_KEY'].{name:name, value:value}]" \
+  --query "[?name=='DATABASE_PATH' || name=='UPLOAD_FOLDER' || name=='MINE_KNOWLEDGE_PERSIST' || name=='MINE_KNOWLEDGE_PERSIST_ROOT' || name=='FLASK_SECRET_KEY'].{name:name, value:value}]" \
   -o table
 
 echo "Restarting app..."
 az webapp restart --name "$APP_NAME" --resource-group "$RG"
 
 echo "Done."
-echo "Website uploads now persist in /home/data/mine across git pushes."
-echo "Local machine still uses project-root mine.db + uploads/."
-echo "To publish local-only catalogue items onto Azure, see: python tools/merge_catalog_into.py --help"
+echo "Live DB/uploads = /home/site/wwwroot (updated by local git push)."
+echo "Knowledge artefacts also mirror to /home/data/mine/knowledge (website ↔ local)."
+echo "Optional merge tool: python tools/merge_catalog_into.py --modules knowledge --help"

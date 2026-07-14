@@ -60,7 +60,8 @@ jobs:
 
       - name: Portal settings reminder
         run: |
-          echo "MiNe on Azure stores live data under /home/data/mine (persists across git deploy)."
-          echo "Run scripts/azure_fix_portal.sh once in Azure Cloud Shell to set DATABASE_PATH and UPLOAD_FOLDER."
-          echo "Local machine keeps using project-root mine.db + uploads/."
-          echo "Merge local catalogue into a downloaded Azure DB: python tools/merge_catalog_into.py --help"
+          echo "MiNe deploy policy:"
+          echo "  - UI / images / non-knowledge content: from this git push (wwwroot)."
+          echo "  - Knowledge artefacts: bidirectional via /home/data/mine/knowledge."
+          echo "Run scripts/azure_fix_portal.sh once in Azure Cloud Shell if portal still has legacy DATABASE_PATH=/home/data/mine."
+          echo "Knowledge merge helper: python tools/merge_catalog_into.py --modules knowledge --help"

@@ -178,6 +178,12 @@ def approve(cid: int):
     log_audit(user["id"], "moderation_approve", "content", cid, None)
     notify(row["author_id"], f"Your submission was approved: #{cid} — {row['title']}")
     db.commit()
+    try:
+        from mine.knowledge_persist import sync_knowledge_item_to_persist
+
+        sync_knowledge_item_to_persist(current_app._get_current_object(), cid)
+    except Exception:
+        current_app.logger.exception("Knowledge persist sync failed after approve #%s", cid)
     flash(f"“{row['title']}” approved and published to the catalogue.", "success")
     return _safe_post_redirect("admin.moderation")
 
@@ -207,6 +213,12 @@ def reject(cid: int):
         msg += f" — Note: {note}"
     notify(row["author_id"], msg)
     db.commit()
+    try:
+        from mine.knowledge_persist import sync_knowledge_item_to_persist
+
+        sync_knowledge_item_to_persist(current_app._get_current_object(), cid)
+    except Exception:
+        current_app.logger.exception("Knowledge persist sync failed after reject #%s", cid)
     flash(f"“{row['title']}” returned to the author with feedback.", "info")
     return _safe_post_redirect("admin.moderation")
 

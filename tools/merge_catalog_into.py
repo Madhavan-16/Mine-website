@@ -4,11 +4,15 @@ Merge catalogue content from a SOURCE database into a TARGET database.
 
 Use cases
 ---------
-1) Publish local-only items onto a downloaded Azure DB (then upload that DB back):
+1) Merge knowledge artefacts only (recommended for Azure ↔ local):
+     python tools/merge_catalog_into.py --source mine.db --target azure-mine.db ^
+         --source-uploads uploads --target-uploads azure-uploads --modules knowledge
+
+2) Publish full local catalogue onto a downloaded Azure DB (then upload that DB back):
      python tools/merge_catalog_into.py --source mine.db --target azure-mine.db ^
          --source-uploads uploads --target-uploads azure-uploads
 
-2) Merge a backup into your local DB without wiping either side:
+3) Merge a backup into your local DB without wiping either side:
      python tools/merge_catalog_into.py --source backup.db --target mine.db ^
          --source-uploads backup-uploads --target-uploads uploads
 
@@ -18,6 +22,7 @@ Rules
 - Content is skipped when the same module + title already exists on the target.
 - Attachment files are copied when missing on the target upload folder.
 - Does not delete anything on the target.
+- Prefer --modules knowledge: UI and non-knowledge content should come from local git push.
 """
 
 from __future__ import annotations
@@ -146,6 +151,7 @@ def merge(
     source_uploads: Path,
     target_uploads: Path,
     dry_run: bool,
+    modules: set[str] | None = None,
 ) -> dict:
     src = _connect(source_db)
     dest = _connect(target_db)
@@ -160,6 +166,8 @@ def merge(
     for row in rows:
         module = row["module"] or ""
         title = row["title"] or ""
+        if modules is not None and module not in modules:
+            continue
         if _content_exists(dest, module, title):
             skipped += 1
             continue
@@ -268,6 +276,11 @@ def main() -> int:
     parser.add_argument("--target", type=Path, required=True, help="Target SQLite DB (will be updated)")
     parser.add_argument("--source-uploads", type=Path, default=None, help="Source uploads folder")
     parser.add_argument("--target-uploads", type=Path, default=None, help="Target uploads folder")
+    parser.add_argument(
+        "--modules",
+        default="",
+        help="Comma-separated modules to merge, or 'knowledge' for knowledge-repository series only",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Report only; do not write")
     args = parser.parse_args()
 
@@ -275,12 +288,23 @@ def main() -> int:
     target_uploads = (args.target_uploads or (args.target.parent / "uploads")).resolve()
     target_uploads.mkdir(parents=True, exist_ok=True)
 
+    modules = None
+    raw_modules = (args.modules or "").strip().lower()
+    if raw_modules:
+        if raw_modules in ("knowledge", "knowledge-series", "knowledge_series"):
+            from mine.catalog_modules import KNOWLEDGE_SERIES_MODULE_KEYS
+
+            modules = set(KNOWLEDGE_SERIES_MODULE_KEYS)
+        else:
+            modules = {m.strip() for m in raw_modules.split(",") if m.strip()}
+
     result = merge(
         source_db=args.source.resolve(),
         target_db=args.target.resolve(),
         source_uploads=source_uploads,
         target_uploads=target_uploads,
         dry_run=args.dry_run,
+        modules=modules,
     )
     mode = "DRY-RUN" if result["dry_run"] else "DONE"
     print(
