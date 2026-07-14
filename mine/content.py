@@ -333,7 +333,8 @@ def _update_from_form(
         )
     att = form.attachment.data
     if att and att.filename:
-        _insert_attachment_from_upload(db, cid, att)
+        # Knowledge edits replace the current file(s); do not stack duplicates.
+        _insert_attachment_from_upload(db, cid, att, replace_existing=True)
     if new_status == "pending" and old_row["status"] != "pending":
         moderation_entry(cid, user["id"], "submit", None)
         _notify_moderators(f"Submission pending review: #{cid} — {title}", except_user_id=user["id"])
@@ -355,8 +356,35 @@ def _save_upload(file_storage, upload_folder: str) -> tuple[str, str]:
     return orig, to_portable_upload_path(path)
 
 
-def _insert_attachment_from_upload(db, content_id: int, file_storage) -> None:
+def _delete_content_attachments(db, content_id: int) -> None:
+    """Remove attachment DB rows and files on disk for a content item."""
+    from mine.slide_preview import remove_slide_preview_dir
+    from mine.upload_paths import resolve_stored_path, resolve_stored_upload_path
+
+    files = db.execute(
+        "SELECT file_path, preview_path, slide_preview_dir FROM attachments WHERE content_id = ?",
+        (content_id,),
+    ).fetchall()
+    for f in files:
+        for key in ("file_path", "preview_path"):
+            p = resolve_stored_upload_path(f[key])
+            try:
+                if p and os.path.isfile(p):
+                    os.remove(p)
+            except OSError:
+                pass
+        try:
+            slide_dir = f["slide_preview_dir"]
+        except (TypeError, KeyError):
+            slide_dir = None
+        remove_slide_preview_dir(resolve_stored_path(slide_dir, kind="dir"))
+    db.execute("DELETE FROM attachments WHERE content_id = ?", (content_id,))
+
+
+def _insert_attachment_from_upload(db, content_id: int, file_storage, *, replace_existing: bool = False) -> None:
     """Save uploaded file, optionally build PDF + slide previews, insert attachments row."""
+    if replace_existing:
+        _delete_content_attachments(db, content_id)
     upload_folder = current_app_upload_folder()
     orig, path = _save_upload(file_storage, upload_folder)
     preview_path = None
@@ -580,17 +608,24 @@ def _view_query_params(
 
 
 def _attachment_manage_href(user, row) -> str | None:
-    """URL to the editor where admins/moderators can upload an attachment (None if not allowed)."""
-    # load_current_user() returns sqlite3.Row — supports row["key"] but not .get()
-    if not user or not row or user["role"] not in ("admin", "moderator"):
+    """URL to the editor where attachment can be replaced (None if not allowed)."""
+    if not user or not row:
         return None
+    role = user["role"]
     mod = (row["module"] or "").strip()
     cid = int(row["id"])
     if mod == "projects":
+        if role not in ("admin", "moderator"):
+            return None
         return url_for("projects.project_edit", cid=cid)
     if mod in STANDALONE_REPO_MODULES:
+        if role not in ("admin", "moderator"):
+            return None
         seg = STANDALONE_MODULE_TO_SEGMENT[mod]
         return url_for("repo_standalone.repo_edit", segment=seg, cid=cid)
+    # Knowledge-repository series: admin only
+    if role != "admin":
+        return None
     return url_for("content.content_edit", cid=cid)
 
 
@@ -847,44 +882,70 @@ def content_edit(cid: int):
     row = db.execute("SELECT * FROM content WHERE id = ?", (cid,)).fetchone()
     if not row:
         abort(404)
-    if row["author_id"] != user["id"] and user["role"] not in ("admin", "moderator"):
-        abort(403)
-    if row["status"] == "pending" and user["role"] not in ("admin", "moderator"):
-        flash("You cannot edit content while it is pending review.", "warning")
-        return redirect(url_for("content.content_view", cid=cid))
-    if row["status"] == "approved" and user["role"] not in ("admin", "moderator"):
-        flash("Approved content is read-only for contributors.", "warning")
-        return redirect(url_for("content.content_view", cid=cid))
     if row["module"] == "projects":
         return redirect(url_for("projects.project_edit", cid=cid))
     if row["module"] in STANDALONE_REPO_MODULES:
         seg = STANDALONE_MODULE_TO_SEGMENT[row["module"]]
         return redirect(url_for("repo_standalone.repo_edit", segment=seg, cid=cid))
+
+    # Knowledge-repository series: admins only may edit summary / replace files
+    if user["role"] != "admin":
+        flash("Only administrators can edit knowledge-repository content.", "warning")
+        return redirect(url_for("content.content_view", cid=cid))
+
     form = ContentForm(obj=row)
     form.module.choices = _knowledge_series_form_choices(row["module"])
     form.tags.data = ", ".join(get_tags(cid))
     _populate_case_study_form_fields(form, row)
+    existing_files = db.execute(
+        "SELECT id, file_name FROM attachments WHERE content_id = ? ORDER BY id DESC",
+        (cid,),
+    ).fetchall()
     if form.validate_on_submit():
         new_mod = (form.module.data or "").strip()
         allowed = KNOWLEDGE_SERIES_MODULE_KEYS | {(row["module"] or "").strip()}
         if new_mod not in allowed:
             flash("That module cannot be assigned from this editor.", "danger")
-            return render_template("content/form.html", form=form, mode="edit", row=row)
+            return render_template(
+                "content/form.html",
+                form=form,
+                mode="edit",
+                row=row,
+                existing_files=existing_files,
+            )
         if new_mod == CASE_STUDY_MODULE:
             action = (request.form.get("action") or "draft").strip()
             errs = _case_study_submit_errors(form, action)
             for msg in errs:
                 flash(msg, "danger")
             if errs:
-                return render_template("content/form.html", form=form, mode="edit", row=row)
+                return render_template(
+                    "content/form.html",
+                    form=form,
+                    mode="edit",
+                    row=row,
+                    existing_files=existing_files,
+                )
         if not _update_from_form(user, row, cid, form, module=new_mod):
-            return render_template("content/form.html", form=form, mode="edit", row=row)
+            return render_template(
+                "content/form.html",
+                form=form,
+                mode="edit",
+                row=row,
+                existing_files=existing_files,
+            )
         get_db().commit()
-        flash("Content updated.", "success")
+        flash("Knowledge content updated.", "success")
         return redirect(url_for("content.content_view", cid=cid))
     if request.method == "POST" and not form.validate_on_submit():
         flash("Please fix the highlighted errors and try again.", "danger")
-    return render_template("content/form.html", form=form, mode="edit", row=row)
+    return render_template(
+        "content/form.html",
+        form=form,
+        mode="edit",
+        row=row,
+        existing_files=existing_files,
+    )
 
 
 def run_project_create():
@@ -1042,25 +1103,7 @@ def content_delete(cid: int):
         abort(404)
     if row["author_id"] != user["id"] and user["role"] != "admin":
         abort(403)
-    files = db.execute(
-        "SELECT file_path, preview_path, slide_preview_dir FROM attachments WHERE content_id = ?", (cid,)
-    ).fetchall()
-    for f in files:
-        for key in ("file_path", "preview_path"):
-            p = resolve_stored_upload_path(f[key])
-            try:
-                if p and os.path.isfile(p):
-                    os.remove(p)
-            except OSError:
-                pass
-        from mine.slide_preview import remove_slide_preview_dir
-        from mine.upload_paths import resolve_stored_path
-
-        try:
-            slide_dir = f["slide_preview_dir"]
-        except (TypeError, KeyError):
-            slide_dir = None
-        remove_slide_preview_dir(resolve_stored_path(slide_dir, kind="dir"))
+    _delete_content_attachments(db, cid)
     db.execute("DELETE FROM content WHERE id = ?", (cid,))
     log_audit(user["id"], "content_delete", "content", cid, None)
     db.commit()

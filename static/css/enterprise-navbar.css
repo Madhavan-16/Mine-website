@@ -101,6 +101,20 @@
   box-shadow: var(--focus-ring);
 }
 
+/* Portal shell is taller than a single nav row (dock / hint under search). Clear it before JS syncs. */
+@media (min-width: 1025px) {
+  body.layout-portal {
+    --portal-header-offset: calc(var(--nav-height) + 44px);
+  }
+}
+
+@media (max-width: 1024px) {
+  body.layout-portal {
+    /* Two-row enterprise header (brand + search) until JS measures exact height */
+    --portal-header-offset: calc(var(--nav-height) + 56px);
+  }
+}
+
 /* ——— Horizontal portal nav (desktop, below search row) ——— */
 .portal-nav-bar {
   display: none;
@@ -130,7 +144,7 @@
     border-radius: 999px;
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
     opacity: 0.55;
-    transition: opacity 0.25s var(--ease-out), height 0.25s var(--ease-out);
+    transition: opacity var(--duration-medium) var(--ease-out), height var(--duration-medium) var(--ease-out);
   }
 
   body.layout-portal .portal-nav-reveal__hint {
@@ -141,7 +155,7 @@
     text-transform: uppercase;
     text-align: center;
     color: rgba(255, 255, 255, 0.5);
-    transition: opacity 0.25s var(--ease-out);
+    transition: opacity var(--duration-medium) var(--ease-out);
   }
 
   body.layout-portal .portal-nav-bar {
@@ -153,9 +167,9 @@
     border-bottom: none;
     pointer-events: none;
     transition:
-      max-height 0.38s var(--ease-standard),
-      opacity 0.28s var(--ease-out),
-      border-color 0.28s var(--ease-out);
+      max-height var(--duration-slow) var(--ease-standard),
+      opacity var(--duration-slow) var(--ease-out),
+      border-color var(--duration-slow) var(--ease-out);
   }
 
   body.layout-portal .portal-nav-reveal:hover .portal-nav-bar,

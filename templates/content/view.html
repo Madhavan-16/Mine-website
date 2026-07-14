@@ -10,9 +10,7 @@
   'blog': 'Blogs & whitepapers'
 } %}
 {% block head_extra %}
-  {% if is_knowledge|default(false) %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/content-view.css') }}" />
-  {% endif %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/content-view.css') }}" />
 {% endblock %}
 {% block page_header %}
   {% if not is_knowledge|default(false) %}
@@ -62,6 +60,25 @@
     {% include "content/_view_knowledge.html" %}
   {% else %}
   <div class="content-view-reading">
+    {% set item_status = (row.status or '')|lower %}
+    {% set can_moderate = current_user and current_user.role in ['admin', 'moderator'] and item_status == 'pending' %}
+    {% if can_moderate %}
+      <section class="kview-modbar" aria-label="Moderation actions" style="margin-bottom:16px;">
+        <div class="kview-modbar__copy">
+          <span class="kview-modbar__eyebrow">Governance review</span>
+          <p class="kview-modbar__text">This item is pending. Approve to publish, or return it with feedback for the author.</p>
+        </div>
+        <div class="kview-modbar__actions" role="group">
+          <form method="post" action="{{ url_for('admin.approve', cid=row.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input type="hidden" name="next" value="{{ url_for('admin.moderation') }}" />
+            <button class="btn btn-primary" type="submit">Approve &amp; publish</button>
+          </form>
+          <a class="btn btn-danger" href="{{ url_for('admin.moderation') }}#mod-item-{{ row.id }}">Return from queue</a>
+          <a class="btn btn-secondary" href="{{ url_for('admin.moderation') }}">← Review queue</a>
+        </div>
+      </section>
+    {% endif %}
     {% if current_user and current_user.role in ['admin','moderator'] %}
       {% if row.status != 'pending' or current_user.role in ['admin','moderator'] %}
         <p class="meta content-view-actions">

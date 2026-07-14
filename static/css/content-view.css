@@ -159,6 +159,7 @@
 .kview-tabs__tab {
   display: inline-flex;
   align-items: center;
+  min-height: 40px;
   padding: 10px 16px;
   border-radius: var(--radius-lg);
   border: 1px solid rgba(189, 191, 192, 0.45);
@@ -167,7 +168,7 @@
   font-weight: 600;
   color: var(--hex-grey-700);
   text-decoration: none;
-  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+  transition: border-color var(--transition-ui), background var(--transition-ui), color var(--transition-ui);
 }
 
 .kview-tabs__tab:hover {
@@ -324,7 +325,7 @@
   background: var(--hex-white);
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition: border-color var(--transition-ui), box-shadow var(--transition-ui);
 }
 
 .kview-related__card:hover {
@@ -347,8 +348,7 @@
 
 /* Catalogue prev / next */
 .kview-pager {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  display: flex;
   align-items: stretch;
   gap: 12px;
   margin-top: 24px;
@@ -356,8 +356,17 @@
   border-top: 1px solid rgba(189, 191, 192, 0.4);
 }
 
+.kview-pager__spacer {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 1px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .kview-pager__link {
   display: flex;
+  flex: 1 1 0;
   flex-direction: column;
   gap: 4px;
   padding: 14px 16px;
@@ -366,7 +375,7 @@
   background: var(--hex-white);
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition: border-color var(--transition-ui), box-shadow var(--transition-ui);
   min-width: 0;
 }
 
@@ -422,10 +431,6 @@
   text-decoration: none;
 }
 
-.kview-pager__spacer {
-  min-height: 1px;
-}
-
 @media (max-width: 720px) {
   .kview-hero__aside {
     align-items: stretch;
@@ -451,8 +456,117 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .kview-tabs__tab,
+  .kview-pager__link,
+  .kview-related__card {
+    transition: none;
+  }
+
   .kview-pager__link:hover,
   .kview-related__card:hover {
     box-shadow: none;
   }
+}
+
+/* Moderation strip on pending full-record view */
+.kview-modbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 18px;
+  margin-bottom: 16px;
+  padding: 14px 18px;
+  border-radius: calc(var(--radius-lg) + 2px);
+  border: 1px solid rgba(179, 119, 67, 0.35);
+  background:
+    linear-gradient(135deg, rgba(179, 119, 67, 0.1), rgba(255, 255, 255, 0.96));
+  box-shadow: 0 4px 14px rgba(16, 63, 90, 0.05);
+}
+
+.kview-modbar__eyebrow {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a5a12;
+}
+
+.kview-modbar__text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--hex-grey-700);
+  max-width: 48ch;
+}
+
+.kview-modbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.kview-panel--attachments .attach-preview-frame--pdf iframe {
+  min-height: min(72vh, 820px);
+}
+
+.gov-reject-modal label {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--hex-grey-700);
+}
+
+.gov-reject-target {
+  margin: 0 0 10px !important;
+  font-weight: 600;
+  color: var(--hex-grey-800) !important;
+}
+
+.reject-modal::backdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.reject-modal {
+  max-width: 440px;
+  width: calc(100% - 32px);
+  border: 1px solid var(--hex-grey-200);
+  border-radius: var(--radius-lg);
+  padding: 0;
+  box-shadow: var(--shadow-md);
+}
+
+.reject-modal form {
+  padding: 20px 22px 22px;
+}
+
+.reject-modal h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.reject-modal p.meta {
+  margin: 0 0 12px;
+}
+
+.reject-modal textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 10px 12px;
+  font: inherit;
+  border: 1px solid var(--hex-grey-200);
+  border-radius: var(--border-radius);
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.reject-modal .modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 14px;
 }

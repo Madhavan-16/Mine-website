@@ -45,10 +45,15 @@ _APP_BRAND_RULES: tuple[tuple[str, str], ...] = (
     ("azure data factory", "microsoft-azure"),
     ("cosmos db", "microsoft-azure"),
     ("sql server", "microsoft-sql-server"),
+    ("sql", "microsoft-sql-server"),
     ("odata", "odata"),
     ("rest api", "rest-api"),
+    ("soap", "rest-api"),
+    ("json", "rest-api"),
+    ("xml", "rest-api"),
     ("sap cloud platform integration", "sap-cpi"),
     ("sap cpi", "sap-cpi"),
+    ("sap integration", "sap-cpi"),
     ("sap ariba", "sap-ariba"),
     ("ariba", "sap-ariba"),
     ("successfactors", "sap-successfactors"),
@@ -65,18 +70,27 @@ _APP_BRAND_RULES: tuple[tuple[str, str], ...] = (
     ("enterprise integration platform", "enterprise-integration"),
     ("enterprise integration", "enterprise-integration"),
     ("enterprise applications", "enterprise-applications"),
+    ("data engineering", "data-integration"),
+    ("data pipeline", "data-integration"),
     ("data integration", "data-integration"),
+    ("etl", "data-integration"),
+    ("elt", "data-integration"),
+    ("devops", "devops"),
     ("project management", "project-management"),
     ("inventory optimization", "inventory-optimization"),
     ("supply chain", "supply-chain"),
     ("operational analytics", "operational-analytics"),
+    ("enterprise analytics", "operational-analytics"),
+    ("analytics platform", "operational-analytics"),
+    ("data analytics", "operational-analytics"),
     ("enterprise reporting", "enterprise-reporting"),
     ("business intelligence", "business-intelligence"),
+    ("sap", "sap"),
 )
 
 
 def _app_brand_slug(label: str) -> str | None:
-    """Map supported-application label to a brand icon asset slug."""
+    """Map application / technology label to a brand icon asset slug."""
     t = (label or "").lower()
     for needle, slug in _APP_BRAND_RULES:
         if needle in t:
@@ -86,7 +100,7 @@ def _app_brand_slug(label: str) -> str | None:
 
 def _build_chip(label: str, section_key: str) -> dict:
     chip = {"text": label, "icon": _chip_icon(label, section_key)}
-    if section_key == "supported_applications":
+    if section_key in ("supported_applications", "technologies"):
         brand = _app_brand_slug(label)
         if brand:
             chip["brand"] = brand

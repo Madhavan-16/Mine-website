@@ -116,10 +116,48 @@ def moderation():
             cid = int(att["content_id"])
             attachments_by_content.setdefault(cid, []).append(att)
 
+    status_counts = {
+        r["status"]: int(r["c"] or 0)
+        for r in db.execute(
+            """
+            SELECT lower(trim(COALESCE(status, ''))) AS status, COUNT(*) AS c
+            FROM content
+            WHERE lower(trim(COALESCE(status, ''))) IN ('draft', 'pending', 'approved', 'rejected')
+            GROUP BY lower(trim(COALESCE(status, '')))
+            """
+        ).fetchall()
+    }
+
+    recent_decisions = db.execute(
+        """
+        SELECT
+          ml.id,
+          ml.action,
+          ml.note,
+          ml.created_at,
+          ml.content_id,
+          COALESCE(c.title, '(deleted item)') AS title,
+          COALESCE(c.module, '') AS module,
+          COALESCE(c.status, '') AS content_status,
+          COALESCE(actor.display_name, 'System') AS actor_name,
+          COALESCE(author.display_name, '') AS author_name
+        FROM moderation_log ml
+        LEFT JOIN content c ON c.id = ml.content_id
+        LEFT JOIN users actor ON actor.id = ml.performed_by
+        LEFT JOIN users author ON author.id = c.author_id
+        WHERE lower(trim(COALESCE(ml.action, ''))) IN ('approve', 'reject')
+        ORDER BY datetime(ml.created_at) DESC, ml.id DESC
+        LIMIT 20
+        """
+    ).fetchall()
+
     return render_template(
         "admin/moderation.html",
         rows=rows,
         attachments_by_content=attachments_by_content,
+        status_counts=status_counts,
+        recent_decisions=recent_decisions,
+        reject_form=RejectForm(),
     )
 
 
@@ -140,7 +178,7 @@ def approve(cid: int):
     log_audit(user["id"], "moderation_approve", "content", cid, None)
     notify(row["author_id"], f"Your submission was approved: #{cid} — {row['title']}")
     db.commit()
-    flash("Content approved.", "success")
+    flash(f"“{row['title']}” approved and published to the catalogue.", "success")
     return _safe_post_redirect("admin.moderation")
 
 
@@ -151,7 +189,7 @@ def reject(cid: int):
     user = load_current_user()
     form = RejectForm()
     if not form.validate_on_submit():
-        flash("A rejection reason is required.", "danger")
+        flash("A rejection reason is required before returning content to the author.", "danger")
         return _safe_post_redirect("admin.moderation")
     db = get_db()
     row = db.execute("SELECT * FROM content WHERE id = ?", (cid,)).fetchone()
@@ -169,7 +207,7 @@ def reject(cid: int):
         msg += f" — Note: {note}"
     notify(row["author_id"], msg)
     db.commit()
-    flash("Content rejected and returned to author.", "info")
+    flash(f"“{row['title']}” returned to the author with feedback.", "info")
     return _safe_post_redirect("admin.moderation")
 
 
@@ -226,9 +264,11 @@ def users_import_roster():
         flash(result["error"], "danger")
     elif result["created"]:
         db.commit()
-        msg = f"Created {result['created']} MiNe account(s) from the roster."
+        msg = f"Created {result['created']} MiNe account(s) from the roster (username = EMP ID)."
+        if result.get("default_password"):
+            msg += f" Default password: {result['default_password']} — users should change it after login."
         if result.get("credentials_file"):
-            msg += " Passwords saved to logs/team-roster-import.csv — distribute securely."
+            msg += " Full list saved to logs/team-roster-import.csv."
         if result["skipped"]:
             msg += f" Skipped {result['skipped']} (already exist)."
         flash(msg, "success")

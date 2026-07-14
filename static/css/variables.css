@@ -90,8 +90,12 @@
   --duration-short: 150ms;
   --duration-medium: 200ms;
   --duration-slow: 280ms;
+  --duration-expand: 360ms;
   --transition-fast: var(--duration-short) var(--ease-out);
   --transition-ui: var(--duration-medium) var(--ease-standard);
+  --transition-expand: var(--duration-expand) var(--ease-out);
+  --lift-card: -2px;
+  --lift-subtle: -1px;
 
   /* Focus & a11y */
   --focus-ring: 0 0 0 3px rgba(0, 174, 240, 0.35);

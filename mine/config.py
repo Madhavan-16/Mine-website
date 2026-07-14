@@ -5,30 +5,31 @@ _BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def _default_data_path(env_key: str) -> Path:
+    """Local defaults; on Azure use /home/data/mine so deploys don't wipe live content."""
+    try:
+        from mine.azure_persist import (
+            azure_default_database_path,
+            azure_default_upload_folder,
+            is_azure_app_service,
+        )
+    except ImportError:
+        is_azure_app_service = lambda: False  # noqa: E731
+        azure_default_database_path = lambda: _BASE_DIR / "mine.db"  # noqa: E731
+        azure_default_upload_folder = lambda: _BASE_DIR / "uploads"  # noqa: E731
+
+    if is_azure_app_service():
+        if env_key == "DATABASE_PATH":
+            return azure_default_database_path()
+        return azure_default_upload_folder()
+
     if env_key == "DATABASE_PATH":
         return _BASE_DIR / "mine.db"
     return _BASE_DIR / "uploads"
 
 
-def _azure_ignores_custom_data_paths() -> bool:
-    """Git-deploy workflow: on Azure App Service use wwwroot mine.db + uploads."""
-    try:
-        from mine.azure_persist import is_azure_app_service
-    except ImportError:
-        return False
-    if not is_azure_app_service():
-        return False
-    return os.environ.get("MINE_ALLOW_CUSTOM_DATA_PATHS", "0").lower() not in (
-        "1",
-        "true",
-        "yes",
-    )
-
-
 def _resolve_path(env_key: str, default: Path) -> str:
+    """Honor DATABASE_PATH / UPLOAD_FOLDER env when set; otherwise use environment defaults."""
     raw = (os.environ.get(env_key) or "").strip()
-    if _azure_ignores_custom_data_paths() and env_key in ("DATABASE_PATH", "UPLOAD_FOLDER"):
-        raw = ""
     p = Path(raw) if raw else default
     if not p.is_absolute():
         p = (_BASE_DIR / p).resolve()

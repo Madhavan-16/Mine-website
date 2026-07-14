@@ -4,6 +4,9 @@
   {% include "includes/back_program_map.html" %}
 
   <h1>{% if mode == 'create' %}Create knowledge content{% else %}Edit knowledge content{% endif %}</h1>
+  {% if mode == 'edit' %}
+  <p class="meta">Update the summary (or challenge/solution), then optionally <strong>replace the attachment</strong>. Saving keeps the current publish status for approved items.</p>
+  {% else %}
   <p class="meta">Use this form for <strong>knowledge-repository series</strong> (KYC, KYA, term of the week, newsletter, case studies, RFP snippets, blogs &amp; whitepapers). For
     <a href="{{ url_for('main.onboarding') }}">onboarding notes</a>,
     <a href="{{ url_for('main.innovation') }}">innovation</a>,
@@ -11,6 +14,7 @@
     <a href="{{ url_for('main.hall_of_fame') }}">Hall of Fame</a>, add content from those pages. For
     <strong>programs &amp; projects</strong>, use
     <a href="{{ url_for('projects.project_create') }}">Add program or project</a>.</p>
+  {% endif %}
 
   <form method="post" class="form" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
@@ -48,19 +52,43 @@
     <label for="tags">Tags</label>
     {{ form.tags(placeholder="comma, separated, values") }}
 
-    <label for="attachment">Attachment (optional)</label>
+    {% if mode == 'edit' and existing_files is defined and existing_files and existing_files|length > 0 %}
+      <div class="content-form-current-files">
+        <p class="meta" style="margin: 0 0 8px;"><strong>Current attachment{% if existing_files|length > 1 %}s{% endif %}</strong> — choosing a new file below replaces {% if existing_files|length > 1 %}them{% else %}it{% endif %}.</p>
+        <ul class="mod-attach-list" style="margin: 0 0 12px; padding-left: 1.2rem;">
+          {% for f in existing_files %}
+            <li>
+              <span class="mod-attach-name">{{ f.file_name|e }}</span>
+              <span class="mod-attach-links">
+                <a href="{{ url_for('content.download_attachment', aid=f.id) }}">Download</a>
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+      <label for="attachment">Replace attachment</label>
+    {% else %}
+      <label for="attachment">Attachment (optional)</label>
+    {% endif %}
     {{ form.attachment() }}
-    <p class="help">Allowed types: PDF, DOCX, XLSX, PPT, PPTX, PNG, JPG — max 10 MB per request.</p>
+    <p class="help">Allowed types: PDF, DOCX, XLSX, PPT, PPTX, PNG, JPG — max 10 MB per request.{% if mode == 'edit' %} Leave empty to keep the current file unchanged.{% endif %}</p>
     <div class="toolbar" style="margin-top: 10px; flex-wrap: wrap; gap: 8px; align-items: center;">
       <button type="button" class="btn btn-secondary" id="btn-autofill-from-file">Suggest from file</button>
       <span class="meta" id="autofill-status" aria-live="polite"></span>
     </div>
 
     <div class="toolbar content-form-actions" style="margin-top: 14px; justify-content: flex-end;">
-      {# Submit first in DOM so Enter in a field submits for review, not "Save draft". #}
-      <button class="btn btn-primary" name="action" value="submit" type="submit">Submit for review</button>
-      <button class="btn btn-secondary" name="action" value="draft" type="submit">Save draft</button>
-      <a class="btn btn-ghost" href="{{ url_for('content.content_list') }}">Cancel</a>
+      {% if mode == 'edit' and row is defined and row and (row.status or '')|lower == 'approved' %}
+        <button class="btn btn-primary" name="action" value="draft" type="submit">Save changes</button>
+      {% else %}
+        <button class="btn btn-primary" name="action" value="submit" type="submit">Submit for review</button>
+        <button class="btn btn-secondary" name="action" value="draft" type="submit">Save draft</button>
+      {% endif %}
+      {% if mode == 'edit' and row is defined and row %}
+        <a class="btn btn-ghost" href="{{ url_for('content.content_view', cid=row.id) }}">Cancel</a>
+      {% else %}
+        <a class="btn btn-ghost" href="{{ url_for('content.content_list') }}">Cancel</a>
+      {% endif %}
     </div>
   </form>
   <script>

@@ -31,6 +31,14 @@ Verify before deploy
 --------------------
   python scripts/verify_deploy_assets.py
 
+Runtime data (not wiped by Azure git deploy)
+-------------------------------------------
+  Local:     mine.db + uploads/ under the project folder
+  Azure:     /home/data/mine/mine.db + /home/data/mine/uploads (persistent)
+             Run scripts/azure_fix_portal.sh once after this change.
+  Merge:     python tools/merge_catalog_into.py --help
+             (publish local-only catalogue rows into a DB without deleting existing rows)
+
 Runtime data (not in static/)
 -----------------------------
   mine.db              SQLite database (created on first run if missing)

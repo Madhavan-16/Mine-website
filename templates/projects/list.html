@@ -22,7 +22,7 @@
     <div class="portal-hero__aside">
       <div class="portal-stat" role="status">
         <span class="portal-stat__value">{{ rows|length }}</span>
-        <span class="portal-stat__label">Projects</span>
+        <span class="portal-stat__label">{% if active == '1' %}Active projects{% elif active == '0' %}Ended projects{% else %}Projects{% endif %}</span>
       </div>
       {% if current_user.role in ['admin','moderator'] %}
       <a class="btn btn-primary" href="{{ url_for('projects.project_create') }}">Add project</a>
@@ -32,15 +32,48 @@
 
   {% include "includes/back_program_map.html" %}
 
-  <form method="get" class="filters-bar" action="{{ url_for('projects.project_list') }}">
-    <div class="field">
-      <label for="active">Engagement</label>
-      <select id="active" name="active" onchange="this.form.submit()">
-        <option value="all" {% if active == 'all' %}selected{% endif %}>All engagements</option>
-        <option value="1" {% if active == '1' %}selected{% endif %}>Active only</option>
-        <option value="0" {% if active == '0' %}selected{% endif %}>Ended only</option>
-      </select>
+  {% set filter_qs = {
+    'program': program or none,
+    'status': status or none,
+    'region': region or none,
+    'q': q or none,
+    'sort': sort or none
+  } %}
+  <nav class="projects-active-filter" aria-label="Filter by engagement status">
+    <p class="projects-active-filter__lede">Show</p>
+    <div class="projects-active-filter__tabs" role="list">
+      <a
+        class="projects-active-filter__tab{% if active == '1' %} is-active{% endif %}"
+        role="listitem"
+        href="{{ url_for('projects.project_list', active='1', **filter_qs) }}"
+        {% if active == '1' %}aria-current="page"{% endif %}
+      >
+        <span class="projects-active-filter__label">Active</span>
+        <span class="projects-active-filter__count">{{ active_count }}</span>
+      </a>
+      <a
+        class="projects-active-filter__tab{% if active == 'all' %} is-active{% endif %}"
+        role="listitem"
+        href="{{ url_for('projects.project_list', active='all', **filter_qs) }}"
+        {% if active == 'all' %}aria-current="page"{% endif %}
+      >
+        <span class="projects-active-filter__label">All</span>
+        <span class="projects-active-filter__count">{{ all_count }}</span>
+      </a>
+      <a
+        class="projects-active-filter__tab{% if active == '0' %} is-active{% endif %}"
+        role="listitem"
+        href="{{ url_for('projects.project_list', active='0', **filter_qs) }}"
+        {% if active == '0' %}aria-current="page"{% endif %}
+      >
+        <span class="projects-active-filter__label">Ended</span>
+        <span class="projects-active-filter__count">{{ ended_count }}</span>
+      </a>
     </div>
+  </nav>
+
+  <form method="get" class="filters-bar" action="{{ url_for('projects.project_list') }}">
+    <input type="hidden" name="active" value="{{ active }}" />
     <div class="field">
       <label for="status">Status</label>
       <select id="status" name="status" onchange="this.form.submit()">
@@ -97,7 +130,7 @@
     <header class="projects-viz-panel__head">
       <div class="projects-viz-panel__intro">
         <h2 class="projects-viz-panel__title" id="projects-view-gantt">Delivery runway</h2>
-        <p class="projects-viz-panel__lede">Timeline of all catalog engagements — live work, schedule overlap, and full portfolio span ({{ insights.rangeLabel or 'see chart' }}).</p>
+        <p class="projects-viz-panel__lede">Timeline of {% if active == '1' %}active{% elif active == '0' %}ended{% else %}all catalog{% endif %} engagements — live work, schedule overlap, and portfolio span ({{ insights.rangeLabel or 'see chart' }}).</p>
       </div>
     </header>
 
@@ -222,7 +255,10 @@
   </div>
   {% else %}
   <div class="projects-portal-empty">
-    <p>No projects match these filters.</p>
+    <p>{% if active == '1' %}No active projects match these filters.{% elif active == '0' %}No ended projects match these filters.{% else %}No projects match these filters.{% endif %}</p>
+    {% if active != 'all' and all_count %}
+    <p class="meta" style="margin-top: 8px;"><a href="{{ url_for('projects.project_list', active='all', program=program or none, status=status or none, region=region or none, q=q or none, sort=sort or none) }}">View all {{ all_count }} engagements</a></p>
+    {% endif %}
   </div>
   {% endif %}
 

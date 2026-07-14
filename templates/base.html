@@ -174,7 +174,7 @@
               {% if current_user.role in ['admin', 'moderator'] %}
               <a class="dropdown-menu__item" href="{{ url_for('main.my_submissions') }}" role="menuitem">My submissions</a>
               <a class="dropdown-menu__item" href="{{ url_for('admin.moderation') }}" role="menuitem">
-                Moderation{% if pending_moderation %} ({{ pending_moderation }}){% endif %}
+                Moderation / Governance{% if pending_moderation %} ({{ pending_moderation }}){% endif %}
               </a>
               <a class="dropdown-menu__item" href="{{ url_for('content.content_list') }}" role="menuitem">Content catalogue (admin)</a>
               {% endif %}
@@ -240,7 +240,7 @@
 
         {% if current_user.role in ['admin','moderator'] %}
         <a class="portal-nav-bar__link" href="{{ url_for('main.my_submissions') }}"{% if request.endpoint == 'main.my_submissions' %} aria-current="page"{% endif %}>My Submissions</a>
-        <a class="portal-nav-bar__link" href="{{ url_for('admin.moderation') }}"{% if request.endpoint == 'admin.moderation' %} aria-current="page"{% endif %}>Moderation</a>
+        <a class="portal-nav-bar__link" href="{{ url_for('admin.moderation') }}"{% if request.endpoint == 'admin.moderation' %} aria-current="page"{% endif %}>Governance</a>
         <a class="portal-nav-bar__link" href="{{ url_for('content.content_list') }}"{% if request.blueprint == 'content' and request.endpoint == 'content.content_list' %} aria-current="page"{% endif %}>Content catalogue</a>
         <a class="portal-nav-bar__link" href="{{ url_for('admin.analytics') }}"{% if request.endpoint == 'admin.analytics' %} aria-current="page"{% endif %}>Analytics</a>
         {% endif %}
@@ -308,7 +308,7 @@
       <a class="nav-link" href="{{ url_for('auth.account_settings') }}"{% if request.endpoint in ('auth.account_settings', 'auth.account_settings_password') %} aria-current="page"{% endif %}>Account settings</a>
       {% endif %}
       {% if current_user and current_user.role in ['admin','moderator'] %}
-      <a class="nav-link" href="{{ url_for('admin.moderation') }}"{% if request.endpoint == 'admin.moderation' %} aria-current="page"{% endif %}>Moderation{% if pending_moderation %} ({{ pending_moderation }}){% endif %}</a>
+      <a class="nav-link" href="{{ url_for('admin.moderation') }}"{% if request.endpoint == 'admin.moderation' %} aria-current="page"{% endif %}>Governance{% if pending_moderation %} ({{ pending_moderation }}){% endif %}</a>
       <a class="nav-link" href="{{ url_for('content.content_list') }}"{% if request.endpoint == 'content.content_list' %} aria-current="page"{% endif %}>Content catalogue</a>
       <a class="nav-link" href="{{ url_for('admin.analytics') }}"{% if request.endpoint == 'admin.analytics' %} aria-current="page"{% endif %}>Analytics</a>
       {% endif %}
@@ -330,9 +330,11 @@
     <main id="main" class="main" tabindex="-1">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-          {% for category, message in messages %}
-            <div class="flash flash-{{ category }}" role="status">{{ message }}</div>
-          {% endfor %}
+          <div class="flash-stack" role="region" aria-label="Notifications">
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}" role="status">{{ message }}</div>
+            {% endfor %}
+          </div>
         {% endif %}
       {% endwith %}
       {% block page_header %}{% endblock %}

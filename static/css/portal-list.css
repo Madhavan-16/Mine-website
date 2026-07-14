@@ -192,14 +192,14 @@
   text-decoration: none;
   color: inherit;
   box-shadow: 0 2px 8px rgba(16, 63, 90, 0.04);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: border-color var(--transition-ui), box-shadow var(--transition-ui), transform var(--transition-ui);
 }
 
 .portal-result:hover {
   border-color: rgba(0, 174, 240, 0.28);
   box-shadow: 0 8px 22px rgba(16, 63, 90, 0.08);
   text-decoration: none;
-  transform: translateY(-1px);
+  transform: translateY(var(--lift-subtle));
 }
 
 .portal-result__top {
@@ -384,5 +384,15 @@
   .portal-hero__aside .btn {
     flex: 1 1 auto;
     text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-result {
+    transition: none;
+  }
+
+  .portal-result:hover {
+    transform: none;
   }
 }

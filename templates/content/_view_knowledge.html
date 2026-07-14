@@ -1,24 +1,50 @@
 {# Knowledge-series content view — professional layout with sections + catalogue pagination #}
+{% from "includes/status_badge.html" import status_badge %}
 {% set series_label = knowledge_module_labels[row.module] %}
 {% set is_case_study = row.module == 'case_study' %}
 {% set has_summary = summary_text and summary_text.strip() %}
 {% set has_body = row.module not in ['kyc', 'domain_term'] and body_text and body_text.strip() %}
 {% set has_attach = files and files|length > 0 %}
-{% set list_href = return_to or url_for('main.knowledge', module=row.module) %}
+{% set series_href = url_for('main.knowledge', module=row.module) %}
+{% set list_href = return_to or series_href %}
+{% set item_status = (row.status or '')|lower %}
+{% set can_moderate = current_user and current_user.role in ['admin', 'moderator'] and item_status == 'pending' %}
+{% set gov_return = url_for('admin.moderation') %}
 
 <article class="kview" data-section="{{ section }}">
+  {% if can_moderate %}
+  <section class="kview-modbar" aria-label="Moderation actions">
+    <div class="kview-modbar__copy">
+      <span class="kview-modbar__eyebrow">Governance review</span>
+      <p class="kview-modbar__text">This item is pending. Approve to publish, or return it with feedback for the author.</p>
+    </div>
+    <div class="kview-modbar__actions" role="group">
+      <form method="post" action="{{ url_for('admin.approve', cid=row.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input type="hidden" name="next" value="{{ gov_return }}" />
+        <button class="btn btn-primary" type="submit">Approve &amp; publish</button>
+      </form>
+      <button class="btn btn-danger" type="button" data-reject-open="{{ row.id }}" data-reject-title="{{ row.title|e }}">Return with feedback</button>
+      <a class="btn btn-secondary" href="{{ gov_return }}">← Review queue</a>
+    </div>
+  </section>
+  {% endif %}
+
   <header class="kview-hero">
     <div class="kview-hero__main">
       <nav class="kview-breadcrumb" aria-label="Breadcrumb">
         <a href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
         <span class="kview-breadcrumb__sep" aria-hidden="true">›</span>
-        <a href="{{ list_href }}">{{ series_label }}</a>
+        <a href="{{ series_href }}">{{ series_label }}</a>
         <span class="kview-breadcrumb__sep" aria-hidden="true">›</span>
         <span aria-current="page">{{ row.title }}</span>
       </nav>
       <div class="kview-hero__badges">
         <span class="kview-badge" data-module="{{ row.module }}">{{ module_label(row.module) }}</span>
-        {% if series_total > 0 %}
+        {% if item_status and item_status != 'approved' %}
+          {{ status_badge(item_status) }}
+        {% endif %}
+        {% if item_status == 'approved' and series_total > 0 and series_position > 0 %}
           <span class="kview-badge kview-badge--muted">{{ series_position }} of {{ series_total }} in series</span>
         {% endif %}
       </div>
@@ -30,10 +56,10 @@
       </p>
     </div>
     <div class="kview-hero__aside">
-      <a class="btn btn-secondary kview-hero__back" href="{{ list_href }}">← {{ series_label }}</a>
-      {% if current_user and current_user.role in ['admin', 'moderator'] %}
+      <a class="btn btn-secondary kview-hero__back" href="{{ series_href }}">← {{ series_label }}</a>
+      {% if current_user and current_user.role == 'admin' %}
         <div class="kview-hero__admin">
-          <a class="btn btn-secondary" href="{{ url_for('content.content_edit', cid=row.id) }}">Edit</a>
+          <a class="btn btn-secondary" href="{{ url_for('content.content_edit', cid=row.id) }}">Edit knowledge content</a>
           {% if current_user.id == row.author_id or current_user.role == 'admin' %}
             <form method="post" action="{{ url_for('content.content_delete', cid=row.id) }}" onsubmit="return confirm('Delete this content permanently?');">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
@@ -108,13 +134,26 @@
           {% endif %}
         </div>
       </section>
+    {% endif %}
+
+    {# Always show attachment previews when files exist (PDF/images visible without switching tabs) #}
+    {% if has_attach %}
+      <section class="kview-panel kview-panel--attachments{% if section == 'attachments' %} is-primary-section{% endif %}" aria-labelledby="kview-attach-title">
+        <header class="kview-panel__head">
+          <h2 id="kview-attach-title" class="kview-panel__title">Attachments{% if attach_total > 1 %} ({{ attach_total }}){% endif %}</h2>
+        </header>
+        {% include "_attachment_previews.html" %}
+      </section>
     {% elif section == 'attachments' %}
-      <section class="kview-panel kview-panel--attachments" aria-label="Attachments">
+      <section class="kview-panel kview-panel--attachments" aria-labelledby="kview-attach-title">
+        <header class="kview-panel__head">
+          <h2 id="kview-attach-title" class="kview-panel__title">Attachments</h2>
+        </header>
         {% include "_attachment_previews.html" %}
       </section>
     {% endif %}
 
-    {% if related_rows and related_rows|length > 0 %}
+    {% if related_rows and related_rows|length > 0 and item_status == 'approved' %}
       <aside class="kview-related" aria-labelledby="kview-related-title">
         <h2 id="kview-related-title" class="kview-related__title">Related in {{ series_label }}</h2>
         <ul class="kview-related__list" role="list">
@@ -131,7 +170,7 @@
     {% endif %}
   </div>
 
-  {% if prev_row or next_row %}
+  {% if item_status == 'approved' and (prev_row or next_row) %}
     <footer class="kview-pager" aria-label="Catalogue navigation">
       {% if prev_row %}
         <a class="kview-pager__link kview-pager__link--prev"
@@ -155,3 +194,50 @@
     </footer>
   {% endif %}
 </article>
+
+{% if can_moderate %}
+<dialog id="reject-dialog" class="reject-modal gov-reject-modal" aria-labelledby="reject-dialog-title">
+  <form method="post" id="reject-dialog-form" action="">
+    <h2 id="reject-dialog-title">Return with feedback</h2>
+    <p class="meta">Required. The author is notified and can revise, then resubmit for review.</p>
+    <p class="gov-reject-target meta" id="reject-dialog-target" hidden></p>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <input type="hidden" name="next" value="{{ gov_return }}" />
+    <label for="reject-note">Reason</label>
+    <textarea id="reject-note" name="note" required maxlength="2000" rows="6" placeholder="Explain what needs to change before this can be published…"></textarea>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" id="reject-dialog-cancel">Cancel</button>
+      <button type="submit" class="btn btn-danger">Confirm return</button>
+    </div>
+  </form>
+</dialog>
+<script>
+(function () {
+  var dialog = document.getElementById("reject-dialog");
+  var form = document.getElementById("reject-dialog-form");
+  var ta = document.getElementById("reject-note");
+  var cancel = document.getElementById("reject-dialog-cancel");
+  var target = document.getElementById("reject-dialog-target");
+  var rejectUrlTpl = {{ url_for('admin.reject', cid=999999001)|tojson }};
+  if (!dialog || !form) return;
+  document.querySelectorAll("[data-reject-open]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var id = btn.getAttribute("data-reject-open");
+      var title = btn.getAttribute("data-reject-title") || "";
+      form.action = rejectUrlTpl.replace("999999001", id);
+      ta.value = "";
+      if (target) {
+        target.hidden = !title;
+        target.textContent = title ? ("Item: " + title) : "";
+      }
+      dialog.showModal();
+      ta.focus();
+    });
+  });
+  cancel.addEventListener("click", function () { dialog.close(); });
+  dialog.addEventListener("click", function (e) {
+    if (e.target === dialog) dialog.close();
+  });
+})();
+</script>
+{% endif %}

@@ -60,6 +60,11 @@ def resolve_stored_path(stored: str | None, *, kind: str = "any") -> str | None:
     if p.is_absolute():
         candidates.append(p)
     else:
+        # Prefer upload root for portable "uploads/..." paths (esp. Azure /home/data/mine/uploads).
+        rel = p.as_posix().lstrip("./")
+        if rel.startswith("uploads/"):
+            under_upload = rel[len("uploads/") :]
+            candidates.append(upload_root / under_upload)
         candidates.extend(
             [
                 Path.cwd() / p,

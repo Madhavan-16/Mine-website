@@ -70,9 +70,9 @@ def project_list():
     region = (request.args.get("region") or "").strip()
     q = (request.args.get("q") or "").strip()
     sort = (request.args.get("sort") or "recent").strip()
-    active = (request.args.get("active") or "all").strip().lower()
+    active = (request.args.get("active") or "1").strip().lower()
     if active not in ("1", "0", "all"):
-        active = "all"
+        active = "1"
     db = get_db()
 
     program_options = [
@@ -139,7 +139,9 @@ def project_list():
         sql = sql.replace("COALESCE(p.is_active, 1) AS is_active", "1 AS is_active")
         rows = db.execute(sql, args).fetchall()
     enriched_all = enrich_project_rows(rows)
-    portfolio_viz = build_portfolio_viz(enriched_all)
+    active_count = sum(1 for r in enriched_all if project_is_active(r))
+    ended_count = len(enriched_all) - active_count
+    all_count = len(enriched_all)
 
     enriched = filter_projects_by_active(enriched_all, active)
     if q:
@@ -152,6 +154,7 @@ def project_list():
         ]
     if sort == "alpha":
         enriched.sort(key=lambda r: (r.get("title") or "").lower())
+    portfolio_viz = build_portfolio_viz(enriched)
     return render_template(
         "projects/list.html",
         rows=enriched,
@@ -164,6 +167,9 @@ def project_list():
         q=q,
         sort=sort,
         active=active,
+        active_count=active_count,
+        ended_count=ended_count,
+        all_count=all_count,
         program_options=program_options,
         status_options=status_options,
         project_is_active=project_is_active,

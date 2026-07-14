@@ -30,6 +30,8 @@ def main() -> int:
             return 1
         db.commit()
         print(f"Created: {result['created']}, skipped: {result['skipped']}")
+        if result.get("default_password"):
+            print(f"Default password (change after login): {result['default_password']}")
         if result.get("credentials_file"):
             print(f"Credentials: {result['credentials_file']}")
     return 0

@@ -35,11 +35,22 @@
 
 @media (prefers-reduced-motion: no-preference) {
   #main .card:not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):not(.journey-digital):hover {
-    transform: translateY(-3px);
+    transform: translateY(var(--lift-card));
   }
 
   body.layout-landing #main .landing-featured .card-grid .card:hover {
-    transform: translateY(-2px);
+    transform: translateY(var(--lift-card));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #main .card:not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):not(.journey-digital) {
+    transition: border-color var(--duration-instant) linear, box-shadow var(--duration-instant) linear;
+  }
+
+  #main .card:not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):not(.journey-digital):hover,
+  #main .card:not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):not(.journey-digital):focus-within {
+    transform: none;
   }
 }
 

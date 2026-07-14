@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import re
-import secrets
-import string
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -34,8 +32,25 @@ _TSR_HEADERS = frozenset(
         "tsrid",
     }
 )
+_EMP_ID_HEADERS = frozenset(
+    {
+        "emp id",
+        "empid",
+        "emp_id",
+        "employee id",
+        "employeeid",
+        "employee #",
+        "employee no",
+        "employee no.",
+        "associate id",
+        "associateid",
+    }
+)
 
 ROSTER_FILENAME = "Freeport active resource Tracker - Updated.xlsx"
+
+# Shared first-login password — users change it under Account settings.
+DEFAULT_ROSTER_PASSWORD = "Mine123!"
 
 
 @dataclass(frozen=True)
@@ -43,6 +58,7 @@ class TeamRosterRow:
     name: str
     tsr: str
     row_num: int
+    emp_id: str = ""
 
 
 @dataclass(frozen=True)
@@ -53,6 +69,7 @@ class ProposedUser:
     email: str
     password: str
     row_num: int
+    emp_id: str = ""
 
 
 def roster_xlsx_path() -> Path:
@@ -87,9 +104,9 @@ def _cell_str(cell) -> str:
     return str(cell).strip()
 
 
-def _find_header_row(ws, *, max_scan: int = 25) -> tuple[int, int, int] | None:
+def _find_header_row(ws, *, max_scan: int = 25) -> tuple[int, int, int, int | None] | None:
     for r_idx, row in enumerate(ws.iter_rows(min_row=1, max_row=max_scan, values_only=True), start=1):
-        name_col = tsr_col = None
+        name_col = tsr_col = emp_col = None
         for c_idx, cell in enumerate(row):
             h = _norm_header(cell)
             if not h:
@@ -98,8 +115,10 @@ def _find_header_row(ws, *, max_scan: int = 25) -> tuple[int, int, int] | None:
                 name_col = c_idx
             if h in _TSR_HEADERS or h.replace(" ", "") == "tsr":
                 tsr_col = c_idx
+            if h in _EMP_ID_HEADERS or h.replace(" ", "") in ("empid", "employeeid"):
+                emp_col = c_idx
         if name_col is not None and tsr_col is not None:
-            return r_idx, name_col, tsr_col
+            return r_idx, name_col, tsr_col, emp_col
     return None
 
 
@@ -125,7 +144,7 @@ def load_team_roster(path: Path | None = None) -> list[TeamRosterRow]:
             found = _find_header_row(ws)
             if not found:
                 continue
-            header_row, name_col, tsr_col = found
+            header_row, name_col, tsr_col, emp_col = found
             for r_idx, row in enumerate(
                 ws.iter_rows(min_row=header_row + 1, values_only=True),
                 start=header_row + 1,
@@ -134,6 +153,9 @@ def load_team_roster(path: Path | None = None) -> list[TeamRosterRow]:
                     continue
                 name = _cell_str(row[name_col]) if name_col < len(row) else ""
                 tsr = _cell_str(row[tsr_col]) if tsr_col < len(row) else ""
+                emp_id = ""
+                if emp_col is not None and emp_col < len(row):
+                    emp_id = _cell_str(row[emp_col])
                 if not name and not tsr:
                     continue
                 low = name.lower()
@@ -141,7 +163,7 @@ def load_team_roster(path: Path | None = None) -> list[TeamRosterRow]:
                     continue
                 if not name:
                     continue
-                rows.append(TeamRosterRow(name=name, tsr=tsr, row_num=r_idx))
+                rows.append(TeamRosterRow(name=name, tsr=tsr, row_num=r_idx, emp_id=emp_id))
             if rows:
                 break
     finally:
@@ -246,6 +268,13 @@ def _slug_username(name: str) -> str:
     return re.sub(r"[^a-z0-9.]", "", base)[:40] or "user"
 
 
+def _username_from_emp_id(emp_id: str) -> str | None:
+    raw = re.sub(r"[^a-zA-Z0-9._-]", "", (emp_id or "").strip())
+    if len(raw) >= 3:
+        return raw[:60]
+    return None
+
+
 def _username_from_tsr(tsr: str) -> str | None:
     raw = re.sub(r"[^a-zA-Z0-9._-]", "", (tsr or "").strip().lower())
     if len(raw) >= 3:
@@ -253,26 +282,24 @@ def _username_from_tsr(tsr: str) -> str | None:
     return None
 
 
-def _temp_password(tsr: str, name: str) -> str:
-    token = re.sub(r"[^a-zA-Z0-9]", "", (tsr or "")[:12])
-    if len(token) < 4:
-        token = "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-    pwd = f"MiNe@{token}!"
-    return pwd if len(pwd) >= 8 else pwd + "Xx1"
-
-
 def propose_users(
     roster: list[TeamRosterRow],
     *,
     existing_usernames: set[str] | None = None,
     existing_emails: set[str] | None = None,
+    default_password: str = DEFAULT_ROSTER_PASSWORD,
 ) -> list[ProposedUser]:
     taken_usernames = {u.lower() for u in (existing_usernames or set())}
     taken_emails = {e.lower() for e in (existing_emails or set())}
     out: list[ProposedUser] = []
+    password = (default_password or DEFAULT_ROSTER_PASSWORD).strip() or DEFAULT_ROSTER_PASSWORD
 
     for row in roster:
-        base = _username_from_tsr(row.tsr) or _slug_username(row.name)
+        base = (
+            _username_from_emp_id(row.emp_id)
+            or _username_from_tsr(row.tsr)
+            or _slug_username(row.name)
+        )
         username = base
         n = 2
         while username.lower() in taken_usernames:
@@ -292,15 +319,16 @@ def propose_users(
                 tsr=row.tsr,
                 username=username,
                 email=email,
-                password=_temp_password(row.tsr, row.name),
+                password=password,
                 row_num=row.row_num,
+                emp_id=row.emp_id,
             )
         )
     return out
 
 
 def import_roster_users(db, *, actor_id: int | None = None) -> dict:
-    """Create MiNe users from roster; writes new credentials to logs/team-roster-import.csv."""
+    """Create MiNe users from roster; username = EMP ID, display name = NAME."""
     import bcrypt
     import csv
 
@@ -310,6 +338,14 @@ def import_roster_users(db, *, actor_id: int | None = None) -> dict:
     if not roster:
         return {"created": 0, "skipped": 0, "error": "Roster file missing or no Name/TSR columns found."}
 
+    missing_emp = sum(1 for r in roster if not (r.emp_id or "").strip())
+    if missing_emp:
+        return {
+            "created": 0,
+            "skipped": 0,
+            "error": f"Roster has {missing_emp} row(s) without EMP ID. Fix the workbook and retry.",
+        }
+
     existing = db.execute("SELECT username, email FROM users").fetchall()
     existing_usernames = {r["username"] for r in existing}
     existing_emails = {r["email"] for r in existing}
@@ -318,12 +354,15 @@ def import_roster_users(db, *, actor_id: int | None = None) -> dict:
         roster,
         existing_usernames=existing_usernames,
         existing_emails=existing_emails,
+        default_password=DEFAULT_ROSTER_PASSWORD,
     )
 
     created_rows: list[ProposedUser] = []
     skipped = 0
     for pu in proposed:
-        if pu.username in existing_usernames or pu.email.lower() in {e.lower() for e in existing_emails}:
+        if pu.username.lower() in {u.lower() for u in existing_usernames} or pu.email.lower() in {
+            e.lower() for e in existing_emails
+        }:
             skipped += 1
             continue
         pw_hash = bcrypt.hashpw(pu.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
@@ -350,13 +389,14 @@ def import_roster_users(db, *, actor_id: int | None = None) -> dict:
         cred_path = log_dir / "team-roster-import.csv"
         with cred_path.open("w", newline="", encoding="utf-8") as fh:
             writer = csv.writer(fh)
-            writer.writerow(["name", "tsr", "username", "email", "temporary_password"])
+            writer.writerow(["name", "emp_id", "tsr", "username", "email", "default_password"])
             for pu in created_rows:
-                writer.writerow([pu.name, pu.tsr, pu.username, pu.email, pu.password])
+                writer.writerow([pu.name, pu.emp_id, pu.tsr, pu.username, pu.email, pu.password])
 
     return {
         "created": len(created_rows),
         "skipped": skipped,
+        "default_password": DEFAULT_ROSTER_PASSWORD if created_rows else None,
         "credentials_file": str(cred_path) if cred_path else None,
         "error": None,
     }

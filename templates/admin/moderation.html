@@ -1,136 +1,270 @@
 {% extends "base.html" %}
-{% block title %}Moderation{% endblock %}
+{% from "includes/status_badge.html" import status_badge %}
+{% block title %}Content moderation &amp; governance{% endblock %}
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/moderation-governance.css') }}" />
+{% endblock %}
 {% block page_header %}{% endblock %}
 {% block content %}
-<div class="portal-page">
-  <header class="portal-hero">
+{% set pending_n = rows|length %}
+{% set draft_n = status_counts.get('draft', 0) %}
+{% set approved_n = status_counts.get('approved', 0) %}
+{% set rejected_n = status_counts.get('rejected', 0) %}
+
+<div class="gov portal-page">
+  <header class="portal-hero gov-hero">
     <div class="portal-hero__copy">
       <nav class="portal-breadcrumb" aria-label="Breadcrumb">
         <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
         <span class="portal-breadcrumb__sep" aria-hidden="true">›</span>
-        <span aria-current="page">Moderation</span>
+        <span aria-current="page">Governance</span>
       </nav>
-      <span class="portal-eyebrow">Admin review</span>
-      <h1 class="portal-hero__title">Content moderation queue</h1>
-      <p class="portal-lede">Review submissions below, then approve or reject. Rejections require a reason and notify the author. Use <strong>Open full record</strong> for attachments or the full-page layout.</p>
+      <span class="portal-eyebrow">Content Moderation / Governance</span>
+      <h1 class="portal-hero__title">Review workflow</h1>
+      <p class="portal-lede">
+        Submissions move from draft to review, then to publish or return with feedback.
+        Only approved items appear in the knowledge catalogue.
+      </p>
     </div>
-    <div class="portal-hero__aside">
+    <div class="portal-hero__aside gov-hero__aside">
       <div class="portal-stat" role="status">
-        <span class="portal-stat__value">{{ rows|length }}</span>
-        <span class="portal-stat__label">Pending</span>
+        <span class="portal-stat__value">{{ pending_n }}</span>
+        <span class="portal-stat__label">In queue</span>
       </div>
+      <a class="btn btn-secondary" href="{{ url_for('content.content_list') }}">Full catalogue</a>
     </div>
   </header>
 
-  {% if rows and rows|length > 0 %}
-    <div class="mod-review-list">
-      {% for item in rows %}
-        <article class="mod-review-card" id="mod-item-{{ item.id }}">
-          <header class="mod-review-card-head">
-            <div>
-              <h2 class="mod-review-title">{{ item.title }}</h2>
-              <p class="mod-review-meta">
-                <span class="portal-module-chip">{{ module_label(item.module) }}</span>
-                <span>{{ item.author_name }} · {{ item.author_email|e }}</span>
-                <span>Submitted {{ item.updated_at }}</span>
-              </p>
-            </div>
-            <div class="mod-actions">
-              <form method="post" action="{{ url_for('admin.approve', cid=item.id) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                <button class="btn btn-primary" type="submit">Approve</button>
-              </form>
-              <button class="btn btn-danger" type="button" data-reject-open="{{ item.id }}">Reject</button>
-              <a class="btn btn-secondary" href="{{ url_for('content.content_view', cid=item.id) }}" target="_blank" rel="noopener">Open full record</a>
-            </div>
-          </header>
+  <section class="gov-pipeline" aria-labelledby="gov-pipeline-title">
+    <div class="gov-pipeline__head">
+      <h2 id="gov-pipeline-title" class="gov-section-title">Workflow</h2>
+      <p class="gov-section-hint">How content is governed before it reaches readers</p>
+    </div>
+    <ol class="gov-steps" role="list">
+      <li class="gov-step">
+        <span class="gov-step__num" aria-hidden="true">1</span>
+        <div class="gov-step__body">
+          <span class="gov-step__label">Draft</span>
+          <span class="gov-step__desc">Author prepares the item</span>
+          <span class="gov-step__count">{{ draft_n }}</span>
+        </div>
+      </li>
+      <li class="gov-step gov-step--active" aria-current="step">
+        <span class="gov-step__num" aria-hidden="true">2</span>
+        <div class="gov-step__body">
+          <span class="gov-step__label">Pending review</span>
+          <span class="gov-step__desc">Awaiting moderator decision</span>
+          <span class="gov-step__count">{{ pending_n }}</span>
+        </div>
+      </li>
+      <li class="gov-step">
+        <span class="gov-step__num" aria-hidden="true">3</span>
+        <div class="gov-step__body">
+          <span class="gov-step__label">Decision</span>
+          <span class="gov-step__desc">Approve to publish, or return with a reason</span>
+        </div>
+      </li>
+      <li class="gov-step">
+        <span class="gov-step__num" aria-hidden="true">4</span>
+        <div class="gov-step__body">
+          <span class="gov-step__label">Published</span>
+          <span class="gov-step__desc">Live in the catalogue</span>
+          <span class="gov-step__count">{{ approved_n }}</span>
+        </div>
+      </li>
+    </ol>
+    <p class="gov-pipeline__note">
+      Returned items ({{ rejected_n }}) go back to the author as <strong>Rejected</strong> so they can revise and resubmit.
+    </p>
+  </section>
 
-          <div class="mod-review-body">
-            {% if item.module == 'case_study' %}
-              <h3 class="mod-review-subhead">Business challenge</h3>
-              <p class="mod-review-summary">{% if item.summary %}{{ item.summary|e }}{% else %}<span class="meta">No business challenge provided.</span>{% endif %}</p>
-              <h3 class="mod-review-subhead">Solution</h3>
-              <div class="mod-preview-scroll" tabindex="0" aria-label="Solution for {{ item.title|e }}">
-                {% if item.body %}
-                  <pre class="mod-preview-pre">{{ item.body|e }}</pre>
+  <div class="gov-layout">
+    <section class="gov-queue" aria-labelledby="gov-queue-title">
+      <div class="gov-queue__head">
+        <div>
+          <h2 id="gov-queue-title" class="gov-section-title">Review queue</h2>
+          <p class="gov-section-hint">Oldest submissions first · decide in place or open the full record</p>
+        </div>
+        {% if pending_n > 0 %}
+          <span class="gov-queue__badge">{{ pending_n }} awaiting decision</span>
+        {% endif %}
+      </div>
+
+      {% if rows and rows|length > 0 %}
+        <div class="mod-review-list">
+          {% for item in rows %}
+            <article class="mod-review-card gov-card" id="mod-item-{{ item.id }}">
+              <header class="mod-review-card-head">
+                <div class="gov-card__intro">
+                  <div class="gov-card__status-row">
+                    {{ status_badge('pending') }}
+                    <span class="gov-card__id">#{{ item.id }}</span>
+                  </div>
+                  <h3 class="mod-review-title">{{ item.title }}</h3>
+                  <p class="mod-review-meta">
+                    <span class="portal-module-chip">{{ module_label(item.module) }}</span>
+                    <span>{{ item.author_name }}{% if item.author_email %} · {{ item.author_email|e }}{% endif %}</span>
+                    <span>Submitted {{ item.updated_at }}</span>
+                  </p>
+                </div>
+                <div class="mod-actions" role="group" aria-label="Decision for {{ item.title|e }}">
+                  <form method="post" action="{{ url_for('admin.approve', cid=item.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <button class="btn btn-primary" type="submit">Approve &amp; publish</button>
+                  </form>
+                  <button class="btn btn-danger" type="button" data-reject-open="{{ item.id }}" data-reject-title="{{ item.title|e }}">Return with feedback</button>
+                  <a class="btn btn-secondary" href="{{ url_for('content.content_view', cid=item.id, return_to=url_for('admin.moderation')) }}">Open full record</a>
+                </div>
+              </header>
+
+              <div class="mod-review-body">
+                {% if item.module == 'case_study' %}
+                  <div class="gov-field">
+                    <h4 class="mod-review-subhead">Business challenge</h4>
+                    <p class="mod-review-summary">{% if item.summary %}{{ item.summary|e }}{% else %}<span class="meta">No business challenge provided.</span>{% endif %}</p>
+                  </div>
+                  <div class="gov-field">
+                    <h4 class="mod-review-subhead">Solution</h4>
+                    <div class="mod-preview-scroll" tabindex="0" aria-label="Solution for {{ item.title|e }}">
+                      {% if item.body %}
+                        <pre class="mod-preview-pre">{{ item.body|e }}</pre>
+                      {% else %}
+                        <p class="meta">No solution provided.</p>
+                      {% endif %}
+                    </div>
+                  </div>
                 {% else %}
-                  <p class="meta">No solution provided.</p>
+                  <div class="gov-field">
+                    <h4 class="mod-review-subhead">Summary</h4>
+                    <p class="mod-review-summary">{% if item.summary %}{{ item.summary|e }}{% else %}<span class="meta">No summary provided.</span>{% endif %}</p>
+                  </div>
+                  {% if item.module not in ['kyc', 'domain_term'] %}
+                    <div class="gov-field">
+                      <h4 class="mod-review-subhead">Body</h4>
+                      <div class="mod-preview-scroll" tabindex="0" aria-label="Submission body for {{ item.title|e }}">
+                        {% if item.body %}
+                          <pre class="mod-preview-pre">{{ item.body|e }}</pre>
+                        {% else %}
+                          <p class="meta">No body text.</p>
+                        {% endif %}
+                      </div>
+                    </div>
+                  {% endif %}
+                {% endif %}
+
+                {% set files = attachments_by_content.get(item.id, []) %}
+                {% if files and files|length > 0 %}
+                  <div class="gov-field">
+                    <h4 class="mod-review-subhead">Attachments ({{ files|length }})</h4>
+                    <ul class="mod-attach-list">
+                      {% for f in files %}
+                        {% set name = f.file_name or "" %}
+                        {% set parts = name.split(".") %}
+                        {% set ext = parts[-1]|lower if parts|length > 1 else "" %}
+                        {% set office_src = office_embed_src(f.id) if ext in ["ppt", "pptx", "xlsx", "xls"] else none %}
+                        {% set has_pdf_preview = f.preview_path %}
+                        {% set xlsx_table_url = url_for("content.attachment_preview_xlsx_html", aid=f.id) if ext == "xlsx" else none %}
+                        <li>
+                          <span class="mod-attach-name">{{ f.file_name|e }}</span>
+                          <span class="mod-attach-links">
+                            {% if has_pdf_preview %}
+                              <a href="{{ url_for('content.attachment_preview_pdf', aid=f.id) }}" target="_blank" rel="noopener">PDF preview</a>
+                            {% elif ext in ["png", "jpg", "jpeg", "gif", "webp", "pdf"] %}
+                              <a href="{{ url_for('content.download_attachment', aid=f.id, inline=1) }}" target="_blank" rel="noopener">View inline</a>
+                            {% elif office_src %}
+                              <a href="{{ office_src }}" target="_blank" rel="noopener">Preview (Office Online)</a>
+                            {% elif ext == "xlsx" and xlsx_table_url and not has_pdf_preview and not office_src %}
+                              <a href="{{ xlsx_table_url }}" target="_blank" rel="noopener">Table preview</a>
+                            {% endif %}
+                            <a href="{{ url_for('content.download_attachment', aid=f.id) }}">Download</a>
+                          </span>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
                 {% endif %}
               </div>
-            {% else %}
-              <h3 class="mod-review-subhead">Summary</h3>
-              <p class="mod-review-summary">{% if item.summary %}{{ item.summary|e }}{% else %}<span class="meta">No summary provided.</span>{% endif %}</p>
-              {% if item.module not in ['kyc', 'domain_term'] %}
-                <h3 class="mod-review-subhead">Body</h3>
-                <div class="mod-preview-scroll" tabindex="0" aria-label="Submission body for {{ item.title|e }}">
-                  {% if item.body %}
-                    <pre class="mod-preview-pre">{{ item.body|e }}</pre>
-                  {% else %}
-                    <p class="meta">No body text.</p>
-                  {% endif %}
-                </div>
-              {% endif %}
-            {% endif %}
-
-            {% set files = attachments_by_content.get(item.id, []) %}
-            {% if files and files|length > 0 %}
-              <h3 class="mod-review-subhead">Attachments</h3>
-              <ul class="mod-attach-list">
-                {% for f in files %}
-                  {% set name = f.file_name or "" %}
-                  {% set parts = name.split(".") %}
-                  {% set ext = parts[-1]|lower if parts|length > 1 else "" %}
-                  {% set office_src = office_embed_src(f.id) if ext in ["ppt", "pptx", "xlsx", "xls"] else none %}
-                  {% set has_pdf_preview = f.preview_path %}
-                  {% set xlsx_table_url = url_for("content.attachment_preview_xlsx_html", aid=f.id) if ext == "xlsx" else none %}
-                  <li>
-                    <span class="mod-attach-name">{{ f.file_name|e }}</span>
-                    <span class="mod-attach-links">
-                      {% if has_pdf_preview %}
-                        <a href="{{ url_for('content.attachment_preview_pdf', aid=f.id) }}" target="_blank" rel="noopener">PDF preview</a>
-                      {% elif ext in ["png", "jpg", "jpeg", "gif", "webp", "pdf"] %}
-                        <a href="{{ url_for('content.download_attachment', aid=f.id, inline=1) }}" target="_blank" rel="noopener">View inline</a>
-                      {% elif office_src %}
-                        <a href="{{ office_src }}" target="_blank" rel="noopener">Preview (Office Online)</a>
-                      {% elif ext == "xlsx" and xlsx_table_url and not has_pdf_preview and not office_src %}
-                        <a href="{{ xlsx_table_url }}" target="_blank" rel="noopener">Table preview</a>
-                      {% endif %}
-                      <a href="{{ url_for('content.download_attachment', aid=f.id) }}">Download original</a>
-                    </span>
-                  </li>
-                {% endfor %}
-              </ul>
-            {% endif %}
-          </div>
-        </article>
-      {% endfor %}
-    </div>
-
-    <dialog id="reject-dialog" class="reject-modal" aria-labelledby="reject-dialog-title">
-      <form method="post" id="reject-dialog-form" action="">
-        <h2 id="reject-dialog-title">Reason for rejection</h2>
-        <p class="meta">This field is required. The author will see your feedback.</p>
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-        <label class="visually-hidden" for="reject-note">Reason</label>
-        <textarea id="reject-note" name="note" required maxlength="2000" rows="6" placeholder="Explain what needs to change…"></textarea>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" id="reject-dialog-cancel">Cancel</button>
-          <button type="submit" class="btn btn-danger">Submit rejection</button>
+            </article>
+          {% endfor %}
         </div>
-      </form>
-    </dialog>
-    <script>
+      {% else %}
+        <div class="gov-empty">
+          <p class="gov-empty__title">Queue is clear</p>
+          <p class="gov-empty__text">There are no pending submissions. New items appear here when authors submit for review.</p>
+        </div>
+      {% endif %}
+    </section>
+
+    <aside class="gov-aside" aria-labelledby="gov-history-title">
+      <h2 id="gov-history-title" class="gov-section-title">Recent decisions</h2>
+      <p class="gov-section-hint">Latest approve and return actions</p>
+      {% if recent_decisions and recent_decisions|length > 0 %}
+        <ol class="gov-history" role="list">
+          {% for d in recent_decisions %}
+            <li class="gov-history__item gov-history__item--{{ d.action }}">
+              <div class="gov-history__top">
+                <span class="gov-history__action">
+                  {% if d.action == 'approve' %}Approved{% else %}Returned{% endif %}
+                </span>
+                <time class="gov-history__time" datetime="{{ d.created_at }}">{{ d.created_at }}</time>
+              </div>
+              <p class="gov-history__title">
+                {% if d.content_id %}
+                  <a href="{{ url_for('content.content_view', cid=d.content_id) }}">{{ d.title }}</a>
+                {% else %}
+                  {{ d.title }}
+                {% endif %}
+              </p>
+              <p class="gov-history__meta">
+                {% if d.module %}{{ module_label(d.module) }} · {% endif %}
+                by {{ d.actor_name }}
+                {% if d.author_name %} · author {{ d.author_name }}{% endif %}
+              </p>
+              {% if d.note %}
+                <p class="gov-history__note">{{ d.note|e }}</p>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ol>
+      {% else %}
+        <p class="gov-aside__empty">No approve or return decisions recorded yet.</p>
+      {% endif %}
+    </aside>
+  </div>
+
+  <dialog id="reject-dialog" class="reject-modal gov-reject-modal" aria-labelledby="reject-dialog-title">
+    <form method="post" id="reject-dialog-form" action="">
+      <h2 id="reject-dialog-title">Return with feedback</h2>
+      <p class="meta">Required. The author is notified and can revise, then resubmit for review.</p>
+      <p class="gov-reject-target meta" id="reject-dialog-target" hidden></p>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <label for="reject-note">Reason</label>
+      <textarea id="reject-note" name="note" required maxlength="2000" rows="6" placeholder="Explain what needs to change before this can be published…"></textarea>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="reject-dialog-cancel">Cancel</button>
+        <button type="submit" class="btn btn-danger">Confirm return</button>
+      </div>
+    </form>
+  </dialog>
+  <script>
 (function () {
   var dialog = document.getElementById("reject-dialog");
   var form = document.getElementById("reject-dialog-form");
   var ta = document.getElementById("reject-note");
   var cancel = document.getElementById("reject-dialog-cancel");
+  var target = document.getElementById("reject-dialog-target");
+  var rejectUrlTpl = {{ url_for('admin.reject', cid=999999001)|tojson }};
   if (!dialog || !form) return;
   document.querySelectorAll("[data-reject-open]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var id = btn.getAttribute("data-reject-open");
-      form.action = "/admin/reject/" + id;
+      var title = btn.getAttribute("data-reject-title") || "";
+      form.action = rejectUrlTpl.replace("999999001", id);
       ta.value = "";
+      if (target) {
+        target.hidden = !title;
+        target.textContent = title ? ("Item: " + title) : "";
+      }
       dialog.showModal();
       ta.focus();
     });
@@ -140,9 +274,6 @@
     if (e.target === dialog) dialog.close();
   });
 })();
-    </script>
-  {% else %}
-    <p class="portal-empty">No pending items in the moderation queue.</p>
-  {% endif %}
+  </script>
 </div>
 {% endblock %}

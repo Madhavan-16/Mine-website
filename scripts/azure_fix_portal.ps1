@@ -1,15 +1,12 @@
-# One-time Azure portal fix for MiNe git-deploy workflow.
-# Run in Azure Cloud Shell: https://shell.azure.com
-#
-#   curl -sL https://raw.githubusercontent.com/Madhavan-16/Mine-website/main/scripts/azure_fix_portal.sh | bash
-# Or from a cloned repo:
+# One-time Azure portal fix: persistent data under /home/data/mine (survives git deploy).
+# Prefer bash in Cloud Shell:
 #   bash scripts/azure_fix_portal.sh
 
 param(
     [string]$AppName = "Mine"
 )
 
-Write-Host "This script requires Azure CLI (az). Use Azure Cloud Shell if az is not installed locally." -ForegroundColor Yellow
+Write-Host "This script requires Azure CLI (az). Prefer scripts/azure_fix_portal.sh in Cloud Shell." -ForegroundColor Yellow
 
 if (-not (Get-Command az -ErrorAction SilentlyContinue)) {
     Write-Host "ERROR: 'az' not found. Open https://shell.azure.com and run scripts/azure_fix_portal.sh instead." -ForegroundColor Red
@@ -23,8 +20,11 @@ if (-not $rg) {
 }
 
 Write-Host "Resource group: $rg"
-Write-Host "Removing DATABASE_PATH and UPLOAD_FOLDER (if set)..."
-az webapp config appsettings delete --name $AppName --resource-group $rg --setting-names DATABASE_PATH UPLOAD_FOLDER 2>$null
+Write-Host "Setting persistent DATABASE_PATH / UPLOAD_FOLDER..."
+az webapp config appsettings set --name $AppName --resource-group $rg --settings `
+  DATABASE_PATH="/home/data/mine/mine.db" `
+  UPLOAD_FOLDER="/home/data/mine/uploads" `
+  MINE_AZURE_DATA_ROOT="/home/data/mine"
 
 Write-Host "Setting startup command..."
 az webapp config set --name $AppName --resource-group $rg --startup-file "bash startup.sh"
@@ -32,4 +32,4 @@ az webapp config set --name $AppName --resource-group $rg --startup-file "bash s
 Write-Host "Restarting app..."
 az webapp restart --name $AppName --resource-group $rg
 
-Write-Host "Done." -ForegroundColor Green
+Write-Host "Done. Live data persists under /home/data/mine." -ForegroundColor Green

@@ -23,6 +23,99 @@
   pointer-events: none;
 }
 
+/* Active / All / Ended engagement filter */
+.projects-active-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: calc(var(--radius-lg) + 2px);
+  border: 1px solid rgba(0, 174, 240, 0.18);
+  background:
+    linear-gradient(135deg, rgba(0, 174, 240, 0.06), rgba(255, 255, 255, 0.94));
+  box-shadow: 0 4px 14px rgba(16, 63, 90, 0.04);
+}
+
+.projects-active-filter__lede {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--hex-grey-600);
+}
+
+.projects-active-filter__tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.projects-active-filter__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 12px 6px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(189, 191, 192, 0.5);
+  background: var(--hex-white);
+  color: var(--hex-grey-800);
+  text-decoration: none;
+  transition:
+    border-color var(--transition-ui),
+    background var(--transition-ui),
+    color var(--transition-ui),
+    box-shadow var(--transition-ui);
+}
+
+.projects-active-filter__tab:hover {
+  border-color: rgba(0, 174, 240, 0.4);
+  color: var(--hex-blue-dark);
+  text-decoration: none;
+}
+
+.projects-active-filter__tab.is-active {
+  border-color: rgba(0, 174, 240, 0.55);
+  background: rgba(0, 174, 240, 0.12);
+  color: var(--hex-blue-dark);
+  box-shadow: 0 0 0 1px rgba(0, 174, 240, 0.12);
+}
+
+.projects-active-filter__label {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.projects-active-filter__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: rgba(16, 63, 90, 0.06);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--hex-grey-700);
+}
+
+.projects-active-filter__tab.is-active .projects-active-filter__count {
+  background: rgba(0, 174, 240, 0.2);
+  color: var(--hex-blue-dark);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .projects-active-filter__tab {
+    transition: none;
+  }
+}
+
 .projects-portal-stack {
   display: flex;
   flex-direction: column;
@@ -49,9 +142,9 @@
     0 4px 18px rgba(16, 63, 90, 0.05);
   overflow: hidden;
   transition:
-    border-color 0.32s ease,
-    box-shadow 0.32s ease,
-    transform 0.32s cubic-bezier(0.33, 1, 0.68, 1);
+    border-color var(--transition-ui),
+    box-shadow var(--transition-ui),
+    transform var(--transition-ui);
 }
 
 .project-card--tone-0 {
@@ -90,7 +183,7 @@
   cursor: pointer;
   font: inherit;
   color: inherit;
-  transition: background-color 0.22s ease;
+  transition: background-color var(--transition-ui);
 }
 
 .project-card__header:hover {
@@ -192,9 +285,9 @@
   background: var(--hex-white);
   position: relative;
   transition:
-    background 0.25s ease,
-    border-color 0.25s ease,
-    transform 0.32s cubic-bezier(0.33, 1, 0.68, 1);
+    background var(--transition-ui),
+    border-color var(--transition-ui),
+    transform var(--transition-expand);
 }
 
 .project-card__chev::before {
@@ -207,7 +300,7 @@
   border-right: 2px solid var(--hex-grey-700);
   border-bottom: 2px solid var(--hex-grey-700);
   transform: translate(-50%, -60%) rotate(45deg);
-  transition: transform 0.32s cubic-bezier(0.33, 1, 0.68, 1);
+  transition: transform var(--transition-expand);
 }
 
 .project-card.is-expanded .project-card__chev {
@@ -222,7 +315,7 @@
 .project-card__panel {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 0.42s cubic-bezier(0.33, 1, 0.68, 1);
+  transition: grid-template-rows var(--transition-expand);
 }
 
 .project-card.is-expanded .project-card__panel {
@@ -272,10 +365,10 @@
   font: inherit;
   color: var(--hex-grey-700);
   transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
+    background var(--transition-ui),
+    border-color var(--transition-ui),
+    color var(--transition-ui),
+    transform var(--transition-ui);
 }
 
 .project-explorer__tab:hover {
@@ -312,7 +405,7 @@
   border-radius: 10px;
   background: var(--project-accent-soft);
   color: var(--hex-teal-dark);
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  transition: background var(--transition-ui), color var(--transition-ui), transform var(--transition-ui);
 }
 
 .project-explorer__tab.is-active .project-explorer__tab-icon {
@@ -357,7 +450,7 @@
 
 .project-section-panel {
   display: none;
-  animation: project-panel-in 0.34s cubic-bezier(0.33, 1, 0.68, 1);
+  animation: project-panel-in var(--duration-slow) var(--ease-out);
 }
 
 .project-section-panel.is-active {
@@ -834,9 +927,9 @@
   color: var(--hex-grey-800);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset;
   transition:
-    transform 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    transform var(--transition-ui),
+    border-color var(--transition-ui),
+    box-shadow var(--transition-ui);
 }
 
 .project-chip__icon,
@@ -1050,10 +1143,10 @@
   border: 2px solid rgba(189, 191, 192, 0.55);
   box-shadow: 0 2px 8px rgba(16, 63, 90, 0.04);
   transition:
-    border-color 0.2s ease,
-    color 0.2s ease,
-    background 0.2s ease,
-    transform 0.2s ease;
+    border-color var(--transition-ui),
+    color var(--transition-ui),
+    background var(--transition-ui),
+    transform var(--transition-ui);
 }
 
 .project-vc-flow__stage.is-active .project-vc-flow__node {
@@ -1185,7 +1278,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .project-chip-cloud li {
-    animation: project-chip-in 0.4s cubic-bezier(0.33, 1, 0.68, 1) backwards;
+    animation: project-chip-in var(--duration-expand) var(--ease-out) backwards;
   }
 
   .project-chip-cloud li:nth-child(1) { animation-delay: 0.02s; }
@@ -1261,18 +1354,27 @@
 
 @media (prefers-reduced-motion: reduce) {
   .project-card,
+  .project-card__header,
   .project-card__chev,
   .project-card__chev::before,
   .project-card__panel,
   .project-explorer__tab,
+  .project-explorer__tab-icon,
   .project-chip,
-  .project-section-panel {
+  .project-section-panel,
+  .project-vc-flow__node {
     transition: none;
     animation: none;
   }
 
-  .project-card.is-expanded .project-card__chev {
+  .project-card.is-expanded .project-card__chev,
+  .project-card.is-expanded .project-card__chev::before,
+  .project-explorer__tab.is-active .project-explorer__tab-icon {
     transform: none;
+  }
+
+  .project-chip-cloud li {
+    animation: none !important;
   }
 }
 
@@ -1343,7 +1445,7 @@
   background: transparent;
   text-align: left;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition: background var(--transition-ui), color var(--transition-ui), border-color var(--transition-ui);
 }
 
 .projects-view-switch__label {
@@ -1686,7 +1788,7 @@
 .projects-constellation__edge {
   stroke: rgba(16, 63, 90, 0.14);
   stroke-width: 1.2;
-  transition: stroke 0.2s ease, stroke-width 0.2s ease, opacity 0.2s ease;
+  transition: stroke var(--transition-ui), stroke-width var(--transition-ui), opacity var(--transition-ui);
 }
 
 .projects-constellation__edge.is-highlight {
@@ -1713,7 +1815,7 @@
 
 .projects-constellation__project-dot {
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: transform var(--transition-ui);
 }
 
 .projects-constellation__node--project {
@@ -2167,5 +2269,32 @@
   .projects-gantt__quarters,
   .projects-gantt__row {
     grid-template-columns: minmax(150px, 38%) 1fr;
+  }
+}
+
+@media (max-width: 960px) {
+  .project-card__header {
+    grid-template-columns: auto auto 1fr auto;
+  }
+
+  .project-card__index,
+  .project-card__accent {
+    display: none;
+  }
+
+  .projects-gantt-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .projects-view-switch__btn,
+  .projects-constellation__edge,
+  .projects-constellation__project-dot {
+    transition: none !important;
+  }
+
+  .projects-constellation__project-dot {
+    transform: none !important;
   }
 }

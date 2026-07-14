@@ -32,11 +32,22 @@
 
     if (!header || !header.classList.contains("header-shell--enterprise")) return;
 
+    /* Skip while hover/focus temporarily expands the portal nav — avoid layout thrash under content. */
+    var reveal = header.querySelector(".portal-nav-reveal");
+    if (
+      reveal &&
+      !reveal.classList.contains("is-pinned") &&
+      (reveal.matches(":hover") || reveal.matches(":focus-within"))
+    ) {
+      return;
+    }
+
     var h = header.getBoundingClientRect().height;
 
     if (!h) return;
 
-    document.documentElement.style.setProperty("--portal-header-offset", Math.ceil(h) + "px");
+    /* Keep a small buffer so flashes / page titles never sit under the bar. */
+    document.documentElement.style.setProperty("--portal-header-offset", Math.ceil(h + 4) + "px");
 
   }
 

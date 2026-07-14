@@ -65,7 +65,7 @@ html.site-motion-prep #main:has(.auth-card),
 /* Smooth page / link transitions (no palette changes) */
 @media (prefers-reduced-motion: no-preference) {
   #main {
-    transition: opacity 0.35s var(--ease-standard);
+    transition: opacity var(--duration-slow) var(--ease-standard);
   }
 
   a:not(.btn):not(.nav-link):not(.skip-link) {
@@ -80,10 +80,9 @@ html.site-motion-prep #main:has(.auth-card),
 .btn {
   transition:
     background-color var(--transition-ui), border-color var(--transition-ui), color var(--transition-ui),
-    box-shadow var(--transition-ui), transform var(--duration-instant) var(--ease-standard),
+    box-shadow var(--transition-ui), transform var(--duration-instant) var(--ease-out),
     opacity var(--transition-ui);
   transform-origin: center center;
-  will-change: transform;
 }
 
 .card {
@@ -95,14 +94,14 @@ html.site-motion-prep #main:has(.auth-card),
   html:not(.site-motion-prep) .card:not(.landing-role-card):not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):not(
       .enterprise-search-xp__asset
     ):hover {
-    transform: translateY(-2px);
+    transform: translateY(var(--lift-card));
     box-shadow: var(--shadow-md);
   }
 
   html:not(.site-motion-prep) .card:not(.landing-role-card):not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):not(
       .enterprise-search-xp__asset
     ):focus-within {
-    transform: translateY(-1px);
+    transform: translateY(var(--lift-subtle));
   }
 
   .btn:hover:not(:disabled) {

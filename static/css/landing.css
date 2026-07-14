@@ -615,10 +615,16 @@ html:not(.landing-motion-prep) body.layout-landing .landing-stats-band {
     transition: none;
   }
 
-  .landing-role-card:not([open]):hover .landing-role-card__peek {
+  .landing-role-card:not([open]):hover .landing-role-card__peek,
+  .landing-role-card:not([open]):focus-within .landing-role-card__peek {
     max-height: 0 !important;
     opacity: 0 !important;
     padding-top: 0 !important;
+    transform: none !important;
+  }
+
+  .landing-role-card__peek {
+    transition: none !important;
   }
 
   .landing-role-card,
@@ -851,10 +857,10 @@ html:not(.landing-motion-prep) body.layout-landing .landing-stats-band {
   overflow: hidden;
   transform: translateY(-6px);
   transition:
-    max-height 0.42s cubic-bezier(0.33, 1, 0.68, 1),
-    opacity 0.34s ease,
-    transform 0.36s ease,
-    padding-top 0.36s ease;
+    max-height var(--transition-expand),
+    opacity var(--duration-slow) var(--ease-out),
+    transform var(--duration-slow) var(--ease-out),
+    padding-top var(--duration-slow) var(--ease-out);
 }
 
 .landing-role-card__peek li {

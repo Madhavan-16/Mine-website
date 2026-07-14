@@ -167,9 +167,9 @@
     0 1px 0 rgba(255, 255, 255, 0.95) inset,
     0 4px 14px rgba(16, 63, 90, 0.05);
   transition:
-    transform 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease;
+    transform var(--transition-ui),
+    border-color var(--transition-ui),
+    box-shadow var(--transition-ui);
 }
 
 .krepo-cat::before {
@@ -197,7 +197,7 @@
     0 1px 0 rgba(255, 255, 255, 0.98) inset,
     0 12px 28px rgba(16, 63, 90, 0.09);
   text-decoration: none;
-  transform: translateY(-2px);
+  transform: translateY(var(--lift-card));
 }
 
 .krepo-cat__icon {
@@ -289,16 +289,16 @@
   color: inherit;
   box-shadow: 0 2px 10px rgba(16, 63, 90, 0.04);
   transition:
-    transform 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease;
+    transform var(--transition-ui),
+    border-color var(--transition-ui),
+    box-shadow var(--transition-ui);
 }
 
 .krepo-artifact:hover {
   border-color: rgba(0, 174, 240, 0.28);
   box-shadow: 0 12px 28px rgba(16, 63, 90, 0.09);
   text-decoration: none;
-  transform: translateY(-2px);
+  transform: translateY(var(--lift-card));
 }
 
 .krepo-artifact__chip {
@@ -411,7 +411,7 @@
   font-weight: 600;
   color: var(--hex-grey-800);
   text-decoration: none;
-  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+  transition: border-color var(--transition-ui), background var(--transition-ui), color var(--transition-ui);
 }
 
 .krepo-series-pill:hover {
@@ -436,6 +436,7 @@
 .krepo-filters {
   position: sticky;
   top: calc(var(--portal-header-offset, 72px) + 12px);
+  scroll-margin-top: calc(var(--portal-header-offset, 72px) + 12px);
   padding: 18px 16px;
   border-radius: calc(var(--radius-lg) + 2px);
   border: 1px solid rgba(189, 191, 192, 0.42);
@@ -579,16 +580,16 @@
   text-decoration: none;
   color: inherit;
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+    border-color var(--transition-ui),
+    box-shadow var(--transition-ui),
+    transform var(--transition-ui);
 }
 
 .krepo-result-card__link:hover {
   border-color: rgba(0, 174, 240, 0.28);
   box-shadow: 0 10px 22px rgba(16, 63, 90, 0.07);
   text-decoration: none;
-  transform: translateY(-1px);
+  transform: translateY(var(--lift-subtle));
 }
 
 .krepo-result-card__main {
@@ -703,16 +704,16 @@
   color: inherit;
   box-shadow: 0 2px 8px rgba(16, 63, 90, 0.04);
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+    border-color var(--transition-ui),
+    box-shadow var(--transition-ui),
+    transform var(--transition-ui);
 }
 
 .krepo-result:hover {
   border-color: rgba(0, 174, 240, 0.25);
   box-shadow: 0 10px 24px rgba(16, 63, 90, 0.08);
   text-decoration: none;
-  transform: translateY(-1px);
+  transform: translateY(var(--lift-subtle));
 }
 
 .krepo-result__top {
@@ -789,6 +790,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .krepo-cat,
+  .krepo-artifact,
+  .krepo-result,
+  .krepo-result-card__link,
+  .krepo-series-pill {
+    transition: none;
+  }
+
   .krepo-cat:hover,
   .krepo-artifact:hover,
   .krepo-result:hover,

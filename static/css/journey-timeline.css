@@ -102,8 +102,7 @@
   box-shadow:
     0 0 22px var(--journey-copper-glow),
     0 0 40px rgba(184, 115, 51, 0.2);
-  transition: transform 0.55s cubic-bezier(0.33, 1, 0.68, 1);
-  will-change: transform;
+  transition: transform var(--duration-expand) var(--ease-out);
 }
 
 #main .journey-ht__row {
@@ -312,8 +311,7 @@
     rgba(184, 115, 51, 0.06)
   );
   opacity: 0.55;
-  filter: blur(4px);
-  transition: opacity 0.35s ease, filter 0.35s ease, background 0.35s ease;
+  transition: opacity var(--duration-slow) var(--ease-out), background var(--duration-slow) var(--ease-out);
 }
 
 #main .journey-ht__connector.is-lit .journey-ht__connector-core {
