@@ -102,7 +102,13 @@ def create_app():
         ensure_notifications_scope()
         ensure_user_mail_tokens_table()
         ensure_projects_is_active_column()
+        from mine.fts import ensure_content_fts
         from mine.upload_paths import normalize_attachment_paths_in_db
+
+        try:
+            ensure_content_fts(get_db())
+        except Exception:
+            app.logger.exception("content_fts ensure/rebuild failed on startup")
 
         try:
             normalize_attachment_paths_in_db(get_db())

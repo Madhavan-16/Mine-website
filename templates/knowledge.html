@@ -55,7 +55,7 @@
         <span class="krepo-stat__value">{{ catalog.total }}</span>
         <span class="krepo-stat__label">{% if landing %}Total items{% else %}Matching{% endif %}</span>
       </div>
-      {% if current_user.role in ['admin', 'moderator'] %}
+      {% if current_user %}
         <a class="btn btn-primary" href="{{ url_for('content.content_create', module=module) if module else url_for('content.content_create') }}">+ Create content</a>
       {% endif %}
       {% if not landing %}

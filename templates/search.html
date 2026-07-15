@@ -212,11 +212,13 @@
 
         </ul>
 
-      {% elif not section_shortcuts %}
+      {% else %}
+
+        <h2 class="search-page__results-subtitle">Catalogue items</h2>
 
         <div class="search-page__empty card">
 
-          <p>No related pages or catalogue matches for <strong>{{ q }}</strong>. Try simpler keywords or change the section filter.</p>
+          <p>No catalogue matches for <strong>{{ q }}</strong>{% if section_shortcuts %} (related pages above may still help){% endif %}. Try a title word, tag, or change the section filter.</p>
 
           <p class="search-page__empty-links">
 

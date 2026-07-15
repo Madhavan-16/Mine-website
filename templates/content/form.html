@@ -5,15 +5,13 @@
 
   <h1>{% if mode == 'create' %}Create knowledge content{% else %}Edit knowledge content{% endif %}</h1>
   {% if mode == 'edit' %}
-  <p class="meta">Update the summary (or challenge/solution), then optionally <strong>replace the attachment</strong>. Saving keeps the current publish status for approved items.</p>
+  <p class="meta">Update the summary (or challenge/solution), then optionally <strong>replace the attachment</strong>. For approved items, only administrators can edit; saving keeps the publish status. Authors can revise drafts or returned items and submit again for review.</p>
   {% else %}
-  <p class="meta">Use this form for <strong>knowledge-repository series</strong> (KYC, KYA, term of the week, newsletter, case studies, RFP snippets, blogs &amp; whitepapers). For
-    <a href="{{ url_for('main.onboarding') }}">onboarding notes</a>,
-    <a href="{{ url_for('main.innovation') }}">innovation</a>,
-    <a href="{{ url_for('main.training') }}">training</a>, or
-    <a href="{{ url_for('main.hall_of_fame') }}">Hall of Fame</a>, add content from those pages. For
-    <strong>programs &amp; projects</strong>, use
-    <a href="{{ url_for('projects.project_create') }}">Add program or project</a>.</p>
+  <p class="meta">Add a knowledge-repository item (KYC, KYA, term of the week, newsletter, case studies, RFP snippets, blogs &amp; whitepapers). Choose <strong>Submit for review</strong> when ready — moderators and admins will be notified to approve it. Use <strong>Save draft</strong> to keep working privately.
+    {% if current_user and current_user.role in ['admin','moderator'] %}
+    For programs &amp; projects, use <a href="{{ url_for('projects.project_create') }}">Add program or project</a>.
+    {% endif %}
+  </p>
   {% endif %}
 
   <form method="post" class="form" enctype="multipart/form-data">

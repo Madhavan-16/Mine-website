@@ -905,8 +905,8 @@ def open_pit_copper_domain_pa_process_image():
 
 @bp.route("/my/submissions")
 @login_required
-@roles_required("admin", "moderator")
 def my_submissions():
+    """Authors review their own drafts, pending, approved, and returned items."""
     user = load_current_user()
     db = get_db()
     rows = db.execute(

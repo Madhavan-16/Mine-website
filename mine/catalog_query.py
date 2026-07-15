@@ -40,6 +40,16 @@ CATALOG_STATUS_OPTIONS = (
 )
 
 
+def _fts_token(token: str) -> str:
+    """Build one FTS5 token; use prefix match for normal words so names hit easily."""
+    if re.fullmatch(r"[A-Za-z0-9_/-]+", token):
+        if len(token) >= 3:
+            return f"{token}*"
+        return token
+    safe = token.replace('"', "")
+    return f'"{safe}"' if safe else token
+
+
 def fts_query_and(raw: str) -> str | None:
     parts = [p for p in re.split(r"\s+", (raw or "").strip()) if p]
     if not parts:
@@ -51,7 +61,7 @@ def fts_query_and(raw: str) -> str | None:
             cleaned.append(part)
     if not cleaned:
         return None
-    return " AND ".join(f'"{token}"' for token in cleaned)
+    return " AND ".join(_fts_token(token) for token in cleaned)
 
 
 def fts_query_or(raw: str) -> str | None:
@@ -65,9 +75,10 @@ def fts_query_or(raw: str) -> str | None:
             cleaned.append(part)
     if not cleaned:
         return None
-    if len(cleaned) == 1:
-        return f'"{cleaned[0]}"'
-    return " OR ".join(f'"{token}"' for token in cleaned)
+    tokens = [_fts_token(token) for token in cleaned]
+    if len(tokens) == 1:
+        return tokens[0]
+    return " OR ".join(tokens)
 
 
 def _resolve_sort(sort: str, *, has_query: bool) -> str:
@@ -172,6 +183,9 @@ def query_catalog(
                 where_sql = f"content_fts MATCH ? AND {filter_sql}"
                 args = [fts, *filter_args]
                 total = _count_rows(db, from_clause=from_clause, where_sql=where_sql, args=args)
+                if total == 0:
+                    # Empty FTS hit — try next query shape, then LIKE fallback below.
+                    continue
                 order_by = _order_sql(sort_key, fts=True)
                 rows = db.execute(
                     f"""
@@ -192,15 +206,29 @@ def query_catalog(
 
     if not used_fts and qtext:
         like = f"%{qtext}%"
+        # Token-wise LIKE so multi-word queries still hit titles/summaries/tags.
+        tokens = [t for t in re.split(r"\s+", qtext) if len(t) >= 2]
         from_clause = """
             FROM content c
             JOIN users u ON u.id = c.author_id
         """
-        where_sql = (
-            f"{filter_sql} AND (c.title LIKE ? OR COALESCE(c.summary, '') LIKE ? "
-            f"OR COALESCE(c.body, '') LIKE ?)"
-        )
-        args = [*filter_args, like, like, like]
+        like_parts = [
+            "(c.title LIKE ? OR COALESCE(c.summary, '') LIKE ? OR COALESCE(c.body, '') LIKE ?"
+            " OR EXISTS (SELECT 1 FROM content_meta m WHERE m.content_id = c.id"
+            " AND m.meta_key = 'tag' AND m.meta_value LIKE ?))"
+        ]
+        like_args: list = [like, like, like, like]
+        if len(tokens) > 1:
+            for tok in tokens:
+                tok_like = f"%{tok}%"
+                like_parts.append(
+                    "(c.title LIKE ? OR COALESCE(c.summary, '') LIKE ? OR COALESCE(c.body, '') LIKE ?"
+                    " OR EXISTS (SELECT 1 FROM content_meta m WHERE m.content_id = c.id"
+                    " AND m.meta_key = 'tag' AND m.meta_value LIKE ?))"
+                )
+                like_args.extend([tok_like, tok_like, tok_like, tok_like])
+        where_sql = f"{filter_sql} AND ({' OR '.join(like_parts)})"
+        args = [*filter_args, *like_args]
         total = _count_rows(db, from_clause=from_clause, where_sql=where_sql, args=args)
         order_by = _order_sql(sort_key, fts=False)
         rows = db.execute(

@@ -460,9 +460,14 @@ def merge_knowledge_persist_into_live(app) -> dict:
             else:
                 skipped += 1
         try:
-            dest.execute("INSERT INTO content_fts(content_fts) VALUES('rebuild')")
-        except sqlite3.Error:
-            pass
+            from mine.fts import rebuild_all_content_fts
+
+            rebuild_all_content_fts(dest)
+        except Exception:
+            try:
+                dest.execute("INSERT INTO content_fts(content_fts) VALUES('rebuild')")
+            except sqlite3.Error:
+                pass
         dest.commit()
     finally:
         src.close()

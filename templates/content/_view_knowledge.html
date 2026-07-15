@@ -57,10 +57,21 @@
     </div>
     <div class="kview-hero__aside">
       <a class="btn btn-secondary kview-hero__back" href="{{ series_href }}">← {{ series_label }}</a>
-      {% if current_user and current_user.role == 'admin' %}
+      {% set item_status_l = (row.status or '')|lower %}
+      {% set can_edit_knowledge = current_user and (
+           current_user.role == 'admin'
+           or (current_user.id == row.author_id and item_status_l in ['draft', 'rejected'])
+         ) %}
+      {% set can_delete_knowledge = current_user and (
+           current_user.role == 'admin'
+           or (current_user.id == row.author_id and item_status_l in ['draft', 'rejected'])
+         ) %}
+      {% if can_edit_knowledge or can_delete_knowledge %}
         <div class="kview-hero__admin">
-          <a class="btn btn-secondary" href="{{ url_for('content.content_edit', cid=row.id) }}">Edit knowledge content</a>
-          {% if current_user.id == row.author_id or current_user.role == 'admin' %}
+          {% if can_edit_knowledge %}
+            <a class="btn btn-secondary" href="{{ url_for('content.content_edit', cid=row.id) }}">Edit knowledge content</a>
+          {% endif %}
+          {% if can_delete_knowledge %}
             <form method="post" action="{{ url_for('content.content_delete', cid=row.id) }}" onsubmit="return confirm('Delete this content permanently?');">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
               <button type="submit" class="btn btn-secondary kview-btn-danger">Delete</button>

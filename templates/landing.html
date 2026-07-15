@@ -393,7 +393,7 @@
     <h2 class="landing-section-title landing-section-title--featured">Featured knowledge</h2>
     <p class="landing-featured-lede">Approved catalogue highlights from the knowledge repository.</p>
     <div class="landing-featured-actions">
-      {% if current_user.role in ['admin','moderator'] %}
+      {% if current_user %}
         <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create content</a>
       {% endif %}
       <a class="btn btn-secondary" href="{{ url_for('main.knowledge') }}">Browse repository</a>
@@ -420,7 +420,7 @@
     {% else %}
       <p class="portal-empty">
         No approved knowledge articles yet.
-        {% if current_user.role in ['admin','moderator'] %}
+        {% if current_user %}
           <span class="portal-empty__action"><a class="btn btn-primary" href="{{ url_for('content.content_create') }}">Create the first article</a></span>
         {% endif %}
       </p>

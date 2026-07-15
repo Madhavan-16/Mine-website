@@ -646,10 +646,13 @@ def _attachment_manage_href(user, row) -> str | None:
             return None
         seg = STANDALONE_MODULE_TO_SEGMENT[mod]
         return url_for("repo_standalone.repo_edit", segment=seg, cid=cid)
-    # Knowledge-repository series: admin only
-    if role != "admin":
-        return None
-    return url_for("content.content_edit", cid=cid)
+    # Knowledge-repository series: admin any; author draft/rejected
+    if role == "admin":
+        return url_for("content.content_edit", cid=cid)
+    status = (row["status"] or "").strip().lower()
+    if int(row["author_id"]) == int(user["id"]) and status in ("draft", "rejected"):
+        return url_for("content.content_edit", cid=cid)
+    return None
 
 
 def _notify_moderators(message: str, *, except_user_id: int | None = None):
@@ -816,14 +819,20 @@ def content_view(cid: int):
 
 @bp.route("/content/create", methods=["GET", "POST"])
 @login_required
-@roles_required("admin", "moderator")
 def content_create():
+    """Any signed-in user may create knowledge content; submit sends it to the moderation queue."""
     user = load_current_user()
     req_mod = (request.args.get("module") or "").strip()
     if request.method == "GET":
         if req_mod == "projects":
+            if user["role"] == "user":
+                flash("Only administrators and moderators can add programs & projects.", "warning")
+                return redirect(url_for("content.content_create"))
             return redirect(url_for("projects.project_create"))
         if req_mod in STANDALONE_REPO_MODULES:
+            if user["role"] == "user":
+                flash("Only administrators and moderators can add items to that section.", "warning")
+                return redirect(url_for("content.content_create"))
             seg = STANDALONE_MODULE_TO_SEGMENT[req_mod]
             return redirect(url_for("repo_standalone.repo_new", segment=seg))
     form = ContentForm()
@@ -846,7 +855,14 @@ def content_create():
         cid = _insert_new_content_from_form(user, form, mod_sl)
         get_db().commit()
         _sync_knowledge_persist(cid)
-        flash("Content saved.", "success")
+        action = (request.form.get("action") or "draft").strip()
+        if action == "submit":
+            flash(
+                "Submitted for review. Moderators and administrators have been notified and will approve or return it.",
+                "success",
+            )
+        else:
+            flash("Draft saved. Open it anytime from My submissions, then Submit for review when ready.", "success")
         return redirect(url_for("content.content_view", cid=cid))
     if request.method == "POST" and not form.validate_on_submit():
         flash("Please fix the highlighted errors and try again.", "danger")
@@ -855,7 +871,6 @@ def content_create():
 
 @bp.route("/content/suggest-fields", methods=["POST"])
 @login_required
-@roles_required("admin", "moderator")
 def content_suggest_fields():
     """Read the posted attachment and return JSON title/summary/body suggestions."""
     from flask_wtf.csrf import validate_csrf
@@ -896,12 +911,22 @@ def current_app_upload_folder():
     return current_app.config["UPLOAD_FOLDER"]
 
 
+def _can_edit_knowledge_row(user, row) -> bool:
+    """Admins may edit any knowledge item; authors may revise their own drafts/rejected items."""
+    if not user or not row:
+        return False
+    if user["role"] == "admin":
+        return True
+    status = (row["status"] or "").strip().lower()
+    if int(row["author_id"]) == int(user["id"]) and status in ("draft", "rejected"):
+        return True
+    return False
+
+
 @bp.route("/content/<int:cid>/edit", methods=["GET", "POST"])
 @login_required
 def content_edit(cid: int):
     user = load_current_user()
-    if user["role"] == "user":
-        abort(403)
     db = get_db()
     row = db.execute("SELECT * FROM content WHERE id = ?", (cid,)).fetchone()
     if not row:
@@ -912,9 +937,14 @@ def content_edit(cid: int):
         seg = STANDALONE_MODULE_TO_SEGMENT[row["module"]]
         return redirect(url_for("repo_standalone.repo_edit", segment=seg, cid=cid))
 
-    # Knowledge-repository series: admins only may edit summary / replace files
-    if user["role"] != "admin":
-        flash("Only administrators can edit knowledge-repository content.", "warning")
+    if not _can_edit_knowledge_row(user, row):
+        status = (row["status"] or "").strip().lower()
+        if status == "pending":
+            flash("This item is awaiting moderation. You can view it, but only admins can change published catalogue edits after approval.", "warning")
+        elif status == "approved" and user["role"] != "admin":
+            flash("Only administrators can edit approved knowledge-repository content.", "warning")
+        else:
+            flash("You do not have permission to edit this content.", "warning")
         return redirect(url_for("content.content_view", cid=cid))
 
     form = ContentForm(obj=row)
@@ -960,7 +990,12 @@ def content_edit(cid: int):
             )
         get_db().commit()
         _sync_knowledge_persist(cid)
-        flash("Knowledge content updated.", "success")
+        action = (request.form.get("action") or "draft").strip()
+        new_status = get_db().execute("SELECT status FROM content WHERE id = ?", (cid,)).fetchone()
+        if new_status and (new_status["status"] or "").strip().lower() == "pending" and action == "submit":
+            flash("Resubmitted for review. Moderators have been notified.", "success")
+        else:
+            flash("Knowledge content updated.", "success")
         return redirect(url_for("content.content_view", cid=cid))
     if request.method == "POST" and not form.validate_on_submit():
         flash("Please fix the highlighted errors and try again.", "danger")
@@ -1120,14 +1155,25 @@ def run_standalone_repo_edit(module: str, cid: int):
 @login_required
 def content_delete(cid: int):
     user = load_current_user()
-    if user["role"] == "user":
-        abort(403)
     db = get_db()
     row = db.execute("SELECT * FROM content WHERE id = ?", (cid,)).fetchone()
     if not row:
         abort(404)
-    if row["author_id"] != user["id"] and user["role"] != "admin":
+    status = (row["status"] or "").strip().lower()
+    is_author = int(row["author_id"]) == int(user["id"])
+    if user["role"] == "admin":
+        allowed = True
+    elif is_author and status in ("draft", "rejected"):
+        allowed = True
+    else:
+        allowed = False
+    if not allowed:
         abort(403)
+    redirect_target = (
+        url_for("main.my_submissions")
+        if user["role"] == "user"
+        else url_for("content.content_list")
+    )
     _delete_content_attachments(db, cid)
     module = row["module"]
     title = row["title"]
@@ -1136,7 +1182,7 @@ def content_delete(cid: int):
     db.commit()
     _sync_knowledge_persist(deleted=True, module=module, title=title)
     flash("Content deleted.", "info")
-    return redirect(url_for("content.content_list"))
+    return redirect(redirect_target)
 
 
 @bp.route("/files/<int:aid>/office-source")

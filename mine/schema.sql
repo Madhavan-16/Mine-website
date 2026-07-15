@@ -123,8 +123,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS content_fts USING fts5(
   summary,
   body,
   tags,
-  content='content',
-  content_rowid='id'
+  tokenize = 'porter unicode61'
 );
 
 CREATE TRIGGER IF NOT EXISTS content_ai AFTER INSERT ON content BEGIN

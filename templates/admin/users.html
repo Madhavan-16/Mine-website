@@ -12,7 +12,7 @@
       </nav>
       <span class="portal-eyebrow">Administration</span>
       <h1 class="portal-hero__title">User management</h1>
-      <p class="portal-lede">Create accounts, assign roles, deactivate users, or permanently remove accounts.</p>
+      <p class="portal-lede">Administrators only — create accounts (including other admins), assign roles, deactivate users, or permanently remove accounts. Moderators can approve content but cannot manage users.</p>
     </div>
     <div class="portal-hero__aside">
       <div class="portal-stat" role="status">
@@ -44,6 +44,7 @@
       {{ create_form.password() }}
       <label for="role">Role</label>
       {{ create_form.role() }}
+      <p class="meta" style="margin: 6px 0 12px;">Roles: <strong>User</strong> submits knowledge for review · <strong>Moderator</strong> approves content · <strong>Admin</strong> manages users/roles and publishes edits.</p>
       <div class="toolbar portal-form-actions">
         <button class="btn btn-primary" type="submit">Create user</button>
       </div>

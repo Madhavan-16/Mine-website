@@ -56,6 +56,20 @@ def login():
             log_audit(user["id"], "login", "user", user["id"], None)
             db.commit()
             nxt = safe_login_next(request.form.get("next") or request.args.get("next"))
+            if user["role"] in ("admin", "moderator"):
+                pending = int(
+                    db.execute(
+                        "SELECT COUNT(*) AS c FROM content WHERE status = 'pending'"
+                    ).fetchone()["c"]
+                    or 0
+                )
+                if pending:
+                    flash(
+                        f"{pending} knowledge submission{'s' if pending != 1 else ''} waiting for approval. Open Governance to review.",
+                        "warning",
+                    )
+                    if not nxt:
+                        return redirect(url_for("admin.moderation"))
             return redirect(nxt or post_login_redirect_url(user))
         flash("Invalid username or password.", "danger")
     return render_template("auth/login.html", form=form)

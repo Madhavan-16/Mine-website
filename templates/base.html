@@ -177,6 +177,9 @@
                 Moderation / Governance{% if pending_moderation %} ({{ pending_moderation }}){% endif %}
               </a>
               <a class="dropdown-menu__item" href="{{ url_for('content.content_list') }}" role="menuitem">Content catalogue (admin)</a>
+              {% else %}
+              <a class="dropdown-menu__item" href="{{ url_for('content.content_create') }}" role="menuitem">Create content</a>
+              <a class="dropdown-menu__item" href="{{ url_for('main.my_submissions') }}" role="menuitem">My submissions</a>
               {% endif %}
               <div class="dropdown-menu__divider" role="separator"></div>
               <form method="post" action="{{ url_for('auth.logout') }}" class="dropdown-menu__form">
@@ -198,8 +201,7 @@
       <div class="portal-nav-reveal__dock" aria-hidden="true"></div>
       <p class="portal-nav-reveal__hint">Hover for portal navigation</p>
     <nav class="portal-nav-bar" id="portal-nav-bar" aria-label="Portal navigation">
-      <div class="portal-nav-bar__scroll">
-        <span class="portal-nav-bar__section">Portal</span>
+      <div class="portal-nav-bar__scroll" role="navigation" aria-label="Primary">
         <a class="portal-nav-bar__link" href="{{ url_for('main.welcome') }}"{% if request.endpoint == 'main.welcome' %} aria-current="page"{% endif %}>Platform overview</a>
         <a class="portal-nav-bar__link" href="{{ url_for('main.dashboard') }}"{% if request.endpoint == 'main.dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
         <a class="portal-nav-bar__link" href="{{ url_for('main.journey') }}"{% if request.endpoint == 'main.journey' %} aria-current="page"{% endif %}>Freeport–Hexaware Journey</a>
@@ -238,17 +240,18 @@
           </details>
         </div>
 
-        {% if current_user.role in ['admin','moderator'] %}
+        <a class="portal-nav-bar__link" href="{{ url_for('content.content_create') }}"{% if request.endpoint == 'content.content_create' %} aria-current="page"{% endif %}>Create content</a>
         <a class="portal-nav-bar__link" href="{{ url_for('main.my_submissions') }}"{% if request.endpoint == 'main.my_submissions' %} aria-current="page"{% endif %}>My Submissions</a>
-        <a class="portal-nav-bar__link" href="{{ url_for('admin.moderation') }}"{% if request.endpoint == 'admin.moderation' %} aria-current="page"{% endif %}>Governance</a>
+        {% if current_user.role in ['admin','moderator'] %}
+        <a class="portal-nav-bar__link" href="{{ url_for('admin.moderation') }}"{% if request.endpoint == 'admin.moderation' %} aria-current="page"{% endif %}>Governance{% if pending_moderation %} ({{ pending_moderation }}){% endif %}</a>
         <a class="portal-nav-bar__link" href="{{ url_for('content.content_list') }}"{% if request.blueprint == 'content' and request.endpoint == 'content.content_list' %} aria-current="page"{% endif %}>Content catalogue</a>
         <a class="portal-nav-bar__link" href="{{ url_for('admin.analytics') }}"{% if request.endpoint == 'admin.analytics' %} aria-current="page"{% endif %}>Analytics</a>
         {% endif %}
         {% if current_user.role == 'admin' %}
-        <div class="portal-nav-bar__anchor">
+        <div class="portal-nav-bar__anchor portal-nav-bar__anchor--end">
           <details class="portal-nav-bar__details" data-portal-dropdown{% if request.endpoint in ('admin.users', 'admin.settings', 'admin.settings_password', 'admin.admin_profile') %} open{% endif %}>
             <summary class="portal-nav-bar__summary">Settings</summary>
-            <div class="portal-nav-bar__menu">
+            <div class="portal-nav-bar__menu portal-nav-bar__menu--end">
               <a class="portal-nav-bar__sublink" href="{{ url_for('admin.users') }}"{% if request.endpoint == 'admin.users' %} aria-current="page"{% endif %}>Users</a>
               <a class="portal-nav-bar__sublink" href="{{ url_for('admin.settings_password') }}"{% if request.endpoint in ('admin.settings', 'admin.settings_password') %} aria-current="page"{% endif %}>Change Password</a>
               <a class="portal-nav-bar__sublink" href="{{ url_for('admin.admin_profile') }}"{% if request.endpoint == 'admin.admin_profile' %} aria-current="page"{% endif %}>Profile</a>
@@ -265,7 +268,6 @@
     {% if current_user and not _is_landing %}
     <div class="nav-drawer-backdrop" id="nav-drawer-backdrop" aria-hidden="true"></div>
     <aside class="sidebar sidebar--mobile-drawer" id="portal-sidebar" aria-label="Primary navigation">
-      <div class="nav-section">Portal</div>
       <a class="nav-link" href="{{ url_for('main.welcome') }}"{% if request.endpoint == 'main.welcome' %} aria-current="page"{% endif %}>Platform overview</a>
       <a class="nav-link" href="{{ url_for('main.dashboard') }}"{% if request.endpoint == 'main.dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
       <a class="nav-link" href="{{ url_for('main.journey') }}"{% if request.endpoint == 'main.journey' %} aria-current="page"{% endif %}>Freeport–Hexaware Journey</a>
@@ -293,8 +295,12 @@
         <a class="nav-link nav-sublink" href="{{ url_for('main.knowledge', module='blog') }}"{% if request.endpoint == 'main.knowledge' and request.args.get('module')=='blog' %} aria-current="page"{% endif %}>Blogs &amp; whitepapers</a>
       </details>
 
-      {% if current_user.role in ['admin','moderator'] %}
+      <a class="nav-link" href="{{ url_for('content.content_create') }}"{% if request.endpoint == 'content.content_create' %} aria-current="page"{% endif %}>Create content</a>
       <a class="nav-link" href="{{ url_for('main.my_submissions') }}"{% if request.endpoint == 'main.my_submissions' %} aria-current="page"{% endif %}>My Submissions</a>
+      {% if current_user.role in ['admin','moderator'] %}
+      <a class="nav-link" href="{{ url_for('admin.moderation') }}"{% if request.endpoint == 'admin.moderation' %} aria-current="page"{% endif %}>Governance{% if pending_moderation %} ({{ pending_moderation }}){% endif %}</a>
+      <a class="nav-link" href="{{ url_for('content.content_list') }}"{% if request.endpoint == 'content.content_list' %} aria-current="page"{% endif %}>Content catalogue</a>
+      <a class="nav-link" href="{{ url_for('admin.analytics') }}"{% if request.endpoint == 'admin.analytics' %} aria-current="page"{% endif %}>Analytics</a>
       {% endif %}
       <div class="nav-section">Account</div>
       {% if current_user.role == 'admin' %}
@@ -306,11 +312,6 @@
       {% else %}
       <a class="nav-link" href="{{ url_for('auth.profile') }}"{% if request.endpoint == 'auth.profile' %} aria-current="page"{% endif %}>Profile</a>
       <a class="nav-link" href="{{ url_for('auth.account_settings') }}"{% if request.endpoint in ('auth.account_settings', 'auth.account_settings_password') %} aria-current="page"{% endif %}>Account settings</a>
-      {% endif %}
-      {% if current_user and current_user.role in ['admin','moderator'] %}
-      <a class="nav-link" href="{{ url_for('admin.moderation') }}"{% if request.endpoint == 'admin.moderation' %} aria-current="page"{% endif %}>Governance{% if pending_moderation %} ({{ pending_moderation }}){% endif %}</a>
-      <a class="nav-link" href="{{ url_for('content.content_list') }}"{% if request.endpoint == 'content.content_list' %} aria-current="page"{% endif %}>Content catalogue</a>
-      <a class="nav-link" href="{{ url_for('admin.analytics') }}"{% if request.endpoint == 'admin.analytics' %} aria-current="page"{% endif %}>Analytics</a>
       {% endif %}
       {% if current_user and current_user.role == 'admin' %}
       <details class="nav-details"{% if request.endpoint in ('admin.users', 'admin.settings', 'admin.settings_password', 'admin.admin_profile') %} open{% endif %}>

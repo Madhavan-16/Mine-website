@@ -126,7 +126,7 @@
         <p class="krepo-empty">No approved items yet.</p>
       {% endif %}
 
-      {% if current_user and current_user.role in ['admin', 'moderator'] %}
+      {% if current_user %}
         <div class="krepo-cta-row">
           <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create knowledge content</a>
         </div>
