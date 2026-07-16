@@ -225,8 +225,8 @@
   width: 100%;
   min-height: 44px;
   padding: 6px clamp(14px, 2.4vw, 28px);
-  overflow-x: auto;
-  overflow-y: visible;
+  /* visible so Program map / Knowledge / Settings menus overlay page content */
+  overflow: visible;
   scrollbar-width: thin;
 }
 
@@ -238,6 +238,7 @@
   flex-wrap: nowrap;
   gap: clamp(2px, 0.55vw, 10px);
   min-width: 0;
+  overflow: visible;
 }
 
 .portal-nav-bar__end {
@@ -247,6 +248,7 @@
   margin-left: 4px;
   padding-left: 8px;
   border-left: 1px solid var(--hex-grey-200);
+  overflow: visible;
 }
 
 .portal-nav-bar__section {
@@ -301,6 +303,8 @@
   position: relative;
   flex: 0 1 auto;
   display: block;
+  overflow: visible;
+  z-index: 1;
 }
 
 .portal-nav-bar__anchor--end {
@@ -311,6 +315,15 @@
   display: inline-flex;
   align-items: stretch;
   flex: 0 1 auto;
+  overflow: visible;
+}
+
+.portal-nav-bar__details[open] {
+  z-index: 5;
+}
+
+.portal-nav-bar__anchor:has(.portal-nav-bar__details[open]) {
+  z-index: 20;
 }
 
 .portal-nav-bar__anchor--split > .portal-nav-bar__link {
@@ -363,9 +376,9 @@
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  z-index: 250;
-  min-width: 200px;
-  max-width: min(280px, calc(100vw - 24px));
+  z-index: 300;
+  min-width: 220px;
+  max-width: min(320px, calc(100vw - 24px));
   padding: 6px;
   background: var(--hex-white);
   border: 1px solid var(--hex-grey-200);

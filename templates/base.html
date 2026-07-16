@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}MiNe{% endblock %} · Mining Intelligence and Knowledge Enablement</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=portal-nav-3" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=portal-nav-4" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/content-cards.css') }}" />
     {% if current_user and (request.endpoint or '') not in ('main.landing', 'main.welcome') %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/portal-list.css') }}" />
@@ -205,7 +205,7 @@
         <div class="portal-nav-bar__primary">
           <a class="portal-nav-bar__link" href="{{ url_for('main.welcome') }}"{% if request.endpoint == 'main.welcome' %} aria-current="page"{% endif %}>Platform overview</a>
           <a class="portal-nav-bar__link" href="{{ url_for('main.dashboard') }}"{% if request.endpoint == 'main.dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
-          <a class="portal-nav-bar__link" href="{{ url_for('main.journey') }}" title="Freeport–Hexaware Journey"{% if request.endpoint == 'main.journey' %} aria-current="page"{% endif %}>Journey</a>
+          <a class="portal-nav-bar__link" href="{{ url_for('main.journey') }}"{% if request.endpoint == 'main.journey' %} aria-current="page"{% endif %}>Freeport–Hexaware Journey</a>
           <a class="portal-nav-bar__link" href="{{ url_for('main.open_pit_copper_domain') }}"{% if request.endpoint == 'main.open_pit_copper_domain' %} aria-current="page"{% endif %}>Domain Knowledge</a>
 
           <div class="portal-nav-bar__anchor">
