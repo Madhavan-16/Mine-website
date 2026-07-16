@@ -336,7 +336,8 @@
   grid-template-columns: minmax(200px, 240px) minmax(0, 1fr);
   gap: clamp(12px, 2vw, 18px);
   margin-top: 14px;
-  min-height: 220px;
+  align-items: start;
+  min-height: 0;
 }
 
 .project-explorer__rail {
@@ -425,7 +426,10 @@
 
 .project-explorer__stage {
   position: relative;
-  min-height: 200px;
+  align-self: start;
+  width: 100%;
+  min-height: 0;
+  height: fit-content;
   padding: clamp(14px, 2vw, 18px);
   border-radius: calc(var(--radius-lg) + 2px);
   border: 1px solid rgba(189, 191, 192, 0.4);
@@ -455,6 +459,7 @@
 
 .project-section-panel.is-active {
   display: block;
+  height: fit-content;
 }
 
 @keyframes project-panel-in {
@@ -910,22 +915,36 @@
   padding: 0;
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-start;
   gap: 8px;
+}
+
+.project-chip-cloud > li {
+  flex: 0 0 auto;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .project-chip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px 8px 8px;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 5px 8px 5px 5px;
   border-radius: var(--radius-full);
   border: 1px solid color-mix(in srgb, var(--project-accent) 22%, var(--hex-grey-200));
   background: var(--hex-white);
   font-size: 12px;
   font-weight: 600;
-  line-height: 1.35;
+  line-height: 1.25;
   color: var(--hex-grey-800);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+  box-sizing: border-box;
   transition:
     transform var(--transition-ui),
     border-color var(--transition-ui),
@@ -934,20 +953,20 @@
 
 .project-chip__icon,
 .project-chip__icon-wrap {
-  flex-shrink: 0;
+  flex: 0 0 auto;
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
   color: var(--hex-teal-dark);
   background: var(--project-accent-soft);
 }
 
 .project-chip__brand {
   display: block;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   object-fit: contain;
 }
 
@@ -1068,7 +1087,12 @@
 }
 
 .project-chip__text {
-  padding-right: 2px;
+  flex: 0 1 auto;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  white-space: nowrap;
 }
 
 .project-vc-flow {

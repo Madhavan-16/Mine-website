@@ -27,31 +27,51 @@
 
 
   /** Match .main / sidebar / drawer top to the real fixed enterprise header height (often two rows). */
+  /** Prefer the collapsed height so hover/pin expand never leaves a gap when the bar closes. */
+  var collapsedPortalOffsetPx = null;
+
+  function portalNavIsExpanded(reveal) {
+    if (!reveal) return false;
+    return (
+      reveal.classList.contains("is-pinned") ||
+      reveal.matches(":hover") ||
+      reveal.matches(":focus-within")
+    );
+  }
 
   function syncPortalHeaderOffset() {
-
     if (!header || !header.classList.contains("header-shell--enterprise")) return;
 
-    /* Skip while hover/focus temporarily expands the portal nav — avoid layout thrash under content. */
     var reveal = header.querySelector(".portal-nav-reveal");
-    if (
-      reveal &&
-      !reveal.classList.contains("is-pinned") &&
-      (reveal.matches(":hover") || reveal.matches(":focus-within"))
-    ) {
+    var expanded = portalNavIsExpanded(reveal);
+
+    /* While expanded, keep the last collapsed offset so content does not jump —
+       and so collapse cannot leave an empty band under the chrome. */
+    if (expanded && collapsedPortalOffsetPx != null) {
+      document.documentElement.style.setProperty(
+        "--portal-header-offset",
+        collapsedPortalOffsetPx + "px"
+      );
       return;
     }
 
     var h = header.getBoundingClientRect().height;
-
     if (!h) return;
 
     /* Keep a small buffer so flashes / page titles never sit under the bar. */
-    document.documentElement.style.setProperty("--portal-header-offset", Math.ceil(h + 4) + "px");
-
+    var px = Math.ceil(h + 4);
+    if (!expanded) {
+      collapsedPortalOffsetPx = px;
+    }
+    document.documentElement.style.setProperty("--portal-header-offset", px + "px");
   }
 
-
+  function schedulePortalHeaderOffsetSync() {
+    window.requestAnimationFrame(function () {
+      syncPortalHeaderOffset();
+      window.setTimeout(syncPortalHeaderOffset, 320);
+    });
+  }
 
   var scrollTick = false;
 
@@ -100,6 +120,22 @@
     }
 
     window.addEventListener("load", syncPortalHeaderOffset);
+
+    var revealEl = header.querySelector(".portal-nav-reveal");
+    var barEl = document.getElementById("portal-nav-bar");
+    if (revealEl) {
+      revealEl.addEventListener("mouseleave", schedulePortalHeaderOffsetSync);
+      revealEl.addEventListener("focusout", function () {
+        window.setTimeout(schedulePortalHeaderOffsetSync, 0);
+      });
+    }
+    if (barEl) {
+      barEl.addEventListener("transitionend", function (e) {
+        if (e.target !== barEl) return;
+        if (e.propertyName !== "max-height" && e.propertyName !== "opacity") return;
+        syncPortalHeaderOffset();
+      });
+    }
 
   }
 
@@ -225,8 +261,12 @@
       var pinned = detailsList.some(function (d) { return d.open; });
 
       reveal.classList.toggle("is-pinned", pinned);
+      schedulePortalHeaderOffsetSync();
 
     }
+
+    /* Honor dropdowns that render already open (e.g. Settings on its own pages). */
+    syncRevealPinned();
 
 
 

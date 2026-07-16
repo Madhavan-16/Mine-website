@@ -127,11 +127,70 @@
 .domain-knowledge-page .hero-footer .brand-tag {font-size:7px;letter-spacing:3px;color:var(--hero-copper);display:block;text-align:right}
 
 /* ═══════ STICKY NAV ═══════ */
-.domain-knowledge-page .sticky-nav {position:sticky;top:0;z-index:100;background:var(--fcx-navy);border-bottom:3px solid var(--fcx-copper);display:flex;align-items:center;overflow-x:auto;white-space:nowrap;padding:0 20px;gap:0}
-.domain-knowledge-page .sticky-nav .nav-brand {font-family:'Georgia',serif;font-weight:700;font-size:12px;color:var(--fcx-white);letter-spacing:1.5px;padding:14px 20px 14px 0;margin-right:4px;border-right:1px solid rgba(255,255,255,0.12);flex-shrink:0}
-.domain-knowledge-page .sticky-nav a {display:inline-block;padding:13px 14px;font-size:11px;font-weight:500;letter-spacing:0.3px;color:rgba(255,255,255,0.55);text-decoration:none;border-bottom:2px solid transparent;transition:all 0.2s;flex-shrink:0}
-.domain-knowledge-page .sticky-nav a:hover, .domain-knowledge-page .sticky-nav a.active {color:var(--fcx-white);border-bottom-color:var(--fcx-copper)}
-.domain-knowledge-page .sticky-nav .nav-sep {width:1px;height:20px;background:rgba(255,255,255,0.12);margin:0 4px;flex-shrink:0}
+.domain-knowledge-page .sticky-nav {
+  position: sticky;
+  top: var(--portal-header-offset, 72px);
+  z-index: 100;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  gap: 0 !important;
+  width: 100%;
+  margin: 0 !important;
+  padding: 0 10px !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  background: var(--fcx-navy);
+  border-bottom: 3px solid var(--fcx-copper);
+}
+.domain-knowledge-page .sticky-nav .nav-brand,
+.domain-knowledge-page .sticky-nav a,
+.domain-knowledge-page .sticky-nav .nav-sep {
+  position: static !important;
+  float: none !important;
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+.domain-knowledge-page .sticky-nav .nav-brand {
+  display: inline-flex;
+  align-items: center;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--fcx-white);
+  letter-spacing: 1.5px;
+  padding: 14px 10px 14px 2px !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.18);
+}
+.domain-knowledge-page .sticky-nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 13px 9px !important;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  color: rgba(255, 255, 255, 0.55);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-bottom-color 0.2s;
+}
+.domain-knowledge-page .sticky-nav a:hover,
+.domain-knowledge-page .sticky-nav a.active {
+  color: var(--fcx-white);
+  border-bottom-color: var(--fcx-copper);
+}
+.domain-knowledge-page .sticky-nav .nav-sep {
+  display: inline-block;
+  width: 1px;
+  height: 18px;
+  padding: 0 !important;
+  background: rgba(255, 255, 255, 0.12);
+  align-self: center;
+}
 
 /* ═══════ SECTIONS ═══════ */
 .domain-knowledge-page .section {max-width:1100px;margin:0 auto;padding:var(--space-section-y) var(--space-section-x) calc(var(--space-section-y) + 12px)}

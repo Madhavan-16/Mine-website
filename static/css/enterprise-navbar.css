@@ -101,10 +101,10 @@
   box-shadow: var(--focus-ring);
 }
 
-/* Portal shell is taller than a single nav row (dock / hint under search). Clear it before JS syncs. */
+/* Portal shell — search row + collapsed hover dock/hint (JS overwrites with measured height). */
 @media (min-width: 1025px) {
   body.layout-portal {
-    --portal-header-offset: calc(var(--nav-height) + 44px);
+    --portal-header-offset: calc(var(--nav-height) + 24px);
   }
 }
 

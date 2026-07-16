@@ -352,6 +352,6 @@
     {% if request.endpoint not in ('main.landing', 'main.welcome') and request.endpoint != 'reference.fmi_kyc' and request.endpoint != 'main.open_pit_copper_domain' and not _is_auth_page %}
     <script src="{{ url_for('static', filename='js/site-motion.bundle.js') }}" defer></script>
     {% endif %}
-    <script src="{{ url_for('static', filename='js/navbar.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/navbar.js') }}?v=portal-offset-2" defer></script>
   </body>
 </html>
