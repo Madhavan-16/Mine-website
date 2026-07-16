@@ -175,7 +175,7 @@
   body.layout-portal .portal-nav-reveal:hover .portal-nav-bar,
   body.layout-portal .portal-nav-reveal:focus-within .portal-nav-bar,
   body.layout-portal .portal-nav-reveal.is-pinned .portal-nav-bar {
-    max-height: 64px;
+    max-height: 120px;
     opacity: 1;
     overflow: visible;
     pointer-events: auto;
@@ -219,14 +219,34 @@
 .portal-nav-bar__scroll {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 4px 6px;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  gap: 10px;
   width: 100%;
-  min-height: 42px;
-  padding: 6px clamp(12px, 2.2vw, 28px);
-  overflow: visible;
+  min-height: 44px;
+  padding: 6px clamp(14px, 2.4vw, 28px);
+  overflow-x: auto;
+  overflow-y: visible;
   scrollbar-width: thin;
+}
+
+.portal-nav-bar__primary {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: clamp(2px, 0.55vw, 10px);
+  min-width: 0;
+}
+
+.portal-nav-bar__end {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  margin-left: 4px;
+  padding-left: 8px;
+  border-left: 1px solid var(--hex-grey-200);
 }
 
 .portal-nav-bar__section {
@@ -235,10 +255,11 @@
 
 .portal-nav-bar__link,
 .portal-nav-bar__summary {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   display: inline-flex;
   align-items: center;
-  padding: 8px 10px;
+  justify-content: center;
+  padding: 8px clamp(6px, 0.7vw, 12px);
   font-size: 13px;
   font-weight: 500;
   letter-spacing: var(--enterprise-nav-tracking);
@@ -278,17 +299,18 @@
 
 .portal-nav-bar__anchor {
   position: relative;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   display: block;
 }
 
 .portal-nav-bar__anchor--end {
-  margin-left: auto;
+  margin-left: 0;
 }
 
 .portal-nav-bar__anchor--split {
   display: inline-flex;
   align-items: stretch;
+  flex: 0 1 auto;
 }
 
 .portal-nav-bar__anchor--split > .portal-nav-bar__link {
@@ -361,6 +383,19 @@
 .portal-nav-bar__anchor--end .portal-nav-bar__menu {
   left: auto;
   right: 0;
+}
+
+@media (max-width: 1280px) {
+  .portal-nav-bar__primary {
+    justify-content: flex-start;
+    gap: 4px;
+  }
+
+  .portal-nav-bar__link,
+  .portal-nav-bar__summary {
+    padding: 8px 8px;
+    font-size: 12.5px;
+  }
 }
 
 .portal-nav-bar__sublink {

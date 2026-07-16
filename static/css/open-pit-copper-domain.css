@@ -136,60 +136,90 @@
   flex-wrap: nowrap !important;
   justify-content: flex-start !important;
   align-items: center !important;
-  gap: 0 !important;
+  gap: 10px;
   width: 100%;
   margin: 0 !important;
-  padding: 0 10px !important;
+  padding: 0 clamp(12px, 2vw, 24px) !important;
   overflow-x: auto;
   overflow-y: hidden;
   white-space: nowrap;
   background: var(--fcx-navy);
   border-bottom: 3px solid var(--fcx-copper);
+  scrollbar-width: thin;
 }
-.domain-knowledge-page .sticky-nav .nav-brand,
-.domain-knowledge-page .sticky-nav a,
-.domain-knowledge-page .sticky-nav .nav-sep {
+.domain-knowledge-page .sticky-nav .nav-brand {
   position: static !important;
   float: none !important;
   flex: 0 0 auto !important;
-  margin: 0 !important;
-  transform: none !important;
-}
-.domain-knowledge-page .sticky-nav .nav-brand {
   display: inline-flex;
   align-items: center;
+  margin: 0 !important;
+  padding: 14px 14px 14px 0 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.18);
   font-family: Georgia, "Times New Roman", serif;
   font-weight: 700;
   font-size: 12px;
   color: var(--fcx-white);
   letter-spacing: 1.5px;
-  padding: 14px 10px 14px 2px !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.18);
+  transform: none !important;
 }
-.domain-knowledge-page .sticky-nav a {
+.domain-knowledge-page .sticky-nav__links {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(4px, 1.2vw, 16px);
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+.domain-knowledge-page .sticky-nav__links a,
+.domain-knowledge-page .sticky-nav__links .nav-sep {
+  position: static !important;
+  float: none !important;
+  flex: 0 1 auto;
+  margin: 0 !important;
+  transform: none !important;
+}
+.domain-knowledge-page .sticky-nav__links a {
   display: inline-flex;
   align-items: center;
-  padding: 13px 9px !important;
+  justify-content: center;
+  padding: 13px clamp(4px, 0.9vw, 12px) !important;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.3px;
   color: rgba(255, 255, 255, 0.55);
   text-decoration: none;
   border-bottom: 2px solid transparent;
+  white-space: nowrap;
   transition: color 0.2s, border-bottom-color 0.2s;
 }
-.domain-knowledge-page .sticky-nav a:hover,
-.domain-knowledge-page .sticky-nav a.active {
+.domain-knowledge-page .sticky-nav__links a:hover,
+.domain-knowledge-page .sticky-nav__links a.active {
   color: var(--fcx-white);
   border-bottom-color: var(--fcx-copper);
 }
-.domain-knowledge-page .sticky-nav .nav-sep {
+.domain-knowledge-page .sticky-nav__links .nav-sep {
   display: inline-block;
+  flex: 0 0 1px;
   width: 1px;
   height: 18px;
   padding: 0 !important;
   background: rgba(255, 255, 255, 0.12);
   align-self: center;
+}
+
+@media (max-width: 1100px) {
+  .domain-knowledge-page .sticky-nav__links {
+    justify-content: flex-start;
+    gap: 2px;
+  }
+  .domain-knowledge-page .sticky-nav__links a {
+    padding: 13px 8px !important;
+  }
 }
 
 /* ═══════ SECTIONS ═══════ */
