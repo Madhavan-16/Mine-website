@@ -12,16 +12,19 @@
     <div class="header-shell">
       <div class="brand">
         <a href="index.html"><span class="brand-mark">M</span> MiNe</a>
-        <div class="brand-fmi">
-          <img
-            src="img/hexaware-freeport-lockup.png"
-            alt="Hexaware and Freeport-McMoRan"
-            class="brand-fmi-img"
-            width="347"
-            height="75"
-            loading="lazy"
-            decoding="async"
-          />
+        <div class="brand-fmi" role="img" aria-label="Hexaware and Freeport-McMoRan">
+          <span class="brand-lockup">
+            <span class="brand-lockup__hexaware">HEXAWARE</span>
+            <span class="brand-lockup__divider" aria-hidden="true"></span>
+            <img
+              class="brand-lockup__fmi-logo"
+              src="img/fmi-logo.svg"
+              alt=""
+              width="72"
+              height="52"
+              decoding="async"
+            />
+          </span>
         </div>
       </div>
       <header class="topbar">
@@ -81,15 +84,19 @@
         <p class="journey-digital__lede">
           Technology path from legacy reporting and lakes to Snowflake on Azure, massive fleet IoT scaling, and analytics that show up in throughput, cost, and safety metrics.
         </p>
-        <figure class="journey-digital__figure">
+        <figure
+          class="journey-digital__figure journey-digital__figure--hires"
+          role="group"
+          aria-label="The Autonomous Mining Revolution: From Data Silos to Predictive Operations"
+        >
           <img
-            src="img/freeport-autonomous-mining-revolution.png"
-            alt="Infographic: The Autonomous Mining Revolution—from legacy SAP BW, Teradata, and Hortonworks Hadoop to Snowflake and Azure; real-time IoT at roughly 60,000 readings per second from 200 sensors across 300 trucks; predictive risk modeling; and highlighted outcomes—about 200 million pounds annual production uplift, roughly 50% lower total cost of ownership, and roughly 95% predictive jam detection with about an eight-minute lead time."
-            class="journey-digital__img"
-            width="1024"
-            height="571"
+            src="img/journey/freeport-autonomous-mining-revolution.png"
+            alt="Infographic titled The Autonomous Mining Revolution: From Data Silos to Predictive Operations. Left—The Legacy Foundation: SAP BW and Teradata for structured reporting, Hortonworks Hadoop for the data lake. Center—The Technology Journey: Snowflake and Azure unified cloud, 300 vehicles with 200 sensors each, 60,000 readings per second, and autonomous haul operations. Right—Predictive Risk Modelling with ML algorithms for high, medium, and low risk, plus operational impact: production boost, lower TCO, and predictive jam detection eight minutes before operator action."
+            class="journey-digital__img zoomable-image"
+            width="2752"
+            height="1494"
             decoding="async"
-            loading="lazy"
+            loading="eager"
           />
         </figure>
       </section>

@@ -57,16 +57,22 @@
     <h2 id="journey-digital-h2">From data silos to predictive operations</h2>
     <p class="journey-digital__lede">
       Technology path from legacy reporting and lakes to Snowflake on Azure, massive fleet IoT scaling, and analytics that show up in throughput, cost, and safety metrics.
+      Click the infographic to zoom and inspect detail.
     </p>
-    <figure class="journey-digital__figure">
+    <figure
+      class="journey-digital__figure journey-digital__figure--hires"
+      role="group"
+      aria-label="The Autonomous Mining Revolution: From Data Silos to Predictive Operations"
+    >
       <img
-        src="{{ url_for('static', filename='img/freeport-autonomous-mining-revolution.png') }}"
-        alt="Infographic: The Autonomous Mining Revolution—from legacy SAP BW, Teradata, and Hortonworks Hadoop to Snowflake and Azure; real-time IoT at roughly 60,000 readings per second from 200 sensors across 300 trucks; predictive risk modeling; and highlighted outcomes—about 200 million pounds annual production uplift, roughly 50% lower total cost of ownership, and roughly 95% predictive jam detection with about an eight-minute lead time."
-        class="journey-digital__img"
-        width="1024"
-        height="571"
+        src="{{ url_for('main.journey_autonomous_mining_revolution_image') }}?v=8"
+        alt="Infographic titled The Autonomous Mining Revolution: From Data Silos to Predictive Operations. Left—The Legacy Foundation: SAP BW and Teradata for structured reporting, Hortonworks Hadoop for the data lake. Center—The Technology Journey: Snowflake and Azure unified cloud, 300 vehicles with 200 sensors each, 60,000 readings per second, and autonomous haul operations. Right—Predictive Risk Modelling with ML algorithms for high, medium, and low risk, plus operational impact: production boost, lower TCO, and predictive jam detection eight minutes before operator action."
+        class="journey-digital__img zoomable-image"
+        width="2752"
+        height="1494"
         decoding="async"
-        loading="lazy"
+        loading="eager"
+        fetchpriority="high"
       />
     </figure>
   </section>
@@ -85,5 +91,18 @@
       />
     </figure>
   </div>
+
+  <div id="img-zoom-modal" class="img-zoom-modal" aria-hidden="true">
+    <div class="img-zoom-dialog" role="dialog" aria-modal="true" aria-label="Full resolution image viewer">
+      <div class="img-zoom-topbar">
+        <span>Enhanced Zoom (2×) — Scroll to inspect text</span>
+        <button type="button" id="img-zoom-close" class="img-zoom-close">Close</button>
+      </div>
+      <div id="img-zoom-stage" class="img-zoom-stage">
+        <img id="img-zoom-target" src="" alt="Full resolution infographic" />
+      </div>
+    </div>
   </div>
+  </div>
+  <script src="{{ url_for('static', filename='js/infographic-zoom.js') }}?v=4" defer></script>
 {% endblock %}

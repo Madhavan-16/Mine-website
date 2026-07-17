@@ -33,6 +33,7 @@ from mine.catalog_modules import (
     KNOWLEDGE_SERIES_MODULE_KEYS,
     KNOWLEDGE_SERIES_MODULES,
     MODULE_LABELS,
+    RESTRICTED_KNOWLEDGE_CREATE_MODULES,
     STANDALONE_MODULE_TO_SEGMENT,
     STANDALONE_REPO_MODULES,
     STANDALONE_REPO_UI,
@@ -117,11 +118,35 @@ def _office_cloud_can_fetch_document_url(file_url: str) -> bool:
     return True
 
 
-def _knowledge_series_form_choices(current_module: str | None) -> list[tuple[str, str]]:
-    choices = list(KNOWLEDGE_SERIES_MODULES)
+def _user_may_create_knowledge_module(role: str | None, module: str | None) -> bool:
+    """Normal users may not create KYC, KYA, or Term of the week (DTOW)."""
+    mod = (module or "").strip()
+    if not mod:
+        return False
+    if (role or "").strip() == "user" and mod in RESTRICTED_KNOWLEDGE_CREATE_MODULES:
+        return False
+    return mod in KNOWLEDGE_SERIES_MODULE_KEYS
+
+
+def _knowledge_series_form_choices(
+    current_module: str | None,
+    *,
+    role: str | None = None,
+) -> list[tuple[str, str]]:
+    """Module dropdown for Create/Edit knowledge. Hide KYC/KYA/DTOW for normal users."""
+    if (role or "").strip() == "user":
+        choices = [
+            (key, label)
+            for key, label in KNOWLEDGE_SERIES_MODULES
+            if key not in RESTRICTED_KNOWLEDGE_CREATE_MODULES
+        ]
+    else:
+        choices = list(KNOWLEDGE_SERIES_MODULES)
+    allowed_keys = {key for key, _ in choices}
     mod = (current_module or "").strip()
-    if mod and mod not in KNOWLEDGE_SERIES_MODULE_KEYS:
-        choices.append((mod, mod.replace("_", " ").title()))
+    # Keep the item's current series visible when editing (even if restricted).
+    if mod and mod not in allowed_keys:
+        choices.append((mod, MODULE_LABELS.get(mod, mod.replace("_", " ").title())))
     return choices
 
 
@@ -746,6 +771,14 @@ def content_view(cid: int):
     ).fetchone()
     if not row or not content_visible(user, row):
         abort(404)
+    from mine.catalog_modules import KNOWLEDGE_SERIES_MODULE_KEYS
+    from mine.guest import is_guest_user
+
+    if is_guest_user(user):
+        mod = (row["module"] or "").strip()
+        if mod not in KNOWLEDGE_SERIES_MODULE_KEYS:
+            flash("Guest accounts can only view knowledge-repository content.", "warning")
+            return redirect(url_for("main.knowledge"))
     project = db.execute("SELECT * FROM projects WHERE content_id = ?", (cid,)).fetchone()
     files = db.execute(
         "SELECT * FROM attachments WHERE content_id = ? ORDER BY id DESC", (cid,)
@@ -822,28 +855,43 @@ def content_view(cid: int):
 def content_create():
     """Any signed-in user may create knowledge content; submit sends it to the moderation queue."""
     user = load_current_user()
+    role = (user["role"] or "").strip()
     req_mod = (request.args.get("module") or "").strip()
     if request.method == "GET":
         if req_mod == "projects":
-            if user["role"] == "user":
+            if role == "user":
                 flash("Only administrators and moderators can add programs & projects.", "warning")
                 return redirect(url_for("content.content_create"))
             return redirect(url_for("projects.project_create"))
         if req_mod in STANDALONE_REPO_MODULES:
-            if user["role"] == "user":
+            if role == "user":
                 flash("Only administrators and moderators can add items to that section.", "warning")
                 return redirect(url_for("content.content_create"))
             seg = STANDALONE_MODULE_TO_SEGMENT[req_mod]
             return redirect(url_for("repo_standalone.repo_new", segment=seg))
+        if role == "user" and req_mod in RESTRICTED_KNOWLEDGE_CREATE_MODULES:
+            flash(
+                "Only administrators and moderators can add KYC, KYA, or Term of the week items.",
+                "warning",
+            )
+            return redirect(url_for("content.content_create"))
     form = ContentForm()
-    form.module.choices = _knowledge_series_form_choices(None)
+    form.module.choices = _knowledge_series_form_choices(None, role=role)
     pre = req_mod if request.method == "GET" else (form.module.data or "").strip()
-    if request.method == "GET" and pre in KNOWLEDGE_SERIES_MODULE_KEYS:
+    if request.method == "GET" and pre in KNOWLEDGE_SERIES_MODULE_KEYS and _user_may_create_knowledge_module(
+        role, pre
+    ):
         form.module.data = pre
     if form.validate_on_submit():
         mod_sl = (form.module.data or "").strip()
-        if mod_sl not in KNOWLEDGE_SERIES_MODULE_KEYS:
-            flash("Choose one of the knowledge-repository series.", "danger")
+        if not _user_may_create_knowledge_module(role, mod_sl):
+            flash(
+                "Choose a series you are allowed to upload (newsletter, case studies, RFP snippets, blogs & whitepapers)."
+                if role == "user"
+                else "Choose one of the knowledge-repository series.",
+                "danger",
+            )
+            form.module.choices = _knowledge_series_form_choices(None, role=role)
             return render_template("content/form.html", form=form, mode="create")
         if mod_sl == CASE_STUDY_MODULE:
             action = (request.form.get("action") or "draft").strip()
@@ -947,8 +995,9 @@ def content_edit(cid: int):
             flash("You do not have permission to edit this content.", "warning")
         return redirect(url_for("content.content_view", cid=cid))
 
+    role = (user["role"] or "").strip()
     form = ContentForm(obj=row)
-    form.module.choices = _knowledge_series_form_choices(row["module"])
+    form.module.choices = _knowledge_series_form_choices(row["module"], role=role)
     form.tags.data = ", ".join(get_tags(cid))
     _populate_case_study_form_fields(form, row)
     existing_files = db.execute(
@@ -957,9 +1006,27 @@ def content_edit(cid: int):
     ).fetchall()
     if form.validate_on_submit():
         new_mod = (form.module.data or "").strip()
-        allowed = KNOWLEDGE_SERIES_MODULE_KEYS | {(row["module"] or "").strip()}
+        old_mod = (row["module"] or "").strip()
+        allowed = KNOWLEDGE_SERIES_MODULE_KEYS | {old_mod}
         if new_mod not in allowed:
             flash("That module cannot be assigned from this editor.", "danger")
+            return render_template(
+                "content/form.html",
+                form=form,
+                mode="edit",
+                row=row,
+                existing_files=existing_files,
+            )
+        if (
+            role == "user"
+            and new_mod in RESTRICTED_KNOWLEDGE_CREATE_MODULES
+            and new_mod != old_mod
+        ):
+            flash(
+                "Only administrators and moderators can move content into KYC, KYA, or Term of the week.",
+                "danger",
+            )
+            form.module.choices = _knowledge_series_form_choices(old_mod, role=role)
             return render_template(
                 "content/form.html",
                 form=form,

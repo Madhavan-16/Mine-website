@@ -13,6 +13,8 @@ bp = Blueprint("auth", __name__)
 
 def post_login_redirect_url(user=None) -> str:
     """Default landing path after sign-in (used when ?next= is not set)."""
+    if user is not None and (user["role"] or "").strip().lower() == "guest":
+        return url_for("main.knowledge")
     return url_for("main.dashboard")
 
 
@@ -43,10 +45,16 @@ def login():
     if form.validate_on_submit():
         db = get_db()
         uname = form.username.data.strip().lower()
+        if uname == "guest":
+            flash("Use Continue as Guest below for the read-only guest account.", "info")
+            return render_template("auth/login.html", form=form)
         user = db.execute(
             "SELECT * FROM users WHERE lower(trim(username)) = ? AND is_active = 1",
             (uname,),
         ).fetchone()
+        if user and (user["role"] or "").strip().lower() == "guest":
+            flash("Use Continue as Guest below for the read-only guest account.", "info")
+            return render_template("auth/login.html", form=form)
         if user and bcrypt.checkpw(
             form.password.data.encode("utf-8"),
             user["password_hash"].encode("utf-8"),
@@ -73,6 +81,35 @@ def login():
             return redirect(nxt or post_login_redirect_url(user))
         flash("Invalid username or password.", "danger")
     return render_template("auth/login.html", form=form)
+
+
+@bp.route("/login/guest", methods=["POST"])
+def login_guest():
+    """Read-only guest session — browse Knowledge, Domain Knowledge, Journey, and KYC only."""
+    from mine.guest import GUEST_USERNAME, ensure_guest_user, guest_may_visit_path
+
+    if load_current_user():
+        return redirect(post_login_redirect_url(load_current_user()))
+
+    ensure_guest_user()
+    db = get_db()
+    user = db.execute(
+        "SELECT * FROM users WHERE lower(trim(username)) = ? AND role = 'guest' AND is_active = 1",
+        (GUEST_USERNAME,),
+    ).fetchone()
+    if not user:
+        flash("Guest access is not available right now.", "danger")
+        return redirect(url_for("auth.login"))
+
+    session.clear()
+    session["user_id"] = user["id"]
+    log_audit(user["id"], "login_guest", "user", user["id"], None)
+    db.commit()
+    flash("Signed in as Guest — view-only access to selected knowledge pages.", "success")
+    nxt = safe_login_next(request.form.get("next") or request.args.get("next"))
+    if nxt and not guest_may_visit_path(nxt):
+        nxt = None
+    return redirect(nxt or post_login_redirect_url(user))
 
 
 @bp.route("/logout", methods=["POST"])

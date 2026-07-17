@@ -58,11 +58,11 @@
     <div class="kview-hero__aside">
       <a class="btn btn-secondary kview-hero__back" href="{{ series_href }}">← {{ series_label }}</a>
       {% set item_status_l = (row.status or '')|lower %}
-      {% set can_edit_knowledge = current_user and (
+      {% set can_edit_knowledge = current_user and not is_guest and (
            current_user.role == 'admin'
            or (current_user.id == row.author_id and item_status_l in ['draft', 'rejected'])
          ) %}
-      {% set can_delete_knowledge = current_user and (
+      {% set can_delete_knowledge = current_user and not is_guest and (
            current_user.role == 'admin'
            or (current_user.id == row.author_id and item_status_l in ['draft', 'rejected'])
          ) %}

@@ -259,6 +259,53 @@ h3 {
   border-left: 1px solid var(--hex-grey-200);
 }
 
+/* Transparent Hexaware + FMI lockup (no white plate) */
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.brand-lockup__hexaware {
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  font-weight: 800;
+  font-style: italic;
+  font-size: 17px;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: #5240ef;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.brand-lockup__divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(82, 64, 239, 0.55);
+  flex: 0 0 auto;
+}
+
+.brand-lockup__fmi-logo {
+  display: block;
+  height: 28px;
+  width: auto;
+  max-height: 32px;
+  object-fit: contain;
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+}
+
+.brand-lockup__fmi,
+.brand-lockup__fmi-mark {
+  display: none;
+}
+
 .brand-fmi-img {
   display: block;
   height: 44px;
@@ -276,6 +323,46 @@ h3 {
   padding-left: 12px;
   margin-left: 0;
 }
+
+.layout-portal .brand-lockup,
+.layout-reference .brand-lockup,
+.layout-public .brand-lockup {
+  height: 40px;
+}
+
+.layout-portal .brand-lockup__hexaware,
+.layout-reference .brand-lockup__hexaware,
+.layout-public .brand-lockup__hexaware {
+  font-size: 18px;
+  color: #5240ef;
+}
+
+.layout-portal .brand-lockup__divider,
+.layout-reference .brand-lockup__divider,
+.layout-public .brand-lockup__divider {
+  background: rgba(160, 170, 255, 0.55);
+  height: 24px;
+}
+
+.layout-portal .brand-lockup__fmi-logo,
+.layout-reference .brand-lockup__fmi-logo,
+.layout-public .brand-lockup__fmi-logo {
+  height: 30px;
+  max-height: 34px;
+}
+
+.layout-portal .brand-lockup__fmi,
+.layout-reference .brand-lockup__fmi,
+.layout-public .brand-lockup__fmi {
+  display: none;
+}
+
+.layout-portal .brand-lockup__fmi-mark,
+.layout-reference .brand-lockup__fmi-mark,
+.layout-public .brand-lockup__fmi-mark {
+  display: none;
+}
+
 
 /* Match home-page brand layout on non-landing headers */
 .layout-portal .brand,
@@ -394,17 +481,12 @@ h3 {
   font-weight: 500;
   cursor: pointer;
   text-decoration: none;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast),
-    box-shadow var(--transition-fast), transform 0.1s var(--ease-out), opacity var(--transition-fast);
+  /* Motion tokens applied in motion-ui.css (single source of truth). */
 }
 
 .btn:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
-}
-
-.btn:active:not(:disabled) {
-  transform: translateY(1px);
 }
 
 .btn:disabled {
@@ -564,6 +646,27 @@ h3 {
   margin-left: 0;
 }
 
+.layout-landing .brand-lockup {
+  height: 42px;
+}
+
+.layout-landing .brand-lockup__hexaware {
+  font-size: 19px;
+}
+
+.layout-landing .brand-lockup__fmi {
+  display: none;
+}
+
+.layout-landing .brand-lockup__fmi-logo {
+  height: 32px;
+  max-height: 36px;
+}
+
+.layout-landing .brand-lockup__fmi-mark {
+  display: none;
+}
+
 .layout-landing .brand-fmi-img {
   display: block;
   height: 52px;
@@ -650,7 +753,7 @@ h3 {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: var(--space-5) var(--space-6);
-  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+  /* Lift + border hover motion lives in motion-ui.css / content-cards.css */
 }
 
 .card:hover {
@@ -748,8 +851,14 @@ h3 {
   z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin: 0 0 16px;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  /* Keep alerts fully clear of the fixed enterprise header */
+  scroll-margin-top: calc(var(--portal-header-offset, 72px) + var(--space-2));
+}
+
+.layout-portal .main > .flash-stack {
+  margin-top: 0;
 }
 
 .flash-stack .flash {
@@ -859,9 +968,63 @@ h3 {
   z-index: 120;
 }
 
-.dropdown:focus-within .dropdown-panel,
-.dropdown:hover .dropdown-panel {
+.dropdown.is-open .dropdown-panel,
+.dropdown:focus-within .dropdown-panel {
   display: block;
+}
+
+.dropdown-panel--menu {
+  width: 240px;
+  max-height: none;
+  padding: 6px;
+}
+
+.dropdown-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dropdown-menu__item {
+  display: block;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--hex-grey-800);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.dropdown-menu__item:hover,
+.dropdown-menu__item:focus-visible {
+  background: var(--hex-grey-50);
+  color: var(--hex-blue-dark);
+  outline: none;
+}
+
+.dropdown-menu__item--button {
+  font-family: inherit;
+}
+
+.dropdown-menu__divider {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--hex-grey-200);
+}
+
+.dropdown-menu__form {
+  margin: 0;
+}
+
+.dropdown-empty {
+  padding: 8px;
+  font-size: 13px;
+  color: var(--hex-grey-600);
 }
 
 .notif-item {
@@ -911,6 +1074,21 @@ h3 {
 .notif-clear-btn:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
+}
+
+.notif-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.notif-actions form {
+  margin: 0;
+}
+
+.notif-actions .btn {
+  width: 100%;
 }
 
 .body-text {
@@ -1002,6 +1180,16 @@ main > h1:first-child {
   .search-form select {
     min-height: var(--tap-min);
     height: auto;
+  }
+
+  .dropdown-panel {
+    right: 0;
+    left: auto;
+    width: min(320px, calc(100vw - 24px));
+  }
+
+  .dropdown-panel--menu {
+    width: min(260px, calc(100vw - 24px));
   }
 }
 

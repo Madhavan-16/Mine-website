@@ -21,6 +21,7 @@ from mine.team_roster import group_roster_for_display, load_team_roster, roster_
 bp = Blueprint("main", __name__)
 
 _DOMAIN_INFOGRAPHICS_DIR = Config.BASE_DIR / "static" / "img" / "domain"
+_JOURNEY_INFOGRAPHICS_DIR = Config.BASE_DIR / "static" / "img" / "journey"
 
 
 def _hero_motifs():
@@ -126,6 +127,22 @@ def _serve_domain_infographic(filename: str):
     if not image.is_file():
         abort(404)
     resp = send_file(image, mimetype="image/png", max_age=0)
+    resp.headers["Cache-Control"] = "no-store, max-age=0"
+    return resp
+
+
+def _serve_journey_infographic(filename: str):
+    """Serve journey-page images the same way as Domain Knowledge (no aggressive browser cache)."""
+    image = _JOURNEY_INFOGRAPHICS_DIR / filename
+    if not image.is_file():
+        # Fall back to legacy static/img location used by older deploys.
+        legacy = Config.BASE_DIR / "static" / "img" / filename
+        if not legacy.is_file():
+            abort(404)
+        image = legacy
+    suffix = image.suffix.lower()
+    mime = "image/jpeg" if suffix in {".jpg", ".jpeg"} else "image/png"
+    resp = send_file(image, mimetype=mime, max_age=0)
     resp.headers["Cache-Control"] = "no-store, max-age=0"
     return resp
 
@@ -721,6 +738,16 @@ def dashboard():
 @bp.route("/journey")
 def journey():
     return render_template("journey.html")
+
+
+@bp.route("/journey/autonomous-mining-revolution-image")
+def journey_autonomous_mining_revolution_image():
+    return _serve_journey_infographic("freeport-autonomous-mining-revolution.png")
+
+
+@bp.route("/journey/autonomous-mining-revolution-image-2x")
+def journey_autonomous_mining_revolution_image_2x():
+    return _serve_journey_infographic("freeport-autonomous-mining-revolution-2x.png")
 
 
 @bp.route("/resources/software-tools")

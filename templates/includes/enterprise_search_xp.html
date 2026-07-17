@@ -126,7 +126,7 @@
         <p class="krepo-empty">No approved items yet.</p>
       {% endif %}
 
-      {% if current_user %}
+      {% if current_user and not is_guest %}
         <div class="krepo-cta-row">
           <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create knowledge content</a>
         </div>

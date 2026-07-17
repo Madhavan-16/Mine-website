@@ -259,6 +259,53 @@ h3 {
   border-left: 1px solid var(--hex-grey-200);
 }
 
+/* Transparent Hexaware + FMI lockup (no white plate) */
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.brand-lockup__hexaware {
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  font-weight: 800;
+  font-style: italic;
+  font-size: 17px;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: #5240ef;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.brand-lockup__divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(82, 64, 239, 0.55);
+  flex: 0 0 auto;
+}
+
+.brand-lockup__fmi-logo {
+  display: block;
+  height: 28px;
+  width: auto;
+  max-height: 32px;
+  object-fit: contain;
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+}
+
+.brand-lockup__fmi,
+.brand-lockup__fmi-mark {
+  display: none;
+}
+
 .brand-fmi-img {
   display: block;
   height: 44px;
@@ -276,6 +323,46 @@ h3 {
   padding-left: 12px;
   margin-left: 0;
 }
+
+.layout-portal .brand-lockup,
+.layout-reference .brand-lockup,
+.layout-public .brand-lockup {
+  height: 40px;
+}
+
+.layout-portal .brand-lockup__hexaware,
+.layout-reference .brand-lockup__hexaware,
+.layout-public .brand-lockup__hexaware {
+  font-size: 18px;
+  color: #5240ef;
+}
+
+.layout-portal .brand-lockup__divider,
+.layout-reference .brand-lockup__divider,
+.layout-public .brand-lockup__divider {
+  background: rgba(160, 170, 255, 0.55);
+  height: 24px;
+}
+
+.layout-portal .brand-lockup__fmi-logo,
+.layout-reference .brand-lockup__fmi-logo,
+.layout-public .brand-lockup__fmi-logo {
+  height: 30px;
+  max-height: 34px;
+}
+
+.layout-portal .brand-lockup__fmi,
+.layout-reference .brand-lockup__fmi,
+.layout-public .brand-lockup__fmi {
+  display: none;
+}
+
+.layout-portal .brand-lockup__fmi-mark,
+.layout-reference .brand-lockup__fmi-mark,
+.layout-public .brand-lockup__fmi-mark {
+  display: none;
+}
+
 
 /* Match home-page brand layout on non-landing headers */
 .layout-portal .brand,
@@ -559,6 +646,27 @@ h3 {
   margin-left: 0;
 }
 
+.layout-landing .brand-lockup {
+  height: 42px;
+}
+
+.layout-landing .brand-lockup__hexaware {
+  font-size: 19px;
+}
+
+.layout-landing .brand-lockup__fmi {
+  display: none;
+}
+
+.layout-landing .brand-lockup__fmi-logo {
+  height: 32px;
+  max-height: 36px;
+}
+
+.layout-landing .brand-lockup__fmi-mark {
+  display: none;
+}
+
 .layout-landing .brand-fmi-img {
   display: block;
   height: 52px;
@@ -654,8 +762,158 @@ h3 {
 }
 
 .auth-card {
-  max-width: 520px;
-  margin: 12px auto 0;
+  max-width: 440px;
+  margin: 24px auto 0;
+  padding: 28px 28px 24px;
+}
+
+.auth-login__header {
+  margin-bottom: 22px;
+}
+
+.auth-login__title {
+  margin: 0 0 6px;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--hex-grey-900);
+}
+
+.auth-login__subtitle {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--hex-grey-500);
+}
+
+.auth-login .form > label {
+  display: block;
+  margin: 0 0 6px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--hex-grey-800);
+}
+
+.auth-login .form > label + .auth-field {
+  margin-bottom: 14px;
+}
+
+.auth-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-field__icon {
+  position: absolute;
+  left: 12px;
+  display: inline-flex;
+  color: var(--hex-grey-500);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.auth-field__toggle {
+  position: absolute;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--border-radius);
+  background: transparent;
+  color: var(--hex-grey-500);
+  cursor: pointer;
+}
+
+.auth-field__toggle:hover {
+  color: var(--hex-grey-800);
+  background: var(--hex-grey-50);
+}
+
+.auth-login .form input.auth-field__input,
+.auth-login .form .auth-field input[type="text"],
+.auth-login .form .auth-field input[type="password"] {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 42px 10px 42px;
+  border: 1px solid var(--hex-grey-200);
+  border-radius: 10px;
+  background: var(--hex-white);
+  box-sizing: border-box;
+}
+
+.auth-login .form .auth-field input[type="password"],
+.auth-login .form .auth-field input#password {
+  padding-right: 44px;
+}
+
+.auth-login__submit,
+.auth-login__guest {
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  border-radius: 10px;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.auth-login__submit {
+  margin-top: 18px;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: var(--hex-grey-500);
+  font-size: 13px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--hex-grey-200);
+}
+
+.auth-divider span {
+  flex: 0 0 auto;
+}
+
+.auth-login__guest-form {
+  margin: 0;
+}
+
+.auth-login__guest {
+  font-weight: 500;
+}
+
+.auth-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 18px;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--hex-grey-500);
+  text-decoration: none;
+}
+
+.auth-back:hover {
+  color: var(--hex-grey-900);
+}
+
+.btn-sm {
+  min-height: 32px;
+  padding: 4px 12px;
+  font-size: var(--text-sm);
+  font-weight: 500;
 }
 
 .card-grid {

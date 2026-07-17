@@ -394,6 +394,134 @@
   max-width: 100%;
 }
 
+/* High-res Downloads PNG (2752×1494) — same presentation as Domain Knowledge value-chain images */
+#main .journey-page .journey-digital__figure--hires {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #ffffff;
+  padding: 0;
+  border: none;
+}
+
+#main .journey-page .journey-digital__figure--hires .journey-digital__img {
+  display: block;
+  width: 1600px;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: #ffffff;
+  image-rendering: auto;
+}
+
+/* Show at layout width 1024px while loading the 2× pixel file — matches
+   “source preview” clarity on HiDPI screens (same trick as Domain Knowledge). */
+#main .journey-page .journey-digital__figure--native {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #ffffff;
+}
+
+#main .journey-page .journey-digital__figure--native .journey-digital__img {
+  display: block;
+  width: 1024px;
+  max-width: none;
+  height: auto;
+  margin: 0 auto;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: #ffffff;
+  image-rendering: auto;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+#main .journey-page .zoomable-image {
+  cursor: zoom-in;
+}
+
+/* Journey click-to-zoom viewer (same behaviour as domain knowledge) */
+.journey-page .img-zoom-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 12, 18, 0.9);
+  z-index: 1200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s ease;
+}
+
+.journey-page .img-zoom-modal.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.journey-page .img-zoom-dialog {
+  position: absolute;
+  inset: 14px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 10px;
+}
+
+.journey-page .img-zoom-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #dce7ef;
+  font-size: 12px;
+}
+
+.journey-page .img-zoom-close {
+  appearance: none;
+  border: 1px solid rgba(220, 231, 239, 0.35);
+  background: transparent;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.journey-page .img-zoom-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.journey-page .img-zoom-stage {
+  overflow: auto;
+  background: #ffffff;
+  border: none;
+  border-radius: 0;
+  padding: 8px;
+}
+
+.journey-page .img-zoom-stage img {
+  display: block;
+  width: auto;
+  max-width: none;
+  height: auto;
+  margin: 0 auto;
+  border: none;
+  box-shadow: none;
+  background: #ffffff;
+}
+
+.journey-page .img-zoom-stage img.is-boosted {
+  image-rendering: auto;
+}
+
+@media (max-width: 720px) {
+  .journey-page .img-zoom-dialog {
+    inset: 8px;
+  }
+}
+
 /* ——— Freeport story — CSS horizontal journey timeline (Hexaware colors) ——— */
 .freeport-ht {
   margin: 0 0 8px;

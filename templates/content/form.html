@@ -7,7 +7,13 @@
   {% if mode == 'edit' %}
   <p class="meta">Update the summary (or challenge/solution), then optionally <strong>replace the attachment</strong>. For approved items, only administrators can edit; saving keeps the publish status. Authors can revise drafts or returned items and submit again for review.</p>
   {% else %}
-  <p class="meta">Add a knowledge-repository item (KYC, KYA, term of the week, newsletter, case studies, RFP snippets, blogs &amp; whitepapers). Choose <strong>Submit for review</strong> when ready — moderators and admins will be notified to approve it. Use <strong>Save draft</strong> to keep working privately.
+  <p class="meta">
+    {% if current_user and current_user.role in ['admin','moderator'] %}
+    Add a knowledge-repository item (KYC, KYA, term of the week, newsletter, case studies, RFP snippets, blogs &amp; whitepapers).
+    {% else %}
+    Add a knowledge-repository item (newsletter, case studies, RFP snippets, blogs &amp; whitepapers). KYC, KYA, and Term of the week are managed by administrators and moderators.
+    {% endif %}
+    Choose <strong>Submit for review</strong> when ready — moderators and admins will be notified to approve it. Use <strong>Save draft</strong> to keep working privately.
     {% if current_user and current_user.role in ['admin','moderator'] %}
     For programs &amp; projects, use <a href="{{ url_for('projects.project_create') }}">Add program or project</a>.
     {% endif %}

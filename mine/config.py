@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
 _BASE_DIR = Path(__file__).resolve().parent.parent
@@ -35,6 +36,10 @@ def _resolve_path(env_key: str, default: Path) -> str:
 class Config:
     BASE_DIR = _BASE_DIR
     SECRET_KEY = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
+    # Used when "Remember me" is checked on sign-in.
+    PERMANENT_SESSION_LIFETIME = timedelta(
+        days=int(os.environ.get("PERMANENT_SESSION_DAYS", "30"))
+    )
     DATABASE = _resolve_path("DATABASE_PATH", _default_data_path("DATABASE_PATH"))
     UPLOAD_FOLDER = _resolve_path("UPLOAD_FOLDER", _default_data_path("UPLOAD_FOLDER"))
     _team_roster = (os.environ.get("TEAM_ROSTER_XLSX") or "").strip()

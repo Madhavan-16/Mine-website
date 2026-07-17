@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="40" viewBox="0 0 220 40" fill="none" role="img" aria-label="Hexaware and Freeport-McMoRan">
+  <text x="0" y="27" fill="#3C2CDA" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="800" font-style="italic" letter-spacing="0.8">HEXAWARE</text>
+  <rect x="128" y="8" width="1" height="24" fill="#3C2CDA" opacity="0.55"/>
+  <rect x="140" y="6" width="72" height="28" rx="3" fill="#0B0B0B"/>
+  <text x="152" y="26" fill="#4EADE3" font-family="Arial Black, Arial, sans-serif" font-size="16" font-weight="900" letter-spacing="1.2">FMI</text>
+</svg>

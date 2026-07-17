@@ -23,7 +23,7 @@
   <header class="krepo-hero">
     <div class="krepo-hero__copy">
       <nav class="krepo-breadcrumb" aria-label="Breadcrumb">
-        <a href="{{ url_for('main.dashboard') }}">Home</a>
+        <a href="{{ url_for('main.knowledge') if is_guest else url_for('main.dashboard') }}">Home</a>
         <span class="krepo-breadcrumb__sep" aria-hidden="true">›</span>
         {% if landing %}
           <span aria-current="page">Knowledge repository</span>
@@ -55,7 +55,7 @@
         <span class="krepo-stat__value">{{ catalog.total }}</span>
         <span class="krepo-stat__label">{% if landing %}Total items{% else %}Matching{% endif %}</span>
       </div>
-      {% if current_user %}
+      {% if current_user and not is_guest %}
         <a class="btn btn-primary" href="{{ url_for('content.content_create', module=module) if module else url_for('content.content_create') }}">+ Create content</a>
       {% endif %}
       {% if not landing %}

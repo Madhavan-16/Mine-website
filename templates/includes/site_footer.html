@@ -4,7 +4,12 @@
       <div class="site-footer__col">
         <h2 class="site-footer__heading">Quick links</h2>
         <ul class="site-footer__list">
-          {% if current_user %}
+          {% if current_user and is_guest %}
+            <li><a href="{{ url_for('main.knowledge') }}">Knowledge repository</a></li>
+            <li><a href="{{ url_for('main.journey') }}">Freeport–Hexaware Journey</a></li>
+            <li><a href="{{ url_for('main.open_pit_copper_domain') }}">Domain Knowledge</a></li>
+            <li><a href="{{ url_for('reference.fmi_kyc') }}">Know your Customer — Freeport</a></li>
+          {% elif current_user %}
             <li><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
             <li><a href="{{ url_for('main.knowledge') }}">Knowledge repository</a></li>
             <li><a href="{{ url_for('projects.project_list') }}">Programs &amp; projects</a></li>
@@ -21,7 +26,7 @@
         <ul class="site-footer__list">
           <li><a href="{{ url_for('reference.fmi_kyc') }}#kyc-evolution-timeline">Evolution timeline</a></li>
           <li><a href="{{ url_for('reference.fmi_kyc') }}">Know your Customer — Freeport</a></li>
-          {% if current_user %}
+          {% if current_user and not is_guest %}
             <li><a href="{{ url_for('main.welcome') }}">Platform overview</a></li>
             <li><a href="{{ url_for('main.software_tools') }}">Software &amp; tools</a></li>
             {% if current_user.role in ['admin', 'moderator'] %}

@@ -60,6 +60,7 @@ def create_app():
     def inject_nav():
         from mine.auth_utils import load_current_user
         from mine.catalog_modules import MODULE_LABELS, SEARCH_FILTER_MODULES, module_label
+        from mine.guest import is_guest_user
         from mine.services import count_read_notifications, count_unread_notifications, get_user_notifications
 
         user = load_current_user()
@@ -67,7 +68,7 @@ def create_app():
         n_unread = 0
         n_read = 0
         pending_moderation = None
-        if user:
+        if user and not is_guest_user(user):
             uid = user["id"]
             n_unread = count_unread_notifications(uid)
             n_read = count_read_notifications(uid)
@@ -81,6 +82,7 @@ def create_app():
                 )
         return dict(
             current_user=user,
+            is_guest=is_guest_user(user),
             notif_count=n_unread,
             notif_read_count=n_read,
             notifs_recent=notifs,
@@ -90,6 +92,22 @@ def create_app():
             search_filter_modules=SEARCH_FILTER_MODULES,
         )
 
+    @app.before_request
+    def enforce_guest_access():
+        from flask import flash, redirect, request, url_for
+
+        from mine.auth_utils import load_current_user
+        from mine.guest import GUEST_ALLOWED_ENDPOINTS, is_guest_user
+
+        user = load_current_user()
+        if not is_guest_user(user):
+            return None
+        endpoint = request.endpoint or ""
+        if endpoint in GUEST_ALLOWED_ENDPOINTS or endpoint.startswith("static"):
+            return None
+        flash("Guest accounts can only view Knowledge, Domain Knowledge, Journey, and Know your Customer.", "warning")
+        return redirect(url_for("main.knowledge"))
+
     with app.app_context():
         if not Path(app.config["DATABASE"]).exists():
             init_db()
@@ -97,6 +115,12 @@ def create_app():
 
         # Ensure default admin exists whenever the users table is empty (not only on first DB file creation).
         seed_if_empty()
+        try:
+            from mine.guest import ensure_guest_user
+
+            ensure_guest_user()
+        except Exception:
+            app.logger.exception("Guest user ensure failed on startup")
         ensure_attachment_preview_column()
         ensure_attachment_slide_preview_column()
         ensure_notifications_scope()
