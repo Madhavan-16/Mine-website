@@ -1,4 +1,4 @@
-"""Keep content_fts in sync and repair broken external-content indexes."""
+"""Keep content_fts in sync and repair broken indexes/triggers."""
 
 from __future__ import annotations
 
@@ -19,6 +19,8 @@ CREATE VIRTUAL TABLE content_fts USING fts5(
 );
 """
 
+# Use DELETE FROM … WHERE rowid=… — the FTS5 INSERT 'delete' command raises
+# "SQL logic error" on some SQLite builds (observed with 3.43.x on Windows/Azure).
 _TRIGGER_SQL = """
 CREATE TRIGGER IF NOT EXISTS content_ai AFTER INSERT ON content BEGIN
   INSERT INTO content_fts(rowid, title, summary, body, tags)
@@ -32,13 +34,11 @@ CREATE TRIGGER IF NOT EXISTS content_ai AFTER INSERT ON content BEGIN
 END;
 
 CREATE TRIGGER IF NOT EXISTS content_ad AFTER DELETE ON content BEGIN
-  INSERT INTO content_fts(content_fts, rowid, title, summary, body, tags)
-  VALUES('delete', old.id, coalesce(old.title, ''), coalesce(old.summary, ''), coalesce(old.body, ''), '');
+  DELETE FROM content_fts WHERE rowid = old.id;
 END;
 
 CREATE TRIGGER IF NOT EXISTS content_au AFTER UPDATE ON content BEGIN
-  INSERT INTO content_fts(content_fts, rowid, title, summary, body, tags)
-  VALUES('delete', old.id, coalesce(old.title, ''), coalesce(old.summary, ''), coalesce(old.body, ''), '');
+  DELETE FROM content_fts WHERE rowid = old.id;
   INSERT INTO content_fts(rowid, title, summary, body, tags)
   VALUES (
     new.id,
@@ -74,6 +74,41 @@ def _fts_is_broken(db) -> bool:
     return False
 
 
+def _triggers_use_legacy_delete(db) -> bool:
+    """True when content_au still uses the broken INSERT … 'delete' command."""
+    row = db.execute(
+        "SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = 'content_au'"
+    ).fetchone()
+    if not row:
+        return True
+    sql = (row[0] if not isinstance(row, sqlite3.Row) else row["sql"]) or ""
+    return "values('delete'" in sql.lower().replace(" ", "") or "'delete'" in sql.lower()
+
+
+def _fts_update_probe_fails(db) -> bool:
+    """True when updating a content row fails (usually a bad FTS trigger)."""
+    row = db.execute("SELECT id FROM content ORDER BY id LIMIT 1").fetchone()
+    if not row:
+        return False
+    cid = int(row[0])
+    try:
+        db.execute("SAVEPOINT fts_update_probe")
+        db.execute("UPDATE content SET title = title WHERE id = ?", (cid,))
+        db.execute("ROLLBACK TO fts_update_probe")
+        db.execute("RELEASE fts_update_probe")
+        return False
+    except sqlite3.Error:
+        try:
+            db.execute("ROLLBACK TO fts_update_probe")
+        except sqlite3.Error:
+            pass
+        try:
+            db.execute("RELEASE fts_update_probe")
+        except sqlite3.Error:
+            pass
+        return True
+
+
 def rebuild_content_fts(db, content_id: int) -> None:
     """Re-index one content row (call after tag / attachment metadata changes)."""
     row = db.execute(
@@ -84,23 +119,14 @@ def rebuild_content_fts(db, content_id: int) -> None:
         (content_id,),
     ).fetchone()
     try:
+        db.execute("DELETE FROM content_fts WHERE rowid = ?", (content_id,))
         if not row:
-            db.execute(
-                "INSERT INTO content_fts(content_fts, rowid, title, summary, body, tags) "
-                "VALUES('delete', ?, '', '', '', '')",
-                (content_id,),
-            )
             return
         tags = db.execute(
             "SELECT coalesce(group_concat(meta_value, ' '), '') FROM content_meta "
             "WHERE content_id = ? AND meta_key = 'tag'",
             (content_id,),
         ).fetchone()[0]
-        db.execute(
-            "INSERT INTO content_fts(content_fts, rowid, title, summary, body, tags) "
-            "VALUES('delete', ?, '', '', '', '')",
-            (content_id,),
-        )
         db.execute(
             "INSERT INTO content_fts(rowid, title, summary, body, tags) VALUES (?, ?, ?, ?, ?)",
             (row[0], row[1], row[2], row[3], tags or ""),
@@ -111,6 +137,14 @@ def rebuild_content_fts(db, content_id: int) -> None:
 
 def rebuild_all_content_fts(db) -> int:
     """Re-index every content row. Returns number of rows indexed."""
+    try:
+        db.execute("DELETE FROM content_fts")
+    except sqlite3.Error:
+        # Fallback if DELETE FROM is unsupported on a broken index
+        try:
+            db.execute("INSERT INTO content_fts(content_fts) VALUES('delete-all')")
+        except sqlite3.Error:
+            pass
     rows = db.execute(
         "SELECT id, coalesce(title,''), coalesce(summary,''), coalesce(body,'') FROM content"
     ).fetchall()
@@ -122,14 +156,6 @@ def rebuild_all_content_fts(db) -> int:
             "WHERE content_id = ? AND meta_key = 'tag'",
             (cid,),
         ).fetchone()[0]
-        try:
-            db.execute(
-                "INSERT INTO content_fts(content_fts, rowid, title, summary, body, tags) "
-                "VALUES('delete', ?, '', '', '', '')",
-                (cid,),
-            )
-        except sqlite3.Error:
-            pass
         db.execute(
             "INSERT INTO content_fts(rowid, title, summary, body, tags) VALUES (?, ?, ?, ?, ?)",
             (cid, row[1], row[2], row[3], tags or ""),
@@ -138,16 +164,26 @@ def rebuild_all_content_fts(db) -> int:
     return n
 
 
+def _install_fts_triggers(db) -> None:
+    db.execute("DROP TRIGGER IF EXISTS content_ai")
+    db.execute("DROP TRIGGER IF EXISTS content_ad")
+    db.execute("DROP TRIGGER IF EXISTS content_au")
+    db.executescript(_TRIGGER_SQL)
+
+
 def ensure_content_fts(db) -> None:
     """
-    Ensure content_fts is a healthy standalone index and rebuild if needed.
+    Ensure content_fts is a healthy standalone index with working UPDATE triggers.
     Safe to call on every app startup.
     """
     needs_rebuild = False
+
     if _fts_is_broken(db):
         logger.warning("Repairing content_fts full-text index (broken or external-content schema)")
+        db.execute("DROP TRIGGER IF EXISTS content_ai")
+        db.execute("DROP TRIGGER IF EXISTS content_ad")
+        db.execute("DROP TRIGGER IF EXISTS content_au")
         db.execute("DROP TABLE IF EXISTS content_fts")
-        # Drop orphaned fts5 shadow tables if any linger with old names
         for name in (
             "content_fts_data",
             "content_fts_idx",
@@ -159,14 +195,20 @@ def ensure_content_fts(db) -> None:
                 db.execute(f"DROP TABLE IF EXISTS {name}")
             except sqlite3.Error:
                 pass
+        db.executescript(_FTS_CREATE_SQL)
+        needs_rebuild = True
+
+    # Replace legacy INSERT … 'delete' triggers (they 500 on approve/update).
+    if _triggers_use_legacy_delete(db) or _fts_update_probe_fails(db):
+        logger.warning("Repairing content_fts triggers so content UPDATE/approve works")
         db.execute("DROP TRIGGER IF EXISTS content_ai")
         db.execute("DROP TRIGGER IF EXISTS content_ad")
         db.execute("DROP TRIGGER IF EXISTS content_au")
-        db.executescript(_FTS_CREATE_SQL)
-        db.executescript(_TRIGGER_SQL)
         needs_rebuild = True
-    else:
-        # Index may be empty after bulk imports that skipped triggers
+
+    _install_fts_triggers(db)
+
+    if not needs_rebuild:
         try:
             fts_n = int(db.execute("SELECT COUNT(*) AS c FROM content_fts").fetchone()[0] or 0)
             content_n = int(db.execute("SELECT COUNT(*) AS c FROM content").fetchone()[0] or 0)
@@ -175,7 +217,20 @@ def ensure_content_fts(db) -> None:
         except sqlite3.Error:
             needs_rebuild = True
 
+    # Final probe with new triggers installed
+    if _fts_update_probe_fails(db):
+        logger.warning("content UPDATE still failing — rebuilding content_fts from scratch")
+        db.execute("DROP TRIGGER IF EXISTS content_ai")
+        db.execute("DROP TRIGGER IF EXISTS content_ad")
+        db.execute("DROP TRIGGER IF EXISTS content_au")
+        db.execute("DROP TABLE IF EXISTS content_fts")
+        db.executescript(_FTS_CREATE_SQL)
+        _install_fts_triggers(db)
+        needs_rebuild = True
+
     if needs_rebuild:
         n = rebuild_all_content_fts(db)
         db.commit()
         logger.info("content_fts rebuilt for %s content row(s)", n)
+    else:
+        db.commit()

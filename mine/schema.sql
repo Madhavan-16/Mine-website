@@ -138,13 +138,11 @@ CREATE TRIGGER IF NOT EXISTS content_ai AFTER INSERT ON content BEGIN
 END;
 
 CREATE TRIGGER IF NOT EXISTS content_ad AFTER DELETE ON content BEGIN
-  INSERT INTO content_fts(content_fts, rowid, title, summary, body, tags)
-  VALUES('delete', old.id, old.title, old.summary, old.body, '');
+  DELETE FROM content_fts WHERE rowid = old.id;
 END;
 
 CREATE TRIGGER IF NOT EXISTS content_au AFTER UPDATE ON content BEGIN
-  INSERT INTO content_fts(content_fts, rowid, title, summary, body, tags)
-  VALUES('delete', old.id, old.title, old.summary, old.body, '');
+  DELETE FROM content_fts WHERE rowid = old.id;
   INSERT INTO content_fts(rowid, title, summary, body, tags)
   VALUES (
     new.id,

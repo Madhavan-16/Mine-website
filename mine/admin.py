@@ -182,10 +182,30 @@ def approve(cid: int):
     from datetime import datetime, timezone
 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-    db.execute(
-        "UPDATE content SET status = 'approved', updated_at = ? WHERE id = ? AND lower(trim(COALESCE(status, ''))) = 'pending'",
-        (now, cid),
-    )
+    try:
+        db.execute(
+            "UPDATE content SET status = 'approved', updated_at = ? WHERE id = ? AND lower(trim(COALESCE(status, ''))) = 'pending'",
+            (now, cid),
+        )
+    except Exception:
+        # Legacy FTS5 triggers use INSERT … 'delete', which 500s on UPDATE (approve).
+        current_app.logger.exception("Approve UPDATE failed for #%s — repairing content_fts and retrying", cid)
+        try:
+            from mine.fts import ensure_content_fts
+
+            ensure_content_fts(db)
+            db.execute(
+                "UPDATE content SET status = 'approved', updated_at = ? WHERE id = ? AND lower(trim(COALESCE(status, ''))) = 'pending'",
+                (now, cid),
+            )
+        except Exception:
+            current_app.logger.exception("Approve still failed after FTS repair for #%s", cid)
+            flash(
+                "Could not approve — a search-index repair is required. Restart the app once, then try again.",
+                "danger",
+            )
+            return _safe_post_redirect("admin.moderation")
+
     check = db.execute("SELECT status FROM content WHERE id = ?", (cid,)).fetchone()
     if not check or (check["status"] or "").strip().lower() != "approved":
         flash("Could not approve — the item may have already been decided. Refresh and retry.", "warning")
@@ -250,10 +270,28 @@ def reject(cid: int):
     from datetime import datetime, timezone
 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-    db.execute(
-        "UPDATE content SET status = 'rejected', updated_at = ? WHERE id = ?",
-        (now, cid),
-    )
+    try:
+        db.execute(
+            "UPDATE content SET status = 'rejected', updated_at = ? WHERE id = ?",
+            (now, cid),
+        )
+    except Exception:
+        current_app.logger.exception("Reject UPDATE failed for #%s — repairing content_fts and retrying", cid)
+        try:
+            from mine.fts import ensure_content_fts
+
+            ensure_content_fts(db)
+            db.execute(
+                "UPDATE content SET status = 'rejected', updated_at = ? WHERE id = ?",
+                (now, cid),
+            )
+        except Exception:
+            current_app.logger.exception("Reject still failed after FTS repair for #%s", cid)
+            flash(
+                "Could not reject — a search-index repair is required. Restart the app once, then try again.",
+                "danger",
+            )
+            return _safe_post_redirect("admin.moderation")
     moderation_entry(cid, user["id"], "reject", note)
     log_audit(user["id"], "moderation_reject", "content", cid, note)
     msg = f"Your submission needs changes: #{cid} — {row['title']}"
