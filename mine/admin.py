@@ -168,24 +168,67 @@ def approve(cid: int):
     user = load_current_user()
     db = get_db()
     row = db.execute("SELECT * FROM content WHERE id = ?", (cid,)).fetchone()
-    if not row or (row["status"] or "").strip().lower() != "pending":
-        abort(404)
+    status = (row["status"] or "").strip().lower() if row else ""
+    if not row:
+        flash("That submission no longer exists.", "danger")
+        return _safe_post_redirect("admin.moderation")
+    if status != "pending":
+        flash(
+            f"“{row['title']}” is not pending (current status: {status or 'unknown'}). Refresh the queue and try again.",
+            "warning",
+        )
+        return redirect(url_for("content.content_view", cid=cid))
+
+    from datetime import datetime, timezone
+
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     db.execute(
-        "UPDATE content SET status = 'approved', updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-        (cid,),
+        "UPDATE content SET status = 'approved', updated_at = ? WHERE id = ? AND lower(trim(COALESCE(status, ''))) = 'pending'",
+        (now, cid),
     )
+    check = db.execute("SELECT status FROM content WHERE id = ?", (cid,)).fetchone()
+    if not check or (check["status"] or "").strip().lower() != "approved":
+        flash("Could not approve — the item may have already been decided. Refresh and retry.", "warning")
+        return redirect(url_for("content.content_view", cid=cid))
+
     moderation_entry(cid, user["id"], "approve", None)
     log_audit(user["id"], "moderation_approve", "content", cid, None)
     notify(row["author_id"], f"Your submission was approved: #{cid} — {row['title']}")
-    db.commit()
     try:
-        from mine.knowledge_persist import sync_knowledge_item_to_persist
+        from mine.fts import rebuild_content_fts
 
-        sync_knowledge_item_to_persist(current_app._get_current_object(), cid)
+        rebuild_content_fts(db, cid)
+    except Exception:
+        current_app.logger.exception("FTS rebuild failed after approve #%s", cid)
+    db.commit()
+
+    try:
+        from mine.knowledge_persist import (
+            is_knowledge_module,
+            knowledge_persist_enabled,
+            sync_knowledge_item_to_persist,
+        )
+
+        if is_knowledge_module(row["module"]) and knowledge_persist_enabled():
+            if sync_knowledge_item_to_persist(current_app._get_current_object(), cid):
+                flash(f"“{row['title']}” approved and published to the knowledge catalogue.", "success")
+            else:
+                flash(
+                    f"“{row['title']}” approved on this site. Durable knowledge mirror sync did not confirm — "
+                    "check Azure logs if the item disappears after the next deploy.",
+                    "warning",
+                )
+        else:
+            flash(f"“{row['title']}” approved and published to the catalogue.", "success")
     except Exception:
         current_app.logger.exception("Knowledge persist sync failed after approve #%s", cid)
-    flash(f"“{row['title']}” approved and published to the catalogue.", "success")
-    return _safe_post_redirect("admin.moderation")
+        flash(
+            f"“{row['title']}” approved on this site, but knowledge mirror sync failed. Check server logs.",
+            "warning",
+        )
+
+    # Show the published record so approve result is obvious on the website.
+    return redirect(url_for("content.content_view", cid=cid))
 
 
 @bp.route("/reject/<int:cid>", methods=["POST"])
@@ -199,12 +242,17 @@ def reject(cid: int):
         return _safe_post_redirect("admin.moderation")
     db = get_db()
     row = db.execute("SELECT * FROM content WHERE id = ?", (cid,)).fetchone()
-    if not row or (row["status"] or "").strip().lower() != "pending":
-        abort(404)
+    status = (row["status"] or "").strip().lower() if row else ""
+    if not row or status != "pending":
+        flash("That submission is not pending review.", "warning")
+        return _safe_post_redirect("admin.moderation")
     note = (form.note.data or "").strip()
+    from datetime import datetime, timezone
+
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     db.execute(
-        "UPDATE content SET status = 'rejected', updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-        (cid,),
+        "UPDATE content SET status = 'rejected', updated_at = ? WHERE id = ?",
+        (now, cid),
     )
     moderation_entry(cid, user["id"], "reject", note)
     log_audit(user["id"], "moderation_reject", "content", cid, note)
@@ -212,11 +260,18 @@ def reject(cid: int):
     if note:
         msg += f" — Note: {note}"
     notify(row["author_id"], msg)
+    try:
+        from mine.fts import rebuild_content_fts
+
+        rebuild_content_fts(db, cid)
+    except Exception:
+        current_app.logger.exception("FTS rebuild failed after reject #%s", cid)
     db.commit()
     try:
-        from mine.knowledge_persist import sync_knowledge_item_to_persist
+        from mine.knowledge_persist import is_knowledge_module, sync_knowledge_item_to_persist
 
-        sync_knowledge_item_to_persist(current_app._get_current_object(), cid)
+        if is_knowledge_module(row["module"]):
+            sync_knowledge_item_to_persist(current_app._get_current_object(), cid)
     except Exception:
         current_app.logger.exception("Knowledge persist sync failed after reject #%s", cid)
     flash(f"“{row['title']}” returned to the author with feedback.", "info")

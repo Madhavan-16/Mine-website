@@ -7,123 +7,84 @@ Your MiNe app URL (example):
 
 | What | How it updates |
 |------|----------------|
-| UI, CSS/JS, images, journey assets, projects config, users, non-knowledge content | **Local → git push only** (wwwroot) |
-| Knowledge repository artefacts (KYC, KYA, term of the week, newsletter, case studies, RFP snippets, blogs & files) | **Both ways** — local push *and* durable mirror of website uploads |
+| UI, CSS/JS, images, text boxes, journey assets, projects config, users, non-knowledge content | **Local → git push only** (wwwroot) |
+| Knowledge repository artefacts (KYC, KYA, term of the week, newsletter, case studies, RFP snippets, blogs & files) | **Website only** — create, edit, approve/reject on the live portal |
 
-Live catalogue paths on Azure:
+Live paths on Azure:
 
 | Item | Path |
 |------|------|
-| Database | `/home/site/wwwroot/mine.db` |
-| Uploads | `/home/site/wwwroot/uploads/` |
-| Knowledge mirror (Azure only) | `/home/data/mine/knowledge/` |
+| Database (UI + non-knowledge) | `/home/site/wwwroot/mine.db` |
+| Uploads (non-knowledge + mirrored knowledge files) | `/home/site/wwwroot/uploads/` |
+| Knowledge mirror (durable) | `/home/data/mine/knowledge/` |
 
-Website knowledge uploads are mirrored under `/home/data/mine/knowledge` and merged back into wwwroot after each deploy so they are not wiped by a UI-only push.
+Website knowledge uploads and approvals are mirrored under `/home/data/mine/knowledge`. After every deploy/restart, that mirror is merged into wwwroot so a UI-only git push cannot wipe knowledge.
+
+**Do not rely on pushing local `mine.db` / `uploads/` for knowledge series.** Knowledge is managed on the website.
 
 ---
 
-## Local upload → Azure deploy workflow
+## Website knowledge workflow
 
-### 1. Create content locally
+1. Sign in on Azure → **Create content** → choose a knowledge series → **Submit for review**
+2. Moderator/admin opens the item → **Approve & publish** (or return with feedback)
+3. Approved items appear in **Knowledge repository** and stay durable via `/home/data/mine/knowledge`
 
-1. Run `python run.py` and open `http://127.0.0.1:5000`
-2. Sign in → create / edit content and assets as usual
+Edit knowledge on the website (admin for approved items). Attachments follow the same path.
 
-Data is saved to:
+---
 
-| Item | Local path |
-|------|------------|
-| Database | `mine.db` (project root) |
-| Attachments | `uploads/` |
-
-### 2. Commit and push (code + any catalogue data you want on Azure)
+## Local git push (UI / assets only)
 
 ```powershell
 cd c:\Users\2000137443\Desktop\MiNe
-git add mine.db uploads/
+git add static/ templates/ mine/ docs/
 git status
-git commit -m "Add catalogue / attachments"
+git commit -m "UI / portal updates"
 git push origin main
 ```
 
-GitHub Actions deploys to `/home/site/wwwroot/`. That is the live source of truth for UI and non-knowledge content.
-
-### 3. Verify on Azure
-
-1. Open `/knowledge` (sign in if prompted)
-2. Confirm records and **Download original**
+Avoid committing knowledge-only changes from a local `mine.db` unless you intend to seed non-knowledge data. After deploy, startup merges the knowledge mirror into live so website knowledge remains.
 
 ---
 
-## Azure portal settings
+## Azure settings
 
-**Configuration → Application settings**
-
-| Name | Value |
-|------|--------|
-| `FLASK_SECRET_KEY` | Long random secret (keep stable across deploys) |
+| Setting | Value |
+|---------|--------|
 | `MINE_KNOWLEDGE_PERSIST` | `1` (default) |
 | `MINE_KNOWLEDGE_PERSIST_ROOT` | `/home/data/mine/knowledge` |
 
-**Do not set** `DATABASE_PATH` or `UPLOAD_FOLDER` to `/home/data/mine`. Those legacy settings are ignored; the live site uses the git-deployed wwwroot DB/uploads.
+**Do not set** `DATABASE_PATH` or `UPLOAD_FOLDER` to `/home/data/mine`. Those legacy settings are ignored; the live site uses wwwroot plus the knowledge mirror.
 
-**One-time fix (Azure Cloud Shell):** `bash scripts/azure_fix_portal.sh`
+Run once after deploy if needed:
 
-**General settings → Startup Command:**
-
-```
-bash startup.sh
+```bash
+bash scripts/azure_fix_portal.sh
 ```
 
 ---
 
-## What gets deployed
-
-| Included in git deploy | Path on Azure |
-|------------------------|---------------|
-| `mine.db` | `/home/site/wwwroot/mine.db` |
-| `uploads/*` (except `.slide_previews/`) | `/home/site/wwwroot/uploads/` |
-| Application code / static images / UI | `/home/site/wwwroot/` |
-
-| Durable outside git | Notes |
-|---------------------|--------|
-| `/home/data/mine/knowledge/` | Knowledge artefacts uploaded on the website; merged into wwwroot on startup |
-| `.env` / secrets | Use Azure Application settings |
-| `uploads/.slide_previews/` | Regenerated on first preview view |
-
----
-
-## Deploy workflow
+## Flow diagram
 
 ```
-Local UI / assets / non-knowledge content
-        ↓ git push
-   Azure wwwroot (source of truth)
-
-Knowledge on website  ↔  /home/data/mine/knowledge  ↔  wwwroot after deploy
-Knowledge on local    →  git push mine.db + uploads (and/or merge tool)
+Local UI / images / code  →  git push  →  /home/site/wwwroot/
+Knowledge on website      ↔  /home/data/mine/knowledge  →  merged into wwwroot on startup
 ```
 
 | Action | Result |
 |--------|--------|
-| Push UI / images / code | Website UI updates; knowledge mirror preserved |
-| Upload knowledge on Azure | Survives next deploy (knowledge mirror) |
-| Upload knowledge locally + push `mine.db` / `uploads/` | Appears on Azure |
-| Push without `mine.db` / `uploads/` | Code/UI only; existing wwwroot catalogue unchanged until next data push |
-
-Optional: `python tools/merge_catalog_into.py --modules knowledge --help`
+| Push UI / images / code | Website UI updates; knowledge mirror preserved and re-applied |
+| Upload + approve knowledge on Azure | Published on site and durable across deploys |
+| Push local `mine.db` with old knowledge | Overwritten on startup by website knowledge mirror |
 
 ---
 
 ## Troubleshooting
 
-| Symptom | Likely cause |
-|---------|----------------|
-| UI not updating | Code not pushed / Actions failed |
-| Case studies missing after deploy | Forgot `git add mine.db uploads/` *and* no knowledge mirror yet |
-| Still reading old `/home/data` catalogue | Run `scripts/azure_fix_portal.sh` to clear legacy `DATABASE_PATH` |
-| Download original 404 | File missing from `uploads/` in git (or knowledge mirror for Azure-only uploads) |
-
-**Log stream:** App Service → **Monitoring → Log stream**
-
-See also: [azure-portal-checklist.md](azure-portal-checklist.md) · [README.md](../README.md)
+| Symptom | Check |
+|---------|--------|
+| Approve seems to do nothing | Hard-refresh; you should land on the item without PENDING. Confirm role is admin/moderator |
+| Approved item missing after deploy | Kudu → `/home/data/mine/knowledge/` has `knowledge.db`; app logs for “Knowledge persist” |
+| Download 404 for knowledge file | File should exist under `/home/data/mine/knowledge/uploads/` and be copied into wwwroot `uploads/` |
+| CSRF / 400 on Approve | Sign out/in and retry; ensure cookies work on the Azure hostname |

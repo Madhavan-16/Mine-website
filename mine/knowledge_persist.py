@@ -3,11 +3,13 @@ Knowledge-artefact persistence on Azure App Service.
 
 Policy
 ------
-- UI, static images, projects config, users, and non-knowledge content come from
-  the git deploy (wwwroot). Local push is the source of truth for those.
-- Knowledge-repository series (KYC, KYA, term of the week, newsletter, case
-  studies, RFP snippets, blogs) are bidirectional: website uploads are mirrored
-  under /home/data/mine/knowledge and re-merged into live wwwroot after each deploy.
+- UI, CSS/JS, static images, text/layout, projects config, and non-knowledge
+  content come from local git push (wwwroot).
+- Knowledge-repository artefacts (KYC, KYA, term of the week, newsletter,
+  case studies, RFP snippets, blogs + attachments) are **website-primary**:
+  create / edit / approve / reject on the live site. They are mirrored under
+  /home/data/mine/knowledge and merged back into wwwroot after every deploy
+  so git pushes cannot wipe website knowledge.
 """
 
 from __future__ import annotations
@@ -16,6 +18,7 @@ import logging
 import os
 import shutil
 import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 
 from mine.catalog_modules import KNOWLEDGE_SERIES_MODULE_KEYS
@@ -53,6 +56,10 @@ def knowledge_persist_uploads_path() -> Path:
 
 def is_knowledge_module(module: str | None) -> bool:
     return (module or "").strip() in KNOWLEDGE_SERIES_MODULE_KEYS
+
+
+def utc_now_iso() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def _connect(path: Path) -> sqlite3.Connection:
@@ -316,7 +323,7 @@ def _upsert_knowledge_row(
             (
                 row["summary"],
                 row["body"],
-                row["status"] or existing["status"],
+                (row["status"] or existing["status"] or "draft"),
                 author_id,
                 row["updated_at"] or existing["updated_at"],
                 dest_cid,
@@ -418,12 +425,13 @@ def seed_knowledge_mirror_from_legacy_full_store() -> None:
 
 
 def merge_knowledge_persist_into_live(app) -> dict:
-    """After git deploy, restore website knowledge artefacts into wwwroot live DB."""
+    """Restore website knowledge into wwwroot. Persist store always wins for knowledge series."""
     if not knowledge_persist_enabled():
         return {"enabled": False}
 
     ensure_knowledge_persist_dirs()
     seed_knowledge_mirror_from_legacy_full_store()
+    seed_knowledge_mirror_from_live_if_empty(app)
 
     mirror_db = knowledge_persist_db_path()
     if not mirror_db.is_file() or mirror_db.stat().st_size == 0:
@@ -443,6 +451,7 @@ def merge_knowledge_persist_into_live(app) -> dict:
             mods,
         ).fetchall()
         for row in rows:
+            # Website persist is the source of truth — always apply into live.
             action, n_files = _upsert_knowledge_row(
                 src=src,
                 dest=dest,
@@ -450,7 +459,7 @@ def merge_knowledge_persist_into_live(app) -> dict:
                 source_uploads=knowledge_persist_uploads_path(),
                 target_uploads=live_uploads,
                 source_base=mirror_db.parent,
-                overwrite_existing=False,
+                overwrite_existing=True,
             )
             files_copied += n_files
             if action == "created":
@@ -490,10 +499,58 @@ def merge_knowledge_persist_into_live(app) -> dict:
     }
 
 
-def sync_knowledge_item_to_persist(app, content_id: int) -> None:
-    """Mirror one live knowledge record into the durable store (create/update)."""
+def seed_knowledge_mirror_from_live_if_empty(app) -> None:
+    """If the durable mirror is empty, capture current live knowledge so it is not lost on the next deploy."""
     if not knowledge_persist_enabled():
         return
+    mirror_db = knowledge_persist_db_path()
+    ensure_knowledge_persist_dirs()
+    with _connect(mirror_db) as conn:
+        n = conn.execute(
+            f"SELECT COUNT(*) AS c FROM content WHERE module IN ({','.join('?' * len(KNOWLEDGE_SERIES_MODULE_KEYS))})",
+            tuple(KNOWLEDGE_SERIES_MODULE_KEYS),
+        ).fetchone()["c"]
+        if n:
+            return
+
+    live_db = Path(app.config["DATABASE"])
+    if not live_db.is_file():
+        return
+    live_uploads = Path(app.config["UPLOAD_FOLDER"])
+    src = _connect(live_db)
+    dest = _connect(mirror_db)
+    try:
+        _ensure_mirror_schema(dest)
+        ph, mods = _module_placeholders()
+        rows = src.execute(
+            f"SELECT * FROM content WHERE module IN ({ph}) ORDER BY id",
+            mods,
+        ).fetchall()
+        created = 0
+        for row in rows:
+            action, _ = _upsert_knowledge_row(
+                src=src,
+                dest=dest,
+                row=row,
+                source_uploads=live_uploads,
+                target_uploads=knowledge_persist_uploads_path(),
+                source_base=live_db.parent,
+                overwrite_existing=True,
+            )
+            if action == "created":
+                created += 1
+        dest.commit()
+        if created:
+            logger.info("Seeded knowledge mirror with %s item(s) from live wwwroot", created)
+    finally:
+        src.close()
+        dest.close()
+
+
+def sync_knowledge_item_to_persist(app, content_id: int) -> bool:
+    """Mirror one live knowledge record into the durable store. Returns True on success."""
+    if not knowledge_persist_enabled():
+        return False
 
     ensure_knowledge_persist_dirs()
     live_db = Path(app.config["DATABASE"])
@@ -504,7 +561,7 @@ def sync_knowledge_item_to_persist(app, content_id: int) -> None:
         _ensure_mirror_schema(dest)
         row = src.execute("SELECT * FROM content WHERE id = ?", (content_id,)).fetchone()
         if not row or not is_knowledge_module(row["module"]):
-            return
+            return False
         _upsert_knowledge_row(
             src=src,
             dest=dest,
@@ -515,8 +572,10 @@ def sync_knowledge_item_to_persist(app, content_id: int) -> None:
             overwrite_existing=True,
         )
         dest.commit()
+        return True
     except Exception:
         logger.exception("Failed syncing knowledge content #%s to persist store", content_id)
+        return False
     finally:
         src.close()
         dest.close()

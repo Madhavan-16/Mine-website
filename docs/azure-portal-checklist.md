@@ -6,8 +6,8 @@ App: `mine-ffffhrdahfdhdcbx.centralindia-01.azurewebsites.net` · App Service na
 
 ## Data policy
 
-- **UI / images / other content** → update from **local git push** only (`wwwroot`)
-- **Knowledge artefacts** → **both ways** (git push + durable mirror at `/home/data/mine/knowledge`)
+- **UI / images / text / layout / non-knowledge** → update from **local git push** only (`wwwroot`)
+- **Knowledge artefacts** → **website only** (create / approve / edit on Azure; durable mirror at `/home/data/mine/knowledge`)
 
 ---
 
@@ -56,11 +56,11 @@ This removes legacy `DATABASE_PATH` / `UPLOAD_FOLDER`, enables the knowledge mir
 
 ## After deploy checklist
 
-- [ ] Home / journey / projects UI matches local
+- [ ] Home / journey / projects UI matches local git push
 - [ ] Static images and journey assets match local push
-- [ ] `/knowledge` shows local knowledge **and** any items uploaded on the website
-- [ ] Download original works for knowledge attachments
-- [ ] Kudu → `/home/site/wwwroot/` has latest `mine.db` / `uploads/` from git
-- [ ] Kudu → `/home/data/mine/knowledge/` exists after a website knowledge upload
+- [ ] Create knowledge on website → Submit for review → Approve & publish works
+- [ ] Approved item appears under Knowledge repository (PENDING badge gone)
+- [ ] Kudu → `/home/data/mine/knowledge/` has `knowledge.db` after website knowledge upload/approve
+- [ ] After a UI-only git push + restart, website knowledge is still present
 
 Full guide: [azure-deploy.md](azure-deploy.md)
