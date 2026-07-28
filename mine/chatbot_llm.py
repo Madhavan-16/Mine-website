@@ -42,8 +42,11 @@ _DEFAULT_GROQ_MODELS = (
 )
 
 
-def _clean_secret(value: str | None) -> str:
-    v = (value or "").strip()
+def _clean_secret(value: Any) -> str:
+    if value is None:
+        return ""
+    # App config may hold non-strings (e.g. CHATBOT_LLM_TIMEOUT as float).
+    v = str(value).strip()
     if len(v) >= 2 and v[0] == v[-1] and v[0] in {'"', "'"}:
         v = v[1:-1].strip()
     # Azure portal paste sometimes adds zero-width / BOM characters.
