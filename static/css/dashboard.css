@@ -73,6 +73,26 @@
   margin-top: 4px;
 }
 
+.dashboard-chat-promo {
+  margin-top: 0;
+}
+
+.dashboard-chat-promo__card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid rgba(0, 174, 240, 0.28);
+  background: linear-gradient(135deg, #f0faff 0%, #ffffff 55%);
+}
+
+.dashboard-chat-promo__copy {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
 .dashboard-pill-alert {
   border-color: rgba(245, 166, 35, 0.45);
   background: rgba(245, 166, 35, 0.08);

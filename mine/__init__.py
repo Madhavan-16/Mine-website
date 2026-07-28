@@ -41,7 +41,7 @@ def create_app():
     csrf.init_app(app)
     app.jinja_env.globals["csrf_token"] = generate_csrf
 
-    from mine import admin, auth, content, main, projects, reference, repo_standalone, search
+    from mine import admin, auth, chatbot, content, main, projects, reference, repo_standalone, search
 
     app.register_blueprint(auth.bp)
     app.register_blueprint(reference.bp)
@@ -51,6 +51,7 @@ def create_app():
     app.register_blueprint(projects.bp)
     app.register_blueprint(search.bp)
     app.register_blueprint(admin.bp)
+    app.register_blueprint(chatbot.bp)
     if app.config.get("MS_GRAPH_ENABLED"):
         from mine import mailbox
 

@@ -132,9 +132,9 @@ def _count_rows(db, *, from_clause: str, where_sql: str, args: list) -> int:
 
 
 def _order_sql(sort_key: str, *, fts: bool) -> str:
-    if sort_key == "relevance" and fts:
-        return "rank ASC"
-    return CATALOG_SORT_SQL[sort_key]
+    if sort_key == "relevance":
+        return "rank ASC" if fts else CATALOG_SORT_SQL["recent"]
+    return CATALOG_SORT_SQL.get(sort_key, CATALOG_SORT_SQL["recent"])
 
 
 def query_catalog(

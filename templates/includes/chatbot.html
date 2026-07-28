@@ -1,0 +1,36 @@
+{% if current_user and config.get('CHATBOT_ENABLED', True) and not _is_auth_page and (request.endpoint or '') != 'main.landing' %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=6" />
+<div
+  id="mine-chatbot"
+  class="mine-chat"
+  data-endpoint="{{ url_for('chatbot.chat') }}"
+  data-csrf="{{ csrf_token() }}"
+  {% if request.endpoint == 'main.dashboard' %}data-auto-open="1"{% endif %}
+>
+  <button type="button" class="mine-chat__launcher" id="mine-chat-open" aria-expanded="false" aria-controls="mine-chat-panel">
+    <span class="mine-chat__launcher-icon" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
+    </span>
+    <span class="mine-chat__launcher-label">Ask MiNe</span>
+  </button>
+
+  <section class="mine-chat__panel is-closed" id="mine-chat-panel" role="dialog" aria-labelledby="mine-chat-title" aria-modal="false" hidden>
+    <header class="mine-chat__header">
+      <div class="mine-chat__header-copy">
+        <h2 class="mine-chat__title" id="mine-chat-title">Ask MiNe</h2>
+        <p class="mine-chat__subtitle">MiNe knowledge · AI assistant (Groq / Gemini)</p>
+      </div>
+      <button type="button" class="mine-chat__close" id="mine-chat-close" aria-label="Close chat" title="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </header>
+    <div class="mine-chat__messages" id="mine-chat-messages" aria-live="polite"></div>
+    <form class="mine-chat__form" id="mine-chat-form">
+      <label class="visually-hidden" for="mine-chat-input">Your question</label>
+      <input id="mine-chat-input" class="mine-chat__input" type="text" maxlength="500" autocomplete="off" placeholder="Ask me anything…" />
+      <button class="btn btn-primary mine-chat__send" type="submit">Send</button>
+    </form>
+  </section>
+</div>
+<script src="{{ url_for('static', filename='js/chatbot.js') }}?v=6" defer></script>
+{% endif %}

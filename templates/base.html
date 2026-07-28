@@ -374,6 +374,8 @@
 
     {% include "includes/site_footer.html" %}
 
+    {% include "includes/chatbot.html" %}
+
     {% if (request.endpoint or '') not in ('main.landing', 'main.welcome') and not _is_auth_page %}
     <script src="{{ url_for('static', filename='js/motion-init.js') }}" defer></script>
     <script src="{{ url_for('static', filename='vendor/aos/aos.js') }}" defer></script>

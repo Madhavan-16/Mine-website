@@ -1,0 +1,243 @@
+/* MiNe knowledge chatbot — floating widget */
+.mine-chat {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1200;
+  font-family: inherit;
+}
+
+.mine-chat__launcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--hex-blue, #00aef0);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 80, 120, 0.28);
+}
+
+.mine-chat__launcher:hover {
+  background: var(--hex-blue-hover, #0095ce);
+}
+
+.mine-chat__launcher-icon {
+  display: inline-flex;
+}
+
+.mine-chat__panel {
+  position: absolute;
+  right: 0;
+  bottom: 56px;
+  width: min(380px, calc(100vw - 32px));
+  height: min(520px, calc(100vh - 120px));
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid var(--hex-grey-200, #e5e7eb);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+  overflow: hidden;
+}
+
+/* Class specificity beats UA [hidden]; without this, close appears to do nothing. */
+.mine-chat__panel[hidden],
+.mine-chat__panel.is-closed {
+  display: none !important;
+}
+
+.mine-chat__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px 10px;
+  background: linear-gradient(180deg, #f4fafd 0%, #fff 100%);
+  border-bottom: 1px solid var(--hex-grey-200, #e5e7eb);
+  position: relative;
+  z-index: 2;
+}
+
+.mine-chat__header-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-right: 4px;
+}
+
+.mine-chat__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--hex-grey-900, #111827);
+}
+
+.mine-chat__subtitle {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--hex-grey-500, #6b7280);
+  line-height: 1.35;
+}
+
+.mine-chat__close {
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 3;
+  width: 36px;
+  height: 36px;
+  margin: -4px -4px 0 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--hex-grey-500, #6b7280);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.mine-chat__close:hover {
+  background: var(--hex-grey-50, #f9fafb);
+  color: var(--hex-grey-900, #111827);
+}
+
+.mine-chat__messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #f8fafc;
+}
+
+.mine-chat__bubble {
+  max-width: 92%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.mine-chat__bubble--bot {
+  align-self: flex-start;
+  background: #fff;
+  border: 1px solid var(--hex-grey-200, #e5e7eb);
+  color: var(--hex-grey-900, #111827);
+}
+
+.mine-chat__bubble--user {
+  align-self: flex-end;
+  background: var(--hex-blue, #00aef0);
+  color: #fff;
+}
+
+.mine-chat__bubble--error {
+  align-self: flex-start;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.mine-chat__sources {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mine-chat__source {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f0f9ff;
+  border: 1px solid #dbeafe;
+  color: #0c4a6e;
+  text-decoration: none;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.mine-chat__source:hover {
+  background: #e0f2fe;
+}
+
+.mine-chat__source-meta {
+  display: block;
+  margin-top: 2px;
+  font-weight: 500;
+  color: #64748b;
+  font-size: 11.5px;
+}
+
+.mine-chat__form {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--hex-grey-200, #e5e7eb);
+  background: #fff;
+}
+
+.mine-chat__input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--hex-grey-200, #e5e7eb);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+}
+
+.mine-chat__input:focus {
+  outline: none;
+  border-color: var(--hex-blue, #00aef0);
+  box-shadow: 0 0 0 3px rgba(0, 174, 240, 0.2);
+}
+
+.mine-chat__send {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 14px;
+}
+
+.mine-chat__typing {
+  align-self: flex-start;
+  font-size: 12px;
+  color: #64748b;
+  padding: 0 4px;
+}
+
+@media (max-width: 480px) {
+  .mine-chat {
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .mine-chat__launcher-label {
+    display: none;
+  }
+
+  .mine-chat__launcher {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .mine-chat__panel {
+    bottom: 60px;
+    height: min(70vh, 520px);
+  }
+}

@@ -16,6 +16,11 @@
       <div class="dashboard-hero-actions">
         <a class="btn btn-primary" href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
         <a class="btn btn-secondary" href="{{ url_for('search.search') }}">Advanced search</a>
+        {% if config.get('CHATBOT_ENABLED', True) %}
+        <button type="button" class="btn btn-secondary" id="dashboard-open-chat" data-open-mine-chat>
+          Ask MiNe
+        </button>
+        {% endif %}
         {% if pending_moderation is not none and pending_moderation > 0 %}
           <a class="btn btn-secondary dashboard-pill-alert" href="{{ url_for('admin.moderation') }}">
             Moderation queue ({{ pending_moderation }})
@@ -46,6 +51,20 @@
       </span>
     </div>
   </header>
+
+  {% if config.get('CHATBOT_ENABLED', True) %}
+  <section class="dashboard-panel-section dashboard-chat-promo" aria-labelledby="dash-chat-heading">
+    <div class="dashboard-chat-promo__card card" data-motion-skip>
+      <div class="dashboard-chat-promo__copy">
+        <h2 id="dash-chat-heading" class="dashboard-h2">Ask MiNe</h2>
+        <p class="dashboard-section-lead" style="margin: 0;">
+          Search Knowledge, Domain Knowledge, Freeport–Hexaware Journey, and Know your Customer without leaving the dashboard.
+        </p>
+      </div>
+      <button type="button" class="btn btn-primary" data-open-mine-chat>Open Ask MiNe</button>
+    </div>
+  </section>
+  {% endif %}
 
   <section class="dashboard-panel-section" aria-labelledby="dash-journey-heading">
     <div class="dashboard-section-head" data-motion-skip>

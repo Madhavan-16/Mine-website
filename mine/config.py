@@ -137,3 +137,13 @@ class Config:
     )
     # Optional Graph API override; defaults to v1 endpoint.
     MS_GRAPH_BASE_URL = (os.environ.get("MS_GRAPH_BASE_URL") or "https://graph.microsoft.com/v1.0").strip()
+
+    # Knowledge chatbot (FTS + optional free-tier LLM: Groq or Gemini).
+    CHATBOT_ENABLED = os.environ.get("CHATBOT_ENABLED", "1").lower() not in ("0", "false", "no")
+    # Provider: auto | groq | gemini | none
+    CHATBOT_LLM_PROVIDER = (os.environ.get("CHATBOT_LLM_PROVIDER") or "auto").strip().lower()
+    GROQ_API_KEY = (os.environ.get("GROQ_API_KEY") or "").strip()
+    GEMINI_API_KEY = (os.environ.get("GEMINI_API_KEY") or "").strip()
+    # Defaults: Groq llama-3.1-8b-instant · Gemini gemini-2.0-flash
+    CHATBOT_LLM_MODEL = (os.environ.get("CHATBOT_LLM_MODEL") or "").strip()
+    CHATBOT_LLM_TIMEOUT = float(os.environ.get("CHATBOT_LLM_TIMEOUT", "45") or 45)
