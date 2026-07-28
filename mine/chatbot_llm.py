@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import logging
 import os
+import socket
 import time
 from typing import Any
 
 import requests
 from flask import current_app, has_app_context
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 logger = logging.getLogger(__name__)
 
@@ -31,12 +34,21 @@ _SYSTEM_PROMPT = (
 
 _RETRYABLE_STATUS = frozenset({408, 429, 500, 502, 503, 504})
 
+# Prefer a current Groq free-tier chat model; allow override via CHATBOT_LLM_MODEL.
+_DEFAULT_GROQ_MODELS = (
+    "llama-3.1-8b-instant",
+    "llama-3.3-70b-versatile",
+    "openai/gpt-oss-20b",
+)
+
 
 def _clean_secret(value: str | None) -> str:
     v = (value or "").strip()
     if len(v) >= 2 and v[0] == v[-1] and v[0] in {'"', "'"}:
         v = v[1:-1].strip()
-    return v
+    # Azure portal paste sometimes adds zero-width / BOM characters.
+    v = v.replace("\ufeff", "").replace("\u200b", "").replace("\r", "").replace("\n", "")
+    return v.strip()
 
 
 def _setting(name: str, default: str = "") -> str:
@@ -59,7 +71,6 @@ def llm_configured() -> bool:
         return bool(groq)
     if provider in ("gemini", "google"):
         return bool(gemini)
-    # auto / anything else with a key
     return bool(groq or gemini)
 
 
@@ -98,21 +109,65 @@ def _http_error_message(resp: requests.Response) -> str:
     return f"HTTP {resp.status_code}: {body or resp.reason}"
 
 
-def _post_json(url: str, *, headers: dict, payload: dict, timeout: float) -> requests.Response:
-    """POST with short retries for transient Azure/Groq failures."""
-    verify: bool | str = True
+def _verify_path() -> bool | str:
     try:
         import certifi
 
-        verify = certifi.where()
+        return certifi.where()
     except Exception:
-        verify = True
+        return True
 
+
+def _session() -> requests.Session:
+    """
+    Dedicated session for LLM calls.
+    trust_env=False avoids broken HTTP(S)_PROXY vars that Azure App Service
+    sometimes injects and that break outbound calls to Groq.
+    """
+    sess = requests.Session()
+    sess.trust_env = False
+    adapter = HTTPAdapter(
+        max_retries=Retry(total=0, redirect=False),
+        pool_connections=4,
+        pool_maxsize=4,
+    )
+    sess.mount("https://", adapter)
+    sess.mount("http://", adapter)
+    return sess
+
+
+def _force_ipv4_once() -> None:
+    """Prefer IPv4 — some Azure App Service hosts fail on IPv6 routes to public APIs."""
+    if getattr(_force_ipv4_once, "_done", False):
+        return
+    try:
+        _orig = socket.getaddrinfo
+
+        def _ipv4_first(host, port, family=0, type=0, proto=0, flags=0):
+            infos = _orig(host, port, family, type, proto, flags)
+            v4 = [i for i in infos if i[0] == socket.AF_INET]
+            return v4 + [i for i in infos if i[0] != socket.AF_INET] if v4 else infos
+
+        socket.getaddrinfo = _ipv4_first  # type: ignore[assignment]
+        _force_ipv4_once._done = True  # type: ignore[attr-defined]
+    except Exception:
+        pass
+
+
+def _post_json(url: str, *, headers: dict, payload: dict, timeout: float) -> requests.Response:
+    """POST with short retries for transient Azure/Groq failures."""
+    _force_ipv4_once()
+    verify = _verify_path()
     last_exc: Exception | None = None
+    sess = _session()
     for attempt in range(3):
         try:
-            resp = requests.post(
-                url, headers=headers, json=payload, timeout=timeout, verify=verify
+            resp = sess.post(
+                url,
+                headers=headers,
+                json=payload,
+                timeout=timeout,
+                verify=verify,
             )
             if resp.status_code in _RETRYABLE_STATUS and attempt < 2:
                 retry_after = resp.headers.get("retry-after")
@@ -130,7 +185,7 @@ def _post_json(url: str, *, headers: dict, payload: dict, timeout: float) -> req
                 time.sleep(delay)
                 continue
             return resp
-        except (requests.Timeout, requests.ConnectionError) as exc:
+        except requests.RequestException as exc:
             last_exc = exc
             if attempt < 2:
                 delay = 0.9 * (attempt + 1)
@@ -143,32 +198,56 @@ def _post_json(url: str, *, headers: dict, payload: dict, timeout: float) -> req
     raise RuntimeError("LLM request failed after retries")
 
 
+def _groq_models() -> list[str]:
+    configured = _setting("CHATBOT_LLM_MODEL")
+    models: list[str] = []
+    if configured:
+        models.append(configured)
+    for m in _DEFAULT_GROQ_MODELS:
+        if m not in models:
+            models.append(m)
+    return models
+
+
 def _call_groq(system: str, user: str) -> str:
     api_key = _setting("GROQ_API_KEY")
-    model = _setting("CHATBOT_LLM_MODEL") or "llama-3.1-8b-instant"
+    if not api_key:
+        raise RuntimeError("GROQ_API_KEY is empty on the server")
     url = "https://api.groq.com/openai/v1/chat/completions"
     timeout = float(_setting("CHATBOT_LLM_TIMEOUT") or "60")
-    resp = _post_json(
-        url,
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        },
-        payload={
-            "model": model,
-            "temperature": 0.65,
-            "max_tokens": 700,
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
-        },
-        timeout=timeout,
-    )
-    if not resp.ok:
-        raise RuntimeError(_http_error_message(resp))
-    data = resp.json()
-    return ((data.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "User-Agent": "MiNe-AskMiNe/1.0",
+    }
+    last_error = ""
+    for model in _groq_models():
+        resp = _post_json(
+            url,
+            headers=headers,
+            payload={
+                "model": model,
+                "temperature": 0.65,
+                "max_tokens": 700,
+                "messages": [
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
+            },
+            timeout=timeout,
+        )
+        if resp.status_code in (400, 404) and "model" in (resp.text or "").lower():
+            last_error = _http_error_message(resp)
+            logger.warning("Groq model %s rejected — trying next: %s", model, last_error)
+            continue
+        if not resp.ok:
+            raise RuntimeError(_http_error_message(resp))
+        data = resp.json()
+        text = ((data.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+        if text.strip():
+            return text
+        last_error = f"Empty LLM response from model {model}"
+    raise RuntimeError(last_error or "Empty LLM response")
 
 
 def _call_gemini(system: str, user: str) -> str:

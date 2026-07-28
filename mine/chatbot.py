@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 from typing import Any
 
@@ -560,6 +561,16 @@ def _maybe_llm_reply(
         msg = "Secure connection to Groq failed on the server — try again shortly."
     else:
         msg = "I couldn't get an AI answer just now — please try again in a few seconds."
+    # Include a short safe diagnostic so Azure failures are visible without Log Stream.
+    if err:
+        import re
+
+        safe = re.sub(r"gsk_[A-Za-z0-9]+", "gsk_***", err)
+        safe = re.sub(r"AIza[A-Za-z0-9_\-]+", "AIza***", safe)
+        safe = " ".join(safe.split())
+        if len(safe) > 140:
+            safe = safe[:139] + "…"
+        msg = f"{msg} ({safe})"
     return {"reply": msg, "provider": None, "error": err or "llm_failed"}
 
 
@@ -760,6 +771,10 @@ def chat_status():
     provider = _resolve_provider()
     configured = llm_configured()
     key_set = bool(_setting("GROQ_API_KEY") or _setting("GEMINI_API_KEY"))
+    key_prefix = ""
+    groq = _setting("GROQ_API_KEY")
+    if groq:
+        key_prefix = groq[:7] + "…" + groq[-4:]
     probe: dict[str, Any] = {"ok": False}
     if configured and provider:
         result = generate_assistant_reply("Reply with exactly: OK", [])
@@ -776,7 +791,9 @@ def chat_status():
             "llm_configured": configured,
             "provider": provider,
             "key_set": key_set,
+            "key_prefix": key_prefix or None,
             "provider_setting": _setting("CHATBOT_LLM_PROVIDER", "auto"),
+            "website_site_name": (os.environ.get("WEBSITE_SITE_NAME") or "").strip() or None,
             "probe": probe,
         }
     )
