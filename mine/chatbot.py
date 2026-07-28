@@ -521,28 +521,32 @@ def _maybe_llm_reply(
     *,
     fallback: str,
     force_llm: bool = False,
-) -> tuple[str, str | None, str | None]:
+) -> dict[str, Any]:
     """
-    Returns (reply_text, provider_or_none, error_or_none).
+    Returns {"reply", "provider", "error"}.
     Uses LLM when configured; otherwise returns fallback.
     force_llm=True for generic / empty-retrieval questions.
     """
     from mine.chatbot_llm import generate_assistant_reply, llm_configured
 
     if not llm_configured():
-        return fallback, None, "not_configured"
+        return {"reply": fallback, "provider": None, "error": "not_configured"}
 
     # Navigation-only answers stay deterministic unless forced.
     if not force_llm and pages and not articles and len(pages) == 1:
-        return fallback, None, None
+        return {"reply": fallback, "provider": None, "error": None}
 
     result = generate_assistant_reply(q, _context_blocks(pages, articles))
     if result.get("ok") and result.get("text"):
-        return str(result["text"]).strip(), result.get("provider"), None
+        return {
+            "reply": str(result["text"]).strip(),
+            "provider": result.get("provider"),
+            "error": None,
+        }
     # LLM failed — keep portal fallback if we have sources, else explain cleanly.
     err = (result.get("error") or "").strip()
     if pages or articles:
-        return fallback, None, err or "llm_failed"
+        return {"reply": fallback, "provider": None, "error": err or "llm_failed"}
     err_l = err.lower()
     if "401" in err or "403" in err or "invalid" in err_l or "unauthorized" in err_l:
         msg = "The Groq API key looks invalid — check GROQ_API_KEY in Azure App Settings."
@@ -556,7 +560,7 @@ def _maybe_llm_reply(
         msg = "Secure connection to Groq failed on the server — try again shortly."
     else:
         msg = "I couldn't get an AI answer just now — please try again in a few seconds."
-    return msg, None, err or "llm_failed"
+    return {"reply": msg, "provider": None, "error": err or "llm_failed"}
 
 
 def _out(
@@ -589,13 +593,14 @@ def answer_question(q: str, *, guest: bool = False) -> dict[str, Any]:
         fallback = _HELP_REPLY if qn in {"help", "?", "what can you do", "who are you"} else _GREETING_REPLIES[0]
         if qn in {"thanks", "thank you", "ty"}:
             fallback = "You're welcome — anything else I can help with?"
-        reply, provider, err = _maybe_llm_reply(
+        llm = _maybe_llm_reply(
             q or "Say a short friendly hello and ask how you can help. Do not list portal pages.",
             [],
             [],
             fallback=fallback,
             force_llm=True,
         )
+        reply, provider, err = llm["reply"], llm["provider"], llm["error"]
         # Never show AI failure noise on a simple hello — fall back to a warm greeting.
         if provider is None:
             reply = fallback
@@ -637,7 +642,8 @@ def answer_question(q: str, *, guest: bool = False) -> dict[str, Any]:
     if _is_general_knowledge_question(qn):
         from mine.chatbot_llm import llm_configured
 
-        reply, provider, err = _maybe_llm_reply(q, [], [], fallback=_HELP_REPLY, force_llm=True)
+        llm = _maybe_llm_reply(q, [], [], fallback=_HELP_REPLY, force_llm=True)
+        reply, provider, err = llm["reply"], llm["provider"], llm["error"]
         if provider is None and not llm_configured():
             reply = (
                 f"I can answer “{q}” when GROQ_API_KEY is set in Azure App Settings "
@@ -679,8 +685,14 @@ def answer_question(q: str, *, guest: bool = False) -> dict[str, Any]:
             articles,
             note=f"Showing the {module_label(mod)} series in Knowledge.",
         )
-        reply, provider, err = _maybe_llm_reply(q, pages, articles, fallback=fallback, force_llm=False)
-        return _out(reply, sources=pages + articles, query=q, provider=provider, llm_error=err)
+        llm = _maybe_llm_reply(q, pages, articles, fallback=fallback, force_llm=False)
+        return _out(
+            llm["reply"],
+            sources=pages + articles,
+            query=q,
+            provider=llm["provider"],
+            llm_error=llm["error"],
+        )
 
     # General questions → answer like a normal AI assistant (no weak FTS source cards).
     if not _looks_like_portal_query(q, allowed):
@@ -690,7 +702,8 @@ def answer_question(q: str, *, guest: bool = False) -> dict[str, Any]:
             f"I don't have a special MiNe page for that — here's a quick take on “{q}” "
             "when the AI assistant is available."
         )
-        reply, provider, err = _maybe_llm_reply(q, [], [], fallback=fallback, force_llm=True)
+        llm = _maybe_llm_reply(q, [], [], fallback=fallback, force_llm=True)
+        reply, provider, err = llm["reply"], llm["provider"], llm["error"]
         if provider is None and not llm_configured():
             reply = (
                 f"I could not find a MiNe match for “{q}”, and no free LLM API key is configured. "
@@ -712,15 +725,22 @@ def answer_question(q: str, *, guest: bool = False) -> dict[str, Any]:
     if has_mine:
         fallback = _compose_answer(q, pages, articles)
         force = bool(articles) or len(qn.split()) >= 2
-        reply, provider, err = _maybe_llm_reply(
+        llm = _maybe_llm_reply(
             q, pages, articles, fallback=fallback, force_llm=force
         )
-        return _out(reply, sources=pages + articles, query=q, provider=provider, llm_error=err)
+        return _out(
+            llm["reply"],
+            sources=pages + articles,
+            query=q,
+            provider=llm["provider"],
+            llm_error=llm["error"],
+        )
 
     from mine.chatbot_llm import llm_configured
 
     fallback = f"I didn't find a matching MiNe page for “{q}”. Answering generally when available."
-    reply, provider, err = _maybe_llm_reply(q, [], [], fallback=fallback, force_llm=True)
+    llm = _maybe_llm_reply(q, [], [], fallback=fallback, force_llm=True)
+    reply, provider, err = llm["reply"], llm["provider"], llm["error"]
     if provider is None and not llm_configured():
         reply = (
             f"I could not find a MiNe match for “{q}”, and no free LLM API key is configured. "
