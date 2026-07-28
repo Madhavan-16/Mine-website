@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from typing import Any
 
 import requests
@@ -27,6 +28,8 @@ _SYSTEM_PROMPT = (
     "6) Keep answers under ~180 words unless the user asks for more detail. Plain text only "
     "(light numbered lists are fine; no markdown tables)."
 )
+
+_RETRYABLE_STATUS = frozenset({408, 429, 500, 502, 503, 504})
 
 
 def _clean_secret(value: str | None) -> str:
@@ -88,18 +91,70 @@ def _build_user_prompt(question: str, context_blocks: list[str]) -> str:
     return "\n\n".join(parts)
 
 
+def _http_error_message(resp: requests.Response) -> str:
+    body = (resp.text or "").strip().replace("\n", " ")
+    if len(body) > 240:
+        body = body[:239] + "…"
+    return f"HTTP {resp.status_code}: {body or resp.reason}"
+
+
+def _post_json(url: str, *, headers: dict, payload: dict, timeout: float) -> requests.Response:
+    """POST with short retries for transient Azure/Groq failures."""
+    verify: bool | str = True
+    try:
+        import certifi
+
+        verify = certifi.where()
+    except Exception:
+        verify = True
+
+    last_exc: Exception | None = None
+    for attempt in range(3):
+        try:
+            resp = requests.post(
+                url, headers=headers, json=payload, timeout=timeout, verify=verify
+            )
+            if resp.status_code in _RETRYABLE_STATUS and attempt < 2:
+                retry_after = resp.headers.get("retry-after")
+                try:
+                    delay = float(retry_after) if retry_after else 0.9 * (attempt + 1)
+                except ValueError:
+                    delay = 0.9 * (attempt + 1)
+                delay = min(max(delay, 0.5), 8.0)
+                logger.info(
+                    "LLM HTTP %s — retry %s/3 after %.1fs",
+                    resp.status_code,
+                    attempt + 2,
+                    delay,
+                )
+                time.sleep(delay)
+                continue
+            return resp
+        except (requests.Timeout, requests.ConnectionError) as exc:
+            last_exc = exc
+            if attempt < 2:
+                delay = 0.9 * (attempt + 1)
+                logger.info("LLM network error (%s) — retry %s/3 after %.1fs", exc, attempt + 2, delay)
+                time.sleep(delay)
+                continue
+            raise
+    if last_exc:
+        raise last_exc
+    raise RuntimeError("LLM request failed after retries")
+
+
 def _call_groq(system: str, user: str) -> str:
     api_key = _setting("GROQ_API_KEY")
     model = _setting("CHATBOT_LLM_MODEL") or "llama-3.1-8b-instant"
     url = "https://api.groq.com/openai/v1/chat/completions"
-    timeout = float(_setting("CHATBOT_LLM_TIMEOUT") or "45")
-    resp = requests.post(
+    timeout = float(_setting("CHATBOT_LLM_TIMEOUT") or "60")
+    resp = _post_json(
         url,
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         },
-        json={
+        payload={
             "model": model,
             "temperature": 0.65,
             "max_tokens": 700,
@@ -110,7 +165,8 @@ def _call_groq(system: str, user: str) -> str:
         },
         timeout=timeout,
     )
-    resp.raise_for_status()
+    if not resp.ok:
+        raise RuntimeError(_http_error_message(resp))
     data = resp.json()
     return ((data.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
 
@@ -118,15 +174,15 @@ def _call_groq(system: str, user: str) -> str:
 def _call_gemini(system: str, user: str) -> str:
     api_key = _setting("GEMINI_API_KEY")
     model = _setting("CHATBOT_LLM_MODEL") or "gemini-2.0-flash"
-    timeout = float(_setting("CHATBOT_LLM_TIMEOUT") or "45")
+    timeout = float(_setting("CHATBOT_LLM_TIMEOUT") or "60")
     url = (
         f"https://generativelanguage.googleapis.com/v1beta/models/"
         f"{model}:generateContent?key={api_key}"
     )
-    resp = requests.post(
+    resp = _post_json(
         url,
         headers={"Content-Type": "application/json"},
-        json={
+        payload={
             "systemInstruction": {"parts": [{"text": system}]},
             "contents": [{"role": "user", "parts": [{"text": user}]}],
             "generationConfig": {
@@ -136,7 +192,8 @@ def _call_gemini(system: str, user: str) -> str:
         },
         timeout=timeout,
     )
-    resp.raise_for_status()
+    if not resp.ok:
+        raise RuntimeError(_http_error_message(resp))
     data = resp.json()
     candidates = data.get("candidates") or []
     if not candidates:

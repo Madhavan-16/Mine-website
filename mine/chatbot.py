@@ -521,36 +521,59 @@ def _maybe_llm_reply(
     *,
     fallback: str,
     force_llm: bool = False,
-) -> tuple[str, str | None]:
+) -> tuple[str, str | None, str | None]:
     """
-    Returns (reply_text, provider_or_none).
+    Returns (reply_text, provider_or_none, error_or_none).
     Uses LLM when configured; otherwise returns fallback.
     force_llm=True for generic / empty-retrieval questions.
     """
     from mine.chatbot_llm import generate_assistant_reply, llm_configured
 
     if not llm_configured():
-        return fallback, None
+        return fallback, None, "not_configured"
 
     # Navigation-only answers stay deterministic unless forced.
     if not force_llm and pages and not articles and len(pages) == 1:
-        return fallback, None
+        return fallback, None, None
 
     result = generate_assistant_reply(q, _context_blocks(pages, articles))
     if result.get("ok") and result.get("text"):
-        return str(result["text"]).strip(), result.get("provider")
-    # LLM failed — keep portal fallback if we have sources, else explain.
-    if pages or articles:
-        return fallback, None
+        return str(result["text"]).strip(), result.get("provider"), None
+    # LLM failed — keep portal fallback if we have sources, else explain cleanly.
     err = (result.get("error") or "").strip()
-    hint = " The AI service did not respond just now — try again shortly."
-    if err and ("401" in err or "403" in err or "Invalid" in err or "Unauthorized" in err):
-        hint = " The Groq API key looks invalid — check GROQ_API_KEY in Azure App Settings."
-    elif err and ("429" in err or "rate" in err.lower()):
-        hint = " Groq rate limit reached — wait a minute and try again."
-    elif err and ("timed out" in err.lower() or "timeout" in err.lower() or "Connection" in err):
-        hint = " Could not reach Groq from the server — check outbound network / try again."
-    return fallback + hint, None
+    if pages or articles:
+        return fallback, None, err or "llm_failed"
+    err_l = err.lower()
+    if "401" in err or "403" in err or "invalid" in err_l or "unauthorized" in err_l:
+        msg = "The Groq API key looks invalid — check GROQ_API_KEY in Azure App Settings."
+    elif "429" in err or "rate" in err_l:
+        msg = "Groq rate limit hit — wait about a minute, then ask again."
+    elif "timed out" in err_l or "timeout" in err_l or "connection" in err_l:
+        msg = "Could not reach Groq from the server just now — try again in a few seconds."
+    elif "http 5" in err_l or "502" in err or "503" in err or "504" in err:
+        msg = "Groq had a temporary outage — try your question again."
+    elif "certificate" in err_l or "ssl" in err_l:
+        msg = "Secure connection to Groq failed on the server — try again shortly."
+    else:
+        msg = "I couldn't get an AI answer just now — please try again in a few seconds."
+    return msg, None, err or "llm_failed"
+
+
+def _out(
+    reply: str,
+    *,
+    sources: list | None = None,
+    query: str = "",
+    provider: str | None = None,
+    llm_error: str | None = None,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {"reply": reply, "sources": sources or [], "query": query}
+    if provider:
+        payload["provider"] = provider
+    if llm_error and llm_error not in ("not_configured",):
+        # Safe debug hint for Azure Network tab (no secrets).
+        payload["llm_error"] = llm_error[:180]
+    return payload
 
 
 def answer_question(q: str, *, guest: bool = False) -> dict[str, Any]:
@@ -566,17 +589,17 @@ def answer_question(q: str, *, guest: bool = False) -> dict[str, Any]:
         fallback = _HELP_REPLY if qn in {"help", "?", "what can you do", "who are you"} else _GREETING_REPLIES[0]
         if qn in {"thanks", "thank you", "ty"}:
             fallback = "You're welcome — anything else I can help with?"
-        reply, provider = _maybe_llm_reply(
+        reply, provider, err = _maybe_llm_reply(
             q or "Say a short friendly hello and ask how you can help. Do not list portal pages.",
             [],
             [],
             fallback=fallback,
             force_llm=True,
         )
-        out: dict[str, Any] = {"reply": reply, "sources": [], "query": q}
-        if provider:
-            out["provider"] = provider
-        return out
+        # Never show AI failure noise on a simple hello — fall back to a warm greeting.
+        if provider is None:
+            reply = fallback
+        return _out(reply, query=q, provider=provider, llm_error=err if provider else None)
 
     # Guests asking for staff-only sections get a clear message (not a wrong case study).
     _guest_blocked = {
@@ -614,17 +637,15 @@ def answer_question(q: str, *, guest: bool = False) -> dict[str, Any]:
     if _is_general_knowledge_question(qn):
         from mine.chatbot_llm import llm_configured
 
-        reply, provider = _maybe_llm_reply(q, [], [], fallback=_HELP_REPLY, force_llm=True)
+        reply, provider, err = _maybe_llm_reply(q, [], [], fallback=_HELP_REPLY, force_llm=True)
         if provider is None and not llm_configured():
             reply = (
                 f"I can answer “{q}” when GROQ_API_KEY is set in Azure App Settings "
                 "(Environment variables), then restart the app. "
                 "Or ask for a MiNe page like “domain knowledge” or “projects”."
             )
-        out = {"reply": reply, "sources": [], "query": q}
-        if provider:
-            out["provider"] = provider
-        return out
+            err = "not_configured"
+        return _out(reply, query=q, provider=provider, llm_error=err)
 
     db = get_db()
 
@@ -658,11 +679,8 @@ def answer_question(q: str, *, guest: bool = False) -> dict[str, Any]:
             articles,
             note=f"Showing the {module_label(mod)} series in Knowledge.",
         )
-        reply, provider = _maybe_llm_reply(q, pages, articles, fallback=fallback, force_llm=False)
-        out = {"reply": reply, "sources": pages + articles, "query": q}
-        if provider:
-            out["provider"] = provider
-        return out
+        reply, provider, err = _maybe_llm_reply(q, pages, articles, fallback=fallback, force_llm=False)
+        return _out(reply, sources=pages + articles, query=q, provider=provider, llm_error=err)
 
     # General questions → answer like a normal AI assistant (no weak FTS source cards).
     if not _looks_like_portal_query(q, allowed):
@@ -672,17 +690,15 @@ def answer_question(q: str, *, guest: bool = False) -> dict[str, Any]:
             f"I don't have a special MiNe page for that — here's a quick take on “{q}” "
             "when the AI assistant is available."
         )
-        reply, provider = _maybe_llm_reply(q, [], [], fallback=fallback, force_llm=True)
+        reply, provider, err = _maybe_llm_reply(q, [], [], fallback=fallback, force_llm=True)
         if provider is None and not llm_configured():
             reply = (
                 f"I could not find a MiNe match for “{q}”, and no free LLM API key is configured. "
                 "Add GROQ_API_KEY in Azure App Settings (or .env) for general AI answers, "
                 "or ask about Knowledge, Domain, Journey, KYC, or Projects."
             )
-        out = {"reply": reply, "sources": [], "query": q}
-        if provider:
-            out["provider"] = provider
-        return out
+            err = "not_configured"
+        return _out(reply, query=q, provider=provider, llm_error=err)
 
     pages = _static_page_hits(q, allowed)
     articles: list[dict[str, Any]] = []
@@ -696,25 +712,54 @@ def answer_question(q: str, *, guest: bool = False) -> dict[str, Any]:
     if has_mine:
         fallback = _compose_answer(q, pages, articles)
         force = bool(articles) or len(qn.split()) >= 2
-        reply, provider = _maybe_llm_reply(
+        reply, provider, err = _maybe_llm_reply(
             q, pages, articles, fallback=fallback, force_llm=force
         )
-        sources = pages + articles
-    else:
-        fallback = f"I didn't find a matching MiNe page for “{q}”. Answering generally when available."
-        reply, provider = _maybe_llm_reply(q, [], [], fallback=fallback, force_llm=True)
-        sources = []
-        if provider is None:
-            reply = (
-                f"I could not find a MiNe match for “{q}”, and no free LLM API key is configured. "
-                "Add GROQ_API_KEY in Azure App Settings (or .env) to enable general AI answers, "
-                "or ask about Knowledge, Domain, Journey, KYC, or Projects."
-            )
+        return _out(reply, sources=pages + articles, query=q, provider=provider, llm_error=err)
 
-    out = {"reply": reply, "sources": sources, "query": q}
-    if provider:
-        out["provider"] = provider
-    return out
+    from mine.chatbot_llm import llm_configured
+
+    fallback = f"I didn't find a matching MiNe page for “{q}”. Answering generally when available."
+    reply, provider, err = _maybe_llm_reply(q, [], [], fallback=fallback, force_llm=True)
+    if provider is None and not llm_configured():
+        reply = (
+            f"I could not find a MiNe match for “{q}”, and no free LLM API key is configured. "
+            "Add GROQ_API_KEY in Azure App Settings (or .env) to enable general AI answers, "
+            "or ask about Knowledge, Domain, Journey, KYC, or Projects."
+        )
+        err = "not_configured"
+    return _out(reply, query=q, provider=provider, llm_error=err)
+
+
+@bp.route("/status", methods=["GET"])
+@login_required
+def chat_status():
+    """Quick LLM config + connectivity check (for Azure debugging)."""
+    from mine.chatbot_llm import _resolve_provider, _setting, generate_assistant_reply, llm_configured
+
+    provider = _resolve_provider()
+    configured = llm_configured()
+    key_set = bool(_setting("GROQ_API_KEY") or _setting("GEMINI_API_KEY"))
+    probe: dict[str, Any] = {"ok": False}
+    if configured and provider:
+        result = generate_assistant_reply("Reply with exactly: OK", [])
+        probe = {
+            "ok": bool(result.get("ok")),
+            "provider": result.get("provider"),
+            "error": (result.get("error") or "")[:180] or None,
+            "sample": ((result.get("text") or "")[:40] or None),
+        }
+    return jsonify(
+        {
+            "ok": True,
+            "chatbot_enabled": _chatbot_enabled(),
+            "llm_configured": configured,
+            "provider": provider,
+            "key_set": key_set,
+            "provider_setting": _setting("CHATBOT_LLM_PROVIDER", "auto"),
+            "probe": probe,
+        }
+    )
 
 
 @bp.route("", methods=["POST"])
@@ -739,4 +784,6 @@ def chat():
     }
     if result.get("provider"):
         payload_out["provider"] = result["provider"]
+    if result.get("llm_error"):
+        payload_out["llm_error"] = result["llm_error"]
     return jsonify(payload_out)

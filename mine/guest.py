@@ -42,6 +42,7 @@ GUEST_ALLOWED_ENDPOINTS = frozenset(
         "content.attachment_preview_docx_html",
         "content.office_attachment_source",
         "chatbot.chat",
+        "chatbot.chat_status",
         "static",
     }
 )

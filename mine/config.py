@@ -146,4 +146,4 @@ class Config:
     GEMINI_API_KEY = (os.environ.get("GEMINI_API_KEY") or "").strip()
     # Defaults: Groq llama-3.1-8b-instant · Gemini gemini-2.0-flash
     CHATBOT_LLM_MODEL = (os.environ.get("CHATBOT_LLM_MODEL") or "").strip()
-    CHATBOT_LLM_TIMEOUT = float(os.environ.get("CHATBOT_LLM_TIMEOUT", "45") or 45)
+    CHATBOT_LLM_TIMEOUT = float(os.environ.get("CHATBOT_LLM_TIMEOUT", "60") or 60)
