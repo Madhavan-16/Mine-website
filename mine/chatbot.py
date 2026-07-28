@@ -542,11 +542,15 @@ def _maybe_llm_reply(
     # LLM failed — keep portal fallback if we have sources, else explain.
     if pages or articles:
         return fallback, None
-    return (
-        fallback
-        + "\n\n(AI assistant is configured but did not respond just now — try again shortly.)",
-        None,
-    )
+    err = (result.get("error") or "").strip()
+    hint = " The AI service did not respond just now — try again shortly."
+    if err and ("401" in err or "403" in err or "Invalid" in err or "Unauthorized" in err):
+        hint = " The Groq API key looks invalid — check GROQ_API_KEY in Azure App Settings."
+    elif err and ("429" in err or "rate" in err.lower()):
+        hint = " Groq rate limit reached — wait a minute and try again."
+    elif err and ("timed out" in err.lower() or "timeout" in err.lower() or "Connection" in err):
+        hint = " Could not reach Groq from the server — check outbound network / try again."
+    return fallback + hint, None
 
 
 def answer_question(q: str, *, guest: bool = False) -> dict[str, Any]:
@@ -608,11 +612,14 @@ def answer_question(q: str, *, guest: bool = False) -> dict[str, Any]:
 
     # Definition / explain questions → plain AI answer (no FTS source cards).
     if _is_general_knowledge_question(qn):
+        from mine.chatbot_llm import llm_configured
+
         reply, provider = _maybe_llm_reply(q, [], [], fallback=_HELP_REPLY, force_llm=True)
-        if provider is None:
+        if provider is None and not llm_configured():
             reply = (
-                f"Here’s a short note on “{q}” when the AI key is set. "
-                "Configure GROQ_API_KEY, or ask for a MiNe page like “domain knowledge” or “projects”."
+                f"I can answer “{q}” when GROQ_API_KEY is set in Azure App Settings "
+                "(Environment variables), then restart the app. "
+                "Or ask for a MiNe page like “domain knowledge” or “projects”."
             )
         out = {"reply": reply, "sources": [], "query": q}
         if provider:
@@ -659,12 +666,14 @@ def answer_question(q: str, *, guest: bool = False) -> dict[str, Any]:
 
     # General questions → answer like a normal AI assistant (no weak FTS source cards).
     if not _looks_like_portal_query(q, allowed):
+        from mine.chatbot_llm import llm_configured
+
         fallback = (
             f"I don't have a special MiNe page for that — here's a quick take on “{q}” "
             "when the AI assistant is available."
         )
         reply, provider = _maybe_llm_reply(q, [], [], fallback=fallback, force_llm=True)
-        if provider is None:
+        if provider is None and not llm_configured():
             reply = (
                 f"I could not find a MiNe match for “{q}”, and no free LLM API key is configured. "
                 "Add GROQ_API_KEY in Azure App Settings (or .env) for general AI answers, "

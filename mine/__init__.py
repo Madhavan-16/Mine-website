@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 from dotenv import load_dotenv
 
@@ -32,6 +33,29 @@ def create_app():
         static_folder=str(base_dir / "static"),
     )
     app.config.from_object(Config)
+    # Re-read LLM secrets from process env so Azure App Settings always win
+    # (Config class attrs are fixed at first import).
+    for key in (
+        "CHATBOT_LLM_PROVIDER",
+        "GROQ_API_KEY",
+        "GEMINI_API_KEY",
+        "CHATBOT_LLM_MODEL",
+        "CHATBOT_LLM_TIMEOUT",
+        "CHATBOT_ENABLED",
+    ):
+        if key in os.environ:
+            raw = (os.environ.get(key) or "").strip()
+            if key == "CHATBOT_LLM_PROVIDER":
+                app.config[key] = (raw or "auto").lower()
+            elif key == "CHATBOT_ENABLED":
+                app.config[key] = raw.lower() not in ("0", "false", "no")
+            elif key == "CHATBOT_LLM_TIMEOUT":
+                try:
+                    app.config[key] = float(raw or 45)
+                except ValueError:
+                    app.config[key] = 45.0
+            else:
+                app.config[key] = raw
     from mine.azure_persist import ensure_azure_persistent_storage
 
     ensure_azure_persistent_storage(app)

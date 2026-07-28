@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any
 
 import requests
-from flask import current_app
+from flask import current_app, has_app_context
 
 logger = logging.getLogger(__name__)
 
@@ -28,36 +29,51 @@ _SYSTEM_PROMPT = (
 )
 
 
+def _clean_secret(value: str | None) -> str:
+    v = (value or "").strip()
+    if len(v) >= 2 and v[0] == v[-1] and v[0] in {'"', "'"}:
+        v = v[1:-1].strip()
+    return v
+
+
+def _setting(name: str, default: str = "") -> str:
+    """Prefer live process env (Azure App Settings), then Flask config."""
+    env_val = _clean_secret(os.environ.get(name))
+    if env_val:
+        return env_val
+    if has_app_context():
+        return _clean_secret(current_app.config.get(name) or default)
+    return _clean_secret(default)
+
+
 def llm_configured() -> bool:
-    provider = (current_app.config.get("CHATBOT_LLM_PROVIDER") or "").strip().lower()
-    if provider in ("", "none", "off", "0"):
+    provider = _setting("CHATBOT_LLM_PROVIDER", "auto").lower() or "auto"
+    if provider in ("none", "off", "0"):
         return False
+    groq = _setting("GROQ_API_KEY")
+    gemini = _setting("GEMINI_API_KEY")
     if provider == "groq":
-        return bool((current_app.config.get("GROQ_API_KEY") or "").strip())
+        return bool(groq)
     if provider in ("gemini", "google"):
-        return bool((current_app.config.get("GEMINI_API_KEY") or "").strip())
-    # Auto: use whichever key is present
-    if provider in ("auto",):
-        return bool(
-            (current_app.config.get("GROQ_API_KEY") or "").strip()
-            or (current_app.config.get("GEMINI_API_KEY") or "").strip()
-        )
-    return False
+        return bool(gemini)
+    # auto / anything else with a key
+    return bool(groq or gemini)
 
 
 def _resolve_provider() -> str | None:
-    provider = (current_app.config.get("CHATBOT_LLM_PROVIDER") or "auto").strip().lower()
-    groq = (current_app.config.get("GROQ_API_KEY") or "").strip()
-    gemini = (current_app.config.get("GEMINI_API_KEY") or "").strip()
+    provider = _setting("CHATBOT_LLM_PROVIDER", "auto").lower() or "auto"
+    groq = _setting("GROQ_API_KEY")
+    gemini = _setting("GEMINI_API_KEY")
+    if provider in ("none", "off", "0"):
+        return None
     if provider == "groq" and groq:
         return "groq"
     if provider in ("gemini", "google") and gemini:
         return "gemini"
-    if provider in ("auto", "", "none") or provider not in ("groq", "gemini", "google"):
-        if groq:
-            return "groq"
-        if gemini:
-            return "gemini"
+    if groq:
+        return "groq"
+    if gemini:
+        return "gemini"
     return None
 
 
@@ -73,9 +89,10 @@ def _build_user_prompt(question: str, context_blocks: list[str]) -> str:
 
 
 def _call_groq(system: str, user: str) -> str:
-    api_key = (current_app.config.get("GROQ_API_KEY") or "").strip()
-    model = (current_app.config.get("CHATBOT_LLM_MODEL") or "").strip() or "llama-3.1-8b-instant"
+    api_key = _setting("GROQ_API_KEY")
+    model = _setting("CHATBOT_LLM_MODEL") or "llama-3.1-8b-instant"
     url = "https://api.groq.com/openai/v1/chat/completions"
+    timeout = float(_setting("CHATBOT_LLM_TIMEOUT") or "45")
     resp = requests.post(
         url,
         headers={
@@ -91,7 +108,7 @@ def _call_groq(system: str, user: str) -> str:
                 {"role": "user", "content": user},
             ],
         },
-        timeout=float(current_app.config.get("CHATBOT_LLM_TIMEOUT", 45)),
+        timeout=timeout,
     )
     resp.raise_for_status()
     data = resp.json()
@@ -99,9 +116,9 @@ def _call_groq(system: str, user: str) -> str:
 
 
 def _call_gemini(system: str, user: str) -> str:
-    api_key = (current_app.config.get("GEMINI_API_KEY") or "").strip()
-    model = (current_app.config.get("CHATBOT_LLM_MODEL") or "").strip() or "gemini-2.0-flash"
-    # v1beta generateContent
+    api_key = _setting("GEMINI_API_KEY")
+    model = _setting("CHATBOT_LLM_MODEL") or "gemini-2.0-flash"
+    timeout = float(_setting("CHATBOT_LLM_TIMEOUT") or "45")
     url = (
         f"https://generativelanguage.googleapis.com/v1beta/models/"
         f"{model}:generateContent?key={api_key}"
@@ -117,7 +134,7 @@ def _call_gemini(system: str, user: str) -> str:
                 "maxOutputTokens": 700,
             },
         },
-        timeout=float(current_app.config.get("CHATBOT_LLM_TIMEOUT", 45)),
+        timeout=timeout,
     )
     resp.raise_for_status()
     data = resp.json()
