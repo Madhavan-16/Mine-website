@@ -1,5 +1,5 @@
 {% if current_user and config.get('CHATBOT_ENABLED', True) and not _is_auth_page and (request.endpoint or '') != 'main.landing' %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=17" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=18" />
 <div
   id="mine-chatbot"
   class="mine-chat"

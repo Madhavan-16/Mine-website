@@ -19,19 +19,26 @@ _SYSTEM_PROMPT = (
     "You are MiNe AI — a professional, friendly, enterprise assistant for the Hexaware–Freeport MiNe portal.\n"
     "Personality: helpful, concise, conversational, context-aware. Never robotic. Avoid repetitive greetings.\n"
     "Knowledge priority (strict):\n"
-    "1) MiNe portal notes / projects / SOW / knowledge articles provided in this turn\n"
+    "1) MiNe portal notes / projects / SOW / knowledge articles provided in this turn — "
+    "use them only when they directly answer the user’s question\n"
     "2) Conversation history (resolve pronouns like it/this/they to the last discussed project or topic)\n"
-    "3) General AI knowledge only when MiNe notes do not cover the question\n"
+    "3) General AI knowledge when notes do not cover the question\n"
     "Never invent Freeport/Hexaware project facts, dates, budgets, or SOW details.\n"
     "If MiNe notes are missing for a portal/project question, say clearly that you could not find it "
     "in the MiNe knowledge repository, then offer a careful general explanation if appropriate.\n"
-    "When MiNe notes exist for the topic (e.g. SIMS, Snowflake OpenFlow), answer from those notes — "
+    "When MiNe notes exist for a named project (e.g. SIMS, Snowflake OpenFlow), answer from those notes — "
     "do not substitute unrelated public definitions.\n"
-    "Response style (ChatGPT-quality):\n"
-    "- Start with a short summary sentence\n"
-    "- Use Markdown: ## headings, bullet lists, numbered lists, **bold** for key terms\n"
-    "- Use tables when comparing items; fenced code blocks only for real code/config\n"
-    "- Adapt length: short for simple questions, deeper detail when asked\n"
+    "Critical: Answer the user’s actual question. Do not dump unrelated projects, case studies, or SOWs "
+    "just because a keyword appears in the notes.\n"
+    "Response style:\n"
+    "- Be precise and concise — prefer short answers unless the user asks for depth\n"
+    "- Start with a short summary sentence that answers the question\n"
+    "- Use Markdown: ## headings only when needed, bullet lists, **bold** for key terms\n"
+    "- Use tables when comparing items\n"
+    "- For architecture/flows: use a short numbered list or bullets with arrows "
+    "(e.g. A → B → C). Do NOT use ASCII box diagrams or fenced code blocks for diagrams — "
+    "they are hard to read in chat.\n"
+    "- Fenced code blocks only for real code/config\n"
     "- Keep greetings to 1–2 short sentences — no long menus unless asked\n"
     "- Plain Markdown only (no HTML). Light emoji only if it improves scannability.\n"
     "Do not mention “context”, “RAG”, or “as an AI”."
@@ -115,6 +122,7 @@ def _build_user_prompt(
     page_context: str | None = None,
     mine_found: bool = False,
     guest: bool = False,
+    concise: bool = False,
 ) -> str:
     parts = [f"Current user question:\n{question.strip()}"]
     if guest:
@@ -124,17 +132,28 @@ def _build_user_prompt(
             "Do not provide Programs & projects, SOW, Onboarding, Training, Innovation, or Hall of Fame details. "
             "If asked about those, say they need a full MiNe account and suggest Guest-allowed topics."
         )
-    if page_context:
+    if concise:
+        parts.append(
+            "CONCISE DEFINITION MODE:\n"
+            "- Answer only what the user asked.\n"
+            "- Keep it short: 1 summary sentence + up to 5 bullets (or one short paragraph).\n"
+            "- Do not list projects, case studies, SOWs, programmes, or engagement details "
+            "unless the user explicitly asked for them.\n"
+            "- If portal notes are off-topic, ignore them and answer from clear domain knowledge."
+        )
+    if page_context and not concise:
         parts.append(f"User is currently viewing: {page_context}")
     if context_blocks:
         parts.append(
-            "MiNe portal notes (PRIMARY source — prefer these over general knowledge):\n"
+            "MiNe portal notes (use only if they directly help answer the question):\n"
             + "\n".join(context_blocks)
         )
-        parts.append(
-            "Answer using the MiNe portal notes above. Stay specific to Freeport/Hexaware content."
-        )
-    elif mine_found is False:
+        if not concise:
+            parts.append(
+                "Answer using the MiNe portal notes above when they match the question. "
+                "Stay specific to Freeport/Hexaware content when relevant."
+            )
+    elif mine_found is False and not concise:
         parts.append(
             "No matching MiNe portal notes were found for this question. "
             "Start with: I couldn't find this information in the MiNe knowledge repository. "
@@ -236,7 +255,7 @@ def _groq_models() -> list[str]:
     return models
 
 
-def _call_groq(system: str, messages: list[dict[str, str]]) -> str:
+def _call_groq(system: str, messages: list[dict[str, str]], *, max_tokens: int = 1100) -> str:
     api_key = _setting("GROQ_API_KEY")
     if not api_key:
         raise RuntimeError("GROQ_API_KEY is empty on the server")
@@ -255,8 +274,8 @@ def _call_groq(system: str, messages: list[dict[str, str]]) -> str:
             headers=headers,
             payload={
                 "model": model,
-                "temperature": 0.55,
-                "max_tokens": 1100,
+                "temperature": 0.4 if max_tokens <= 600 else 0.55,
+                "max_tokens": max_tokens,
                 "messages": chat_messages,
             },
             timeout=timeout,
@@ -274,7 +293,7 @@ def _call_groq(system: str, messages: list[dict[str, str]]) -> str:
     raise RuntimeError(last_error or "Empty LLM response")
 
 
-def _call_gemini(system: str, messages: list[dict[str, str]]) -> str:
+def _call_gemini(system: str, messages: list[dict[str, str]], *, max_tokens: int = 1100) -> str:
     api_key = _setting("GEMINI_API_KEY")
     model = _setting("CHATBOT_LLM_MODEL") or "gemini-2.0-flash"
     timeout = float(_setting("CHATBOT_LLM_TIMEOUT") or "60")
@@ -293,8 +312,8 @@ def _call_gemini(system: str, messages: list[dict[str, str]]) -> str:
             "systemInstruction": {"parts": [{"text": system}]},
             "contents": contents,
             "generationConfig": {
-                "temperature": 0.55,
-                "maxOutputTokens": 1100,
+                "temperature": 0.4 if max_tokens <= 600 else 0.55,
+                "maxOutputTokens": max_tokens,
             },
         },
         timeout=timeout,
@@ -318,6 +337,7 @@ def generate_assistant_reply(
     page_context: str | None = None,
     mine_found: bool = False,
     guest: bool = False,
+    concise: bool = False,
 ) -> dict[str, Any]:
     provider = _resolve_provider()
     if not provider:
@@ -330,13 +350,14 @@ def generate_assistant_reply(
         page_context=page_context,
         mine_found=mine_found,
         guest=guest,
+        concise=concise,
     )
     messages = [*prior, {"role": "user", "content": user_prompt}]
     try:
         if provider == "groq":
-            text = _call_groq(_SYSTEM_PROMPT, messages)
+            text = _call_groq(_SYSTEM_PROMPT, messages, max_tokens=550 if concise else 1100)
         else:
-            text = _call_gemini(_SYSTEM_PROMPT, messages)
+            text = _call_gemini(_SYSTEM_PROMPT, messages, max_tokens=550 if concise else 1100)
         text = (text or "").strip()
         if not text:
             return {"ok": False, "error": "Empty LLM response", "provider": provider}

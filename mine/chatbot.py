@@ -337,6 +337,75 @@ def _is_general_knowledge_question(qn: str) -> bool:
     return any(qn.startswith(p) for p in patterns)
 
 
+def _is_concise_definition_question(q: str) -> bool:
+    """
+    Short definition/explain asks (e.g. “what is mining process”) should get a
+    focused answer — not a dump of every article/project that mentions a keyword.
+    """
+    qn = _normalize(q)
+    if not qn or len(qn.split()) > 12:
+        return False
+    # Explicit delivery / portfolio asks stay on full retrieval.
+    heavy = (
+        "project",
+        "projects",
+        "program",
+        "programme",
+        "sow",
+        "sims",
+        "openflow",
+        "case stud",
+        "newsletter",
+        "rfp",
+        "onboarding",
+        "hexaware engagement",
+        "engagement details",
+        "compare ",
+        "architecture",
+    )
+    if any(h in qn for h in heavy):
+        return False
+    starters = (
+        "what is ",
+        "what are ",
+        "whats ",
+        "what's ",
+        "define ",
+        "definition of ",
+        "meaning of ",
+        "explain ",
+    )
+    return any(qn.startswith(p) for p in starters)
+
+
+_DOMAIN_CONCEPT_HINTS = (
+    "mining",
+    "mine ",
+    " copper",
+    "copper ",
+    "ore",
+    "open pit",
+    "open-pit",
+    "leach",
+    "haul",
+    "flotat",
+    "smelt",
+    "concentr",
+    "tailings",
+    "blast",
+    "drill",
+    "mineral",
+    "extraction",
+    "geology",
+    "grade",
+)
+
+
+def _is_domain_concept_question(q: str) -> bool:
+    qn = f" {_normalize(q)} "
+    return any(h in qn or qn.strip().startswith(h.strip()) for h in _DOMAIN_CONCEPT_HINTS)
+
+
 def _is_question_form(qn: str) -> bool:
     if "?" in qn:
         return True
@@ -872,50 +941,85 @@ def _project_catalog_hits(q: str, *, limit: int = 4) -> list[dict[str, Any]]:
     return [item for _, item in scored[:limit]]
 
 
-def _filter_relevant_articles(q: str, articles: list[dict]) -> list[dict]:
+def _filter_relevant_articles(q: str, articles: list[dict], *, concise: bool = False) -> list[dict]:
     """Drop weak FTS hits that don't share meaningful tokens with the question."""
     tokens = _query_tokens(q)
     if not tokens or not articles:
         return articles
+    # Definition questions: never pull case studies / projects just because a keyword matched.
+    skip_modules = {"case_study", "projects"} if concise else set()
     kept: list[dict] = []
     for a in articles:
+        mod = (a.get("module") or "").strip().lower()
+        kind = (a.get("kind") or "").strip().lower()
+        if mod in skip_modules or kind == "project":
+            continue
+        title_n = _normalize(str(a.get("title") or ""))
         blob = _normalize(f"{a.get('title') or ''} {a.get('summary') or ''}")
+        if concise:
+            # Prefer title overlap for short definition asks.
+            if any(t in title_n for t in tokens):
+                kept.append(a)
+            continue
         if any(t in blob for t in tokens):
             kept.append(a)
     return kept
 
 
-def _context_blocks(pages: list[dict], articles: list[dict]) -> list[str]:
+def _context_blocks(
+    pages: list[dict],
+    articles: list[dict],
+    *,
+    concise: bool = False,
+) -> list[str]:
     blocks: list[str] = []
-    for p in pages[:4]:
+    page_limit = 1 if concise else 4
+    article_limit = 1 if concise else 6
+    overview_limit = 220 if concise else 420
+    for p in pages[:page_limit]:
         blocks.append(
-            f"- Portal page: {p.get('title')} — {p.get('summary') or ''} (path: {p.get('url')})"
+            f"- Portal page: {p.get('title')} — {_snippet(p.get('summary') or '', 180 if concise else 320)} "
+            f"(path: {p.get('url')})"
         )
-    for a in articles[:6]:
+    for a in articles[:article_limit]:
         detail = a.get("detail") or {}
         extra = ""
-        if detail:
+        if detail and not concise:
             bits = []
             if detail.get("sow_title"):
                 bits.append(f"SOW: {detail['sow_title']}")
             if detail.get("client"):
                 bits.append(f"Client: {detail['client']}")
             if detail.get("overview"):
-                bits.append(f"Overview: {_snippet(detail['overview'], 420)}")
+                bits.append(f"Overview: {_snippet(detail['overview'], overview_limit)}")
             if detail.get("scope"):
                 bits.append(f"Scope: {_snippet(detail['scope'], 320)}")
             if detail.get("technologies"):
                 bits.append(f"Technologies: {_snippet(detail['technologies'], 220)}")
             extra = " | ".join(bits)
+        summary = _snippet(a.get("summary") or "", 180 if concise else 320)
         blocks.append(
             f"- MiNe [{a.get('module_label')}]: {a.get('title')} — "
-            f"{extra or (a.get('summary') or '')}"
+            f"{extra or summary}"
         )
     return blocks
 
 
-def _retrieve_mine_content(q: str, *, guest: bool) -> tuple[list[dict], list[dict]]:
+def _retrieve_definition_context(q: str, *, guest: bool) -> tuple[list[dict], list[dict]]:
+    """Slim context for definition questions — page hint only, no keyword dump."""
+    pages: list[dict[str, Any]] = []
+    if _is_domain_concept_question(q):
+        hub = _page_hit("domain_knowledge")
+        if hub:
+            pages = [hub]
+    return pages, []
+
+
+def _retrieve_mine_content(q: str, *, guest: bool, concise: bool = False) -> tuple[list[dict], list[dict]]:
     """Prefer website content: projects catalog + knowledge (+ projects DB when allowed)."""
+    if concise:
+        return _retrieve_definition_context(q, guest=guest)
+
     allowed = _allowed_section_ids(guest=guest)
     db = get_db()
     pages = _static_page_hits(q, allowed)
@@ -931,7 +1035,7 @@ def _retrieve_mine_content(q: str, *, guest: bool) -> tuple[list[dict], list[dic
         limit=6,
         include_projects=(not guest and "projects" in allowed),
     )
-    fts = _filter_relevant_articles(q, fts)
+    fts = _filter_relevant_articles(q, fts, concise=False)
 
     # Deduplicate by title/id while keeping project-catalog hits first.
     seen: set[str] = set()
@@ -1015,6 +1119,7 @@ def _maybe_llm_reply(
     page_context: str | None = None,
     empty_context_ok: bool = False,
     guest: bool = False,
+    concise: bool = False,
 ) -> dict[str, Any]:
     """
     Returns {"reply", "provider", "error"}.
@@ -1034,11 +1139,12 @@ def _maybe_llm_reply(
     mine_found = bool(pages or articles) or empty_context_ok
     result = generate_assistant_reply(
         q,
-        _context_blocks(pages, articles),
+        _context_blocks(pages, articles, concise=concise),
         history=history,
         page_context=page_context,
         mine_found=mine_found,
         guest=guest,
+        concise=concise,
     )
     if result.get("ok") and result.get("text"):
         return {
@@ -1335,15 +1441,17 @@ def answer_question(
             )
         )
 
+    concise = _is_concise_definition_question(q)
+
     # Always try MiNe website content first (projects catalog + knowledge).
-    # Use expanded retrieve_q so follow-ups like "technologies?" resolve against SIMS etc.
-    pages, articles = _retrieve_mine_content(retrieve_q, guest=guest)
+    # Definition asks use slim domain context only — no keyword dump of case studies/projects.
+    pages, articles = _retrieve_mine_content(retrieve_q, guest=guest, concise=concise)
     if guest:
         pages = _guest_safe_sources(pages)
         articles = _guest_safe_sources(articles)
 
     # Page-aware boost: browsing Programs & Projects with a vague ask → portfolio hub.
-    if not pages and not articles and "project" in _normalize(page_path):
+    if not concise and not pages and not articles and "project" in _normalize(page_path):
         hub = _page_hit("projects")
         if hub and not guest:
             pages = [hub]
@@ -1354,14 +1462,19 @@ def answer_question(
 
     from mine.chatbot_llm import llm_configured
 
-    if pages or articles:
+    if pages or articles or concise:
         # Prefer a project title as the follow-up topic when retrieval found one.
-        if not guest:
+        if not guest and not concise:
             for a in articles:
                 if a.get("module") == "projects" and a.get("title"):
                     topic = str(a["title"])
                     break
-        fallback = _compose_answer(display_q, pages, articles, guest=guest)
+        if concise and not pages and not articles:
+            fallback = (
+                "Here’s a concise explanation. Ask if you want Freeport Domain Knowledge details or related MiNe pages."
+            )
+        else:
+            fallback = _compose_answer(display_q, pages, articles, guest=guest)
         llm = _maybe_llm_reply(
             display_q,
             pages,
@@ -1369,8 +1482,10 @@ def answer_question(
             fallback=fallback,
             force_llm=True,
             history=hist,
-            page_context=page_ctx,
+            page_context=None if concise else page_ctx,
+            empty_context_ok=concise,
             guest=guest,
+            concise=concise,
         )
         return _finish(
             _out(
@@ -1379,7 +1494,20 @@ def answer_question(
                 query=q,
                 provider=llm["provider"],
                 llm_error=llm["error"],
-                topic=topic if not guest else "",
+                topic="" if (guest or concise) else topic,
+                follow_ups=(
+                    _follow_up_suggestions(guest=True)
+                    if guest
+                    else (
+                        [
+                            {"label": "Domain Knowledge", "query": "domain knowledge"},
+                            {"label": "Mining operations", "query": "what are the major mining operations"},
+                            {"label": "Knowledge Base", "query": "knowledge"},
+                        ]
+                        if concise
+                        else None
+                    )
+                ),
                 guest=guest,
             )
         )
