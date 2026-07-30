@@ -8,7 +8,6 @@ from mine.project_catalog import (
     PROJECT_SECTIONS,
     build_portfolio_viz,
     enrich_project_rows,
-    fetch_approved_project_rows,
     filter_projects_by_active,
     project_is_active,
     set_catalog_project_active,

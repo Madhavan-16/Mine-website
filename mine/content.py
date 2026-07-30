@@ -26,7 +26,7 @@ from itsdangerous import BadSignature, URLSafeTimedSerializer
 from wtforms import BooleanField, SelectField, StringField, TextAreaField
 from wtforms.validators import DataRequired, Length, Optional
 
-from mine.auth_utils import load_current_user, login_required, roles_required
+from mine.auth_utils import load_current_user, login_required
 from mine.catalog_modules import (
     CASE_STUDY_MODULE,
     KNOWLEDGE_MODULES_WITHOUT_BODY,

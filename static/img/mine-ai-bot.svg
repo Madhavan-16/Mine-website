@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-hidden="true">
+  <!-- Soft plate behind face for contrast on blue launcher -->
+  <rect x="14" y="30" width="36" height="28" rx="10" fill="#ffffff"/>
+  <!-- Hard-hat dome -->
+  <path d="M18 30c0-11.5 6.2-18 14-18s14 6.5 14 18" fill="#FFB020"/>
+  <path d="M18 30c0-11.5 6.2-18 14-18s14 6.5 14 18" stroke="#E8950C" stroke-width="1.2" opacity=".35"/>
+  <!-- Brim -->
+  <rect x="11" y="28.5" width="42" height="5.5" rx="2.75" fill="#F59E0B"/>
+  <!-- Headlamp -->
+  <circle cx="32" cy="17.5" r="5.2" fill="#FFE58A"/>
+  <circle cx="32" cy="17.5" r="3.1" fill="#ffffff"/>
+  <circle cx="32" cy="17.5" r="1.7" fill="#00AEF0"/>
+  <!-- Eyes -->
+  <circle cx="25.5" cy="41" r="3.2" fill="#00AEF0"/>
+  <circle cx="38.5" cy="41" r="3.2" fill="#00AEF0"/>
+  <circle cx="26.4" cy="40.2" r="1" fill="#ffffff" opacity=".9"/>
+  <circle cx="39.4" cy="40.2" r="1" fill="#ffffff" opacity=".9"/>
+  <!-- Smile -->
+  <path d="M25.5 47.5c2.2 2.8 10.8 2.8 13 0" stroke="#00AEF0" stroke-width="2.6" stroke-linecap="round"/>
+</svg>

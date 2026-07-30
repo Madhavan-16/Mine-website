@@ -1,36 +1,96 @@
 {% if current_user and config.get('CHATBOT_ENABLED', True) and not _is_auth_page and (request.endpoint or '') != 'main.landing' %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=6" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=17" />
 <div
   id="mine-chatbot"
   class="mine-chat"
   data-endpoint="{{ url_for('chatbot.chat') }}"
   data-csrf="{{ csrf_token() }}"
+  data-page-endpoint="{{ request.endpoint or '' }}"
+  data-user-key="{{ current_user.id }}:{{ current_user.username }}"
+  data-bot-icon="{{ url_for('static', filename='img/mine-ai-bot.svg') }}?v=16"
+  {% if is_guest %}data-guest="1"{% endif %}
   {% if request.endpoint == 'main.dashboard' %}data-auto-open="1"{% endif %}
 >
-  <button type="button" class="mine-chat__launcher" id="mine-chat-open" aria-expanded="false" aria-controls="mine-chat-panel">
-    <span class="mine-chat__launcher-icon" aria-hidden="true">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
-    </span>
-    <span class="mine-chat__launcher-label">Ask MiNe</span>
+  <button
+    type="button"
+    class="mine-chat__launcher"
+    id="mine-chat-open"
+    aria-expanded="false"
+    aria-controls="mine-chat-panel"
+    aria-label="Ask MiNe AI"
+    title="Ask MiNe AI"
+  >
+    <span class="mine-chat__launcher-ring" aria-hidden="true"></span>
+    <img
+      class="mine-chat__launcher-icon"
+      src="{{ url_for('static', filename='img/mine-ai-bot.svg') }}?v=16"
+      width="40"
+      height="40"
+      alt=""
+      decoding="async"
+      draggable="false"
+    />
+    <span class="mine-chat__tooltip" role="tooltip">Ask MiNe AI</span>
   </button>
 
   <section class="mine-chat__panel is-closed" id="mine-chat-panel" role="dialog" aria-labelledby="mine-chat-title" aria-modal="false" hidden>
     <header class="mine-chat__header">
-      <div class="mine-chat__header-copy">
-        <h2 class="mine-chat__title" id="mine-chat-title">Ask MiNe</h2>
-        <p class="mine-chat__subtitle">MiNe knowledge · AI assistant (Groq / Gemini)</p>
+      <div class="mine-chat__header-brand">
+        <span class="mine-chat__header-avatar" aria-hidden="true">
+          <img
+            src="{{ url_for('static', filename='img/mine-ai-bot.svg') }}?v=16"
+            width="30"
+            height="30"
+            alt=""
+            decoding="async"
+            draggable="false"
+          />
+        </span>
+        <div class="mine-chat__header-copy">
+          <h2 class="mine-chat__title" id="mine-chat-title">MiNe AI Assistant</h2>
+          <p class="mine-chat__status">
+            <span class="mine-chat__status-dot" aria-hidden="true"></span>
+            Online
+          </p>
+        </div>
       </div>
-      <button type="button" class="mine-chat__close" id="mine-chat-close" aria-label="Close chat" title="Close">
-        <span aria-hidden="true">&times;</span>
-      </button>
+      <div class="mine-chat__header-actions">
+        <button
+          type="button"
+          class="mine-chat__clear"
+          id="mine-chat-clear"
+          aria-label="Clear chat"
+          title="Clear chat"
+          hidden
+        >
+          Clear
+        </button>
+        <button type="button" class="mine-chat__close" id="mine-chat-close" aria-label="Close chat" title="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
     </header>
     <div class="mine-chat__messages" id="mine-chat-messages" aria-live="polite"></div>
     <form class="mine-chat__form" id="mine-chat-form">
       <label class="visually-hidden" for="mine-chat-input">Your question</label>
-      <input id="mine-chat-input" class="mine-chat__input" type="text" maxlength="500" autocomplete="off" placeholder="Ask me anything…" />
-      <button class="btn btn-primary mine-chat__send" type="submit">Send</button>
+      <div class="mine-chat__composer">
+        <input
+          id="mine-chat-input"
+          class="mine-chat__input"
+          type="text"
+          maxlength="500"
+          autocomplete="off"
+          placeholder="Ask about Projects, SAP, Snowflake, SIMS, Mining..."
+        />
+        <button class="mine-chat__send" id="mine-chat-send" type="submit" aria-label="Send message" disabled>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4.5 11.5 19 4l-5.5 16-2.2-6.3L4.5 11.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="m11.3 13.7 7.7-9.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
     </form>
   </section>
 </div>
-<script src="{{ url_for('static', filename='js/chatbot.js') }}?v=6" defer></script>
+<script src="{{ url_for('static', filename='js/chatbot.js') }}?v=17" defer></script>
 {% endif %}

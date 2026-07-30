@@ -16,25 +16,29 @@ from urllib3.util.retry import Retry
 logger = logging.getLogger(__name__)
 
 _SYSTEM_PROMPT = (
-    "You are Ask MiNe — a friendly, sharp AI assistant embedded in the Hexaware–Freeport MiNe portal. "
-    "Talk like a modern chatbot (natural, warm, clear) — not like a search engine or RAG demo.\n"
-    "Rules:\n"
-    "1) Answer the user's question directly. Lead with the answer; never open with meta lines "
-    "like “Based on the provided context”, “According to MINE CONTEXT”, or “As an AI”.\n"
-    "2) For greetings or small talk, reply briefly and invite how you can help "
-    "(e.g. “Hey — how can I assist you today?”).\n"
-    "3) For general questions (science, definitions, how things work, etc.), answer from general knowledge. "
-    "Do not force Freeport/MiNe into the answer unless the user asked about them.\n"
-    "4) When optional portal notes are provided and the user is clearly asking about MiNe/Freeport content, "
-    "you may weave those facts in naturally — still without mentioning “context” or “sources”.\n"
-    "5) If unsure, say so briefly. Do not invent MiNe URLs.\n"
-    "6) Keep answers under ~180 words unless the user asks for more detail. Plain text only "
-    "(light numbered lists are fine; no markdown tables)."
+    "You are MiNe AI — a professional, friendly, enterprise assistant for the Hexaware–Freeport MiNe portal.\n"
+    "Personality: helpful, concise, conversational, context-aware. Never robotic. Avoid repetitive greetings.\n"
+    "Knowledge priority (strict):\n"
+    "1) MiNe portal notes / projects / SOW / knowledge articles provided in this turn\n"
+    "2) Conversation history (resolve pronouns like it/this/they to the last discussed project or topic)\n"
+    "3) General AI knowledge only when MiNe notes do not cover the question\n"
+    "Never invent Freeport/Hexaware project facts, dates, budgets, or SOW details.\n"
+    "If MiNe notes are missing for a portal/project question, say clearly that you could not find it "
+    "in the MiNe knowledge repository, then offer a careful general explanation if appropriate.\n"
+    "When MiNe notes exist for the topic (e.g. SIMS, Snowflake OpenFlow), answer from those notes — "
+    "do not substitute unrelated public definitions.\n"
+    "Response style (ChatGPT-quality):\n"
+    "- Start with a short summary sentence\n"
+    "- Use Markdown: ## headings, bullet lists, numbered lists, **bold** for key terms\n"
+    "- Use tables when comparing items; fenced code blocks only for real code/config\n"
+    "- Adapt length: short for simple questions, deeper detail when asked\n"
+    "- Keep greetings to 1–2 short sentences — no long menus unless asked\n"
+    "- Plain Markdown only (no HTML). Light emoji only if it improves scannability.\n"
+    "Do not mention “context”, “RAG”, or “as an AI”."
 )
 
 _RETRYABLE_STATUS = frozenset({408, 429, 500, 502, 503, 504})
 
-# Prefer a current Groq free-tier chat model; allow override via CHATBOT_LLM_MODEL.
 _DEFAULT_GROQ_MODELS = (
     "llama-3.1-8b-instant",
     "llama-3.3-70b-versatile",
@@ -45,17 +49,14 @@ _DEFAULT_GROQ_MODELS = (
 def _clean_secret(value: Any) -> str:
     if value is None:
         return ""
-    # App config may hold non-strings (e.g. CHATBOT_LLM_TIMEOUT as float).
     v = str(value).strip()
     if len(v) >= 2 and v[0] == v[-1] and v[0] in {'"', "'"}:
         v = v[1:-1].strip()
-    # Azure portal paste sometimes adds zero-width / BOM characters.
     v = v.replace("\ufeff", "").replace("\u200b", "").replace("\r", "").replace("\n", "")
     return v.strip()
 
 
 def _setting(name: str, default: str = "") -> str:
-    """Prefer live process env (Azure App Settings), then Flask config."""
     env_val = _clean_secret(os.environ.get(name))
     if env_val:
         return env_val
@@ -94,14 +95,52 @@ def _resolve_provider() -> str | None:
     return None
 
 
-def _build_user_prompt(question: str, context_blocks: list[str]) -> str:
-    parts = [f"User:\n{question.strip()}"]
+def _normalize_history(history: list[dict] | None, *, limit: int = 8) -> list[dict[str, str]]:
+    out: list[dict[str, str]] = []
+    for item in history or []:
+        if not isinstance(item, dict):
+            continue
+        role = (item.get("role") or "").strip().lower()
+        content = (item.get("content") or "").strip()
+        if role not in {"user", "assistant"} or not content:
+            continue
+        out.append({"role": role, "content": content[:1200]})
+    return out[-limit:]
+
+
+def _build_user_prompt(
+    question: str,
+    context_blocks: list[str],
+    *,
+    page_context: str | None = None,
+    mine_found: bool = False,
+    guest: bool = False,
+) -> str:
+    parts = [f"Current user question:\n{question.strip()}"]
+    if guest:
+        parts.append(
+            "GUEST MODE: This user is Guest. Only discuss Knowledge repository, Domain Knowledge "
+            "(copper mining), Freeport–Hexaware Journey, and Know your Customer. "
+            "Do not provide Programs & projects, SOW, Onboarding, Training, Innovation, or Hall of Fame details. "
+            "If asked about those, say they need a full MiNe account and suggest Guest-allowed topics."
+        )
+    if page_context:
+        parts.append(f"User is currently viewing: {page_context}")
     if context_blocks:
         parts.append(
-            "Optional portal notes (use only if relevant to this question; never mention these notes):\n"
+            "MiNe portal notes (PRIMARY source — prefer these over general knowledge):\n"
             + "\n".join(context_blocks)
         )
-    parts.append("Assistant:")
+        parts.append(
+            "Answer using the MiNe portal notes above. Stay specific to Freeport/Hexaware content."
+        )
+    elif mine_found is False:
+        parts.append(
+            "No matching MiNe portal notes were found for this question. "
+            "Start with: I couldn't find this information in the MiNe knowledge repository. "
+            "Then offer a careful general explanation if helpful, and ask if they want that."
+        )
+    parts.append("Write the assistant reply now in polished Markdown.")
     return "\n\n".join(parts)
 
 
@@ -122,11 +161,6 @@ def _verify_path() -> bool | str:
 
 
 def _session() -> requests.Session:
-    """
-    Dedicated session for LLM calls.
-    trust_env=False avoids broken HTTP(S)_PROXY vars that Azure App Service
-    sometimes injects and that break outbound calls to Groq.
-    """
     sess = requests.Session()
     sess.trust_env = False
     adapter = HTTPAdapter(
@@ -140,7 +174,6 @@ def _session() -> requests.Session:
 
 
 def _force_ipv4_once() -> None:
-    """Prefer IPv4 — some Azure App Service hosts fail on IPv6 routes to public APIs."""
     if getattr(_force_ipv4_once, "_done", False):
         return
     try:
@@ -158,7 +191,6 @@ def _force_ipv4_once() -> None:
 
 
 def _post_json(url: str, *, headers: dict, payload: dict, timeout: float) -> requests.Response:
-    """POST with short retries for transient Azure/Groq failures."""
     _force_ipv4_once()
     verify = _verify_path()
     last_exc: Exception | None = None
@@ -179,21 +211,13 @@ def _post_json(url: str, *, headers: dict, payload: dict, timeout: float) -> req
                 except ValueError:
                     delay = 0.9 * (attempt + 1)
                 delay = min(max(delay, 0.5), 8.0)
-                logger.info(
-                    "LLM HTTP %s — retry %s/3 after %.1fs",
-                    resp.status_code,
-                    attempt + 2,
-                    delay,
-                )
                 time.sleep(delay)
                 continue
             return resp
         except requests.RequestException as exc:
             last_exc = exc
             if attempt < 2:
-                delay = 0.9 * (attempt + 1)
-                logger.info("LLM network error (%s) — retry %s/3 after %.1fs", exc, attempt + 2, delay)
-                time.sleep(delay)
+                time.sleep(0.9 * (attempt + 1))
                 continue
             raise
     if last_exc:
@@ -212,7 +236,7 @@ def _groq_models() -> list[str]:
     return models
 
 
-def _call_groq(system: str, user: str) -> str:
+def _call_groq(system: str, messages: list[dict[str, str]]) -> str:
     api_key = _setting("GROQ_API_KEY")
     if not api_key:
         raise RuntimeError("GROQ_API_KEY is empty on the server")
@@ -224,24 +248,21 @@ def _call_groq(system: str, user: str) -> str:
         "User-Agent": "MiNe-AskMiNe/1.0",
     }
     last_error = ""
+    chat_messages = [{"role": "system", "content": system}, *messages]
     for model in _groq_models():
         resp = _post_json(
             url,
             headers=headers,
             payload={
                 "model": model,
-                "temperature": 0.65,
-                "max_tokens": 700,
-                "messages": [
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user},
-                ],
+                "temperature": 0.55,
+                "max_tokens": 1100,
+                "messages": chat_messages,
             },
             timeout=timeout,
         )
         if resp.status_code in (400, 404) and "model" in (resp.text or "").lower():
             last_error = _http_error_message(resp)
-            logger.warning("Groq model %s rejected — trying next: %s", model, last_error)
             continue
         if not resp.ok:
             raise RuntimeError(_http_error_message(resp))
@@ -253,7 +274,7 @@ def _call_groq(system: str, user: str) -> str:
     raise RuntimeError(last_error or "Empty LLM response")
 
 
-def _call_gemini(system: str, user: str) -> str:
+def _call_gemini(system: str, messages: list[dict[str, str]]) -> str:
     api_key = _setting("GEMINI_API_KEY")
     model = _setting("CHATBOT_LLM_MODEL") or "gemini-2.0-flash"
     timeout = float(_setting("CHATBOT_LLM_TIMEOUT") or "60")
@@ -261,15 +282,19 @@ def _call_gemini(system: str, user: str) -> str:
         f"https://generativelanguage.googleapis.com/v1beta/models/"
         f"{model}:generateContent?key={api_key}"
     )
+    contents = []
+    for m in messages:
+        role = "user" if m.get("role") == "user" else "model"
+        contents.append({"role": role, "parts": [{"text": m.get("content") or ""}]})
     resp = _post_json(
         url,
         headers={"Content-Type": "application/json"},
         payload={
             "systemInstruction": {"parts": [{"text": system}]},
-            "contents": [{"role": "user", "parts": [{"text": user}]}],
+            "contents": contents,
             "generationConfig": {
-                "temperature": 0.65,
-                "maxOutputTokens": 700,
+                "temperature": 0.55,
+                "maxOutputTokens": 1100,
             },
         },
         timeout=timeout,
@@ -285,21 +310,33 @@ def _call_gemini(system: str, user: str) -> str:
     return "\n".join(t for t in texts if t).strip()
 
 
-def generate_assistant_reply(question: str, context_blocks: list[str]) -> dict[str, Any]:
-    """
-    Call configured free-tier LLM.
-    Returns {"ok": True, "text": "...", "provider": "groq"|"gemini"} or {"ok": False, "error": "..."}.
-    """
+def generate_assistant_reply(
+    question: str,
+    context_blocks: list[str],
+    *,
+    history: list[dict] | None = None,
+    page_context: str | None = None,
+    mine_found: bool = False,
+    guest: bool = False,
+) -> dict[str, Any]:
     provider = _resolve_provider()
     if not provider:
         return {"ok": False, "error": "No LLM provider configured"}
 
-    user_prompt = _build_user_prompt(question, context_blocks)
+    prior = _normalize_history(history)
+    user_prompt = _build_user_prompt(
+        question,
+        context_blocks,
+        page_context=page_context,
+        mine_found=mine_found,
+        guest=guest,
+    )
+    messages = [*prior, {"role": "user", "content": user_prompt}]
     try:
         if provider == "groq":
-            text = _call_groq(_SYSTEM_PROMPT, user_prompt)
+            text = _call_groq(_SYSTEM_PROMPT, messages)
         else:
-            text = _call_gemini(_SYSTEM_PROMPT, user_prompt)
+            text = _call_gemini(_SYSTEM_PROMPT, messages)
         text = (text or "").strip()
         if not text:
             return {"ok": False, "error": "Empty LLM response", "provider": provider}

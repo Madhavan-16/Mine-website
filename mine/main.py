@@ -1,6 +1,6 @@
 from flask import Blueprint, abort, redirect, render_template, request, send_file, url_for
 
-from mine.auth_utils import load_current_user, login_required, roles_required
+from mine.auth_utils import load_current_user, login_required
 from mine.catalog_modules import (
     KNOWLEDGE_SERIES_MODULES as KNOWLEDGE_MODULES,
     KNOWLEDGE_SERIES_MODULE_KEYS,
@@ -16,7 +16,7 @@ from mine.config import Config
 from mine.db import get_db
 from mine.hero_showcase import _hero_showcase_slides
 from mine.project_catalog import count_portfolio_projects
-from mine.team_roster import group_roster_for_display, load_team_roster, roster_member_count, roster_xlsx_path
+from mine.team_roster import group_roster_for_display, load_team_roster, roster_member_count
 
 bp = Blueprint("main", __name__)
 

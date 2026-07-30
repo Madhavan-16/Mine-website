@@ -17,7 +17,7 @@
         <a class="btn btn-primary" href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
         <a class="btn btn-secondary" href="{{ url_for('search.search') }}">Advanced search</a>
         {% if config.get('CHATBOT_ENABLED', True) %}
-        <button type="button" class="btn btn-secondary" id="dashboard-open-chat" data-open-mine-chat>
+        <button type="button" class="btn btn-secondary" data-open-mine-chat>
           Ask MiNe
         </button>
         {% endif %}
