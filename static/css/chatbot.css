@@ -161,6 +161,25 @@
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
+.mine-chat__explain {
+  appearance: none;
+  border: 1px solid #cfeaf7;
+  background: #eef9fe;
+  color: var(--mine-chat-blue-deep);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.mine-chat__explain:hover {
+  background: #dff3fb;
+  border-color: #9ad8ef;
+}
+
 .mine-chat__clear:hover {
   background: #f1f5f9;
   color: var(--mine-chat-ink);
@@ -169,6 +188,183 @@
 
 .mine-chat__clear[hidden] {
   display: none !important;
+}
+
+.mine-chat__expand {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--mine-chat-muted);
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.mine-chat__expand:hover {
+  background: #f1f5f9;
+  color: var(--mine-chat-ink);
+  border-color: #e2e8f0;
+}
+
+.mine-chat__expand-icon--shrink[hidden],
+.mine-chat.is-expanded .mine-chat__expand-icon--grow {
+  display: none !important;
+}
+
+.mine-chat.is-expanded .mine-chat__expand-icon--shrink {
+  display: block !important;
+}
+
+.mine-chat.is-expanded {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  right: auto;
+  bottom: auto;
+  z-index: 10050;
+  pointer-events: auto;
+  background: #eef3f8;
+}
+
+.mine-chat.is-expanded .mine-chat__panel {
+  pointer-events: auto;
+  position: fixed;
+  inset: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  border-radius: 0;
+  border: 0;
+  box-shadow: none;
+  background: #f7fafc;
+}
+
+.mine-chat.is-expanded .mine-chat__launcher {
+  display: none !important;
+}
+
+/* Copilot-style: centered wide reading column for text + diagrams */
+.mine-chat.is-expanded .mine-chat__header {
+  padding: 14px clamp(16px, 4vw, 40px);
+  background: #fff;
+}
+
+.mine-chat.is-expanded .mine-chat__messages {
+  padding: 20px clamp(16px, 5vw, 48px) 28px;
+  align-items: center;
+  background:
+    radial-gradient(90% 50% at 50% 0%, rgba(0, 174, 240, 0.07), transparent 55%),
+    #f7fafc;
+}
+
+.mine-chat.is-expanded .mine-chat__row,
+.mine-chat.is-expanded .mine-chat__welcome,
+.mine-chat.is-expanded .mine-chat__followups,
+.mine-chat.is-expanded .mine-chat__typing {
+  width: min(920px, 100%);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.mine-chat.is-expanded .mine-chat__followups {
+  margin-left: 0;
+}
+
+.mine-chat.is-expanded .mine-chat__stack {
+  max-width: min(860px, calc(100% - 44px));
+  width: 100%;
+}
+
+.mine-chat.is-expanded .mine-chat__row--bot .mine-chat__stack {
+  flex: 1;
+  min-width: 0;
+}
+
+.mine-chat.is-expanded .mine-chat__bubble {
+  width: 100%;
+  max-width: 100%;
+  padding: 16px 18px;
+  font-size: 15px;
+  line-height: 1.55;
+  border-radius: 18px;
+}
+
+.mine-chat.is-expanded .mine-chat__bubble--user {
+  width: fit-content;
+  max-width: min(720px, 100%);
+  margin-left: auto;
+}
+
+.mine-chat.is-expanded .mine-chat__bubble--bot {
+  max-width: 100%;
+}
+
+.mine-chat.is-expanded .mine-chat__md {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.mine-chat.is-expanded .mine-chat__md-h {
+  font-size: 18px;
+}
+
+.mine-chat.is-expanded .mine-chat__diagrams {
+  margin-top: 0.85em;
+}
+
+.mine-chat.is-expanded .mine-chat__diagram {
+  border-radius: 14px;
+}
+
+.mine-chat.is-expanded .mine-chat__diagram-img {
+  max-height: min(70vh, 640px);
+  width: 100%;
+  object-fit: contain;
+  background: #fff;
+}
+
+.mine-chat.is-expanded .mine-chat__open-cta {
+  font-size: 13.5px;
+  padding: 11px 14px;
+}
+
+.mine-chat.is-expanded .mine-chat__form {
+  padding: 12px clamp(16px, 5vw, 48px) calc(16px + env(safe-area-inset-bottom, 0px));
+  background: #fff;
+  border-top: 1px solid var(--mine-chat-line);
+  display: flex;
+  justify-content: center;
+}
+
+.mine-chat.is-expanded .mine-chat__composer {
+  width: min(920px, 100%);
+  max-width: 100%;
+}
+
+.mine-chat.is-expanded .mine-chat__welcome-card {
+  width: 100%;
+  max-width: none;
+}
+
+.mine-chat.is-expanded .mine-chat__typing {
+  margin-left: 0;
+  max-width: min(920px, 100%);
+  align-self: center;
+}
+
+html.mine-chat-expanded,
+html.mine-chat-expanded body {
+  overflow: hidden !important;
 }
 
 .mine-chat.is-open .mine-chat__launcher {
@@ -467,6 +663,7 @@
 .mine-chat__action:focus-visible,
 .mine-chat__send:focus-visible,
 .mine-chat__clear:focus-visible,
+.mine-chat__expand:focus-visible,
 .mine-chat__close:focus-visible,
 .mine-chat__open-cta:focus-visible {
   outline: 2px solid var(--mine-chat-blue);
@@ -525,8 +722,138 @@
   padding-left: 1.2em;
 }
 
+.mine-chat__md-list--ordered {
+  list-style: decimal;
+  padding-left: 1.35em;
+}
+
 .mine-chat__md-list li {
   margin: 0.15em 0;
+}
+
+.mine-chat__md-list--nested {
+  list-style: disc;
+  margin: 0.25em 0 0.45em;
+  padding-left: 1.15em;
+}
+
+.mine-chat__md-list--nested > li {
+  font-weight: 400;
+  color: #334155;
+}
+
+.mine-chat__diagrams {
+  margin: 0.55em 0 0.35em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55em;
+}
+
+.mine-chat__diagram {
+  margin: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #c5d5e3;
+  background: #f8fafc;
+}
+
+.mine-chat__diagram-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 280px;
+  object-fit: contain;
+  background: #fff;
+  cursor: zoom-in;
+}
+
+.mine-chat__diagram-cap {
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 11.5px;
+  color: #475569;
+  border-top: 1px solid #e2e8f0;
+}
+
+.mine-chat__flow {
+  margin: 0.65em 0 0.35em;
+  border: 1px solid #c5d5e3;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef6fb 100%);
+  padding: 12px 12px 14px;
+  overflow-x: auto;
+}
+
+.mine-chat__flow-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.mine-chat__flow-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.mine-chat__flow-exports {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.mine-chat__flow-export {
+  appearance: none;
+  border: 1px solid #cfeaf7;
+  background: #fff;
+  color: #0277a8;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mine-chat__flow-export:hover {
+  background: #eef9fe;
+}
+
+.mine-chat__flow-canvas {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mine-chat__flow-svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.mine-chat.is-expanded .mine-chat__flow {
+  padding: 16px;
+}
+
+.mine-chat.is-expanded .mine-chat__flow-svg {
+  max-width: none;
+}
+
+.mine-chat.is-expanded .mine-chat__flow[data-flow-direction="LR"] .mine-chat__flow-canvas {
+  display: flex;
+  justify-content: center;
+}
+
+.mine-chat__bubble--streaming {
+  opacity: 0.96;
+}
+
+.mine-chat__stream-pending {
+  color: #64748b;
+  font-style: italic;
 }
 
 .mine-chat__md-code {
@@ -657,10 +984,12 @@
   background: #f8fafc;
   color: #475569;
   border-radius: 8px;
-  padding: 4px 9px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
   font: inherit;
-  font-size: 11.5px;
-  font-weight: 650;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
@@ -675,6 +1004,10 @@
   background: #ecfdf5;
   border-color: #a7f3d0;
   color: #047857;
+}
+
+.mine-chat__action svg {
+  display: block;
 }
 
 .mine-chat__source {
@@ -858,6 +1191,13 @@
     height: min(72vh, 620px);
     border-radius: 18px;
   }
+
+  .mine-chat.is-expanded .mine-chat__panel {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
 }
 
 @media (max-width: 480px) {
@@ -894,5 +1234,18 @@
 
   .mine-chat__stack {
     max-width: min(94%, 100%);
+  }
+
+  .mine-chat.is-expanded .mine-chat__panel {
+    inset: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+
+  .mine-chat.is-expanded .mine-chat__stack {
+    max-width: calc(100% - 40px);
   }
 }

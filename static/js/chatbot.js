@@ -9,6 +9,8 @@
   var openBtn = document.getElementById("mine-chat-open");
   var closeBtn = document.getElementById("mine-chat-close");
   var clearBtn = document.getElementById("mine-chat-clear");
+  var expandBtn = document.getElementById("mine-chat-expand");
+  var explainBtn = document.getElementById("mine-chat-explain");
   var panel = document.getElementById("mine-chat-panel");
   var form = document.getElementById("mine-chat-form");
   var input = document.getElementById("mine-chat-input");
@@ -158,24 +160,39 @@
     });
   }
 
+  function isImageSource(s) {
+    if (!s || !s.url) return false;
+    if (String(s.kind || "").toLowerCase() === "image") return true;
+    return /\/(value-chain|lifecycle|digital-enablement|service-map|pa-process|measurement-hierarchy)-image/i.test(
+      String(s.url)
+    );
+  }
+
+  function scoreSource(s) {
+    var kind = String(s.kind || "").toLowerCase();
+    var mod = String(s.module || "").toLowerCase();
+    var title = String(s.title || "").toLowerCase();
+    var n = 100;
+    if (isImageSource(s)) n = 40;
+    else if (kind === "project" || mod === "projects") n = 300;
+    else if (mod === "domain_knowledge" && kind === "page") n = 220;
+    else if (kind === "page") n = 50;
+    if (
+      title === "programs & projects" ||
+      title === "programs and projects" ||
+      title === "projects"
+    ) {
+      n -= 100;
+    }
+    return n;
+  }
+
   function dedupeSources(sources) {
     var best = {};
     (sources || []).forEach(function (s) {
       if (!s || !s.url) return;
       var key = String(s.url).toLowerCase();
-      var score = 100;
-      var kind = String(s.kind || "").toLowerCase();
-      var mod = String(s.module || "").toLowerCase();
-      var title = String(s.title || "").toLowerCase();
-      if (kind === "project" || mod === "projects") score = 300;
-      else if (kind === "page") score = 50;
-      if (
-        title === "programs & projects" ||
-        title === "programs and projects" ||
-        title === "projects"
-      ) {
-        score -= 100;
-      }
+      var score = scoreSource(s);
       if (!best[key] || score > best[key].score) {
         best[key] = { score: score, item: s };
       }
@@ -185,37 +202,17 @@
         return best[k].item;
       })
       .sort(function (a, b) {
-        function score(s) {
-          var kind = String(s.kind || "").toLowerCase();
-          var mod = String(s.module || "").toLowerCase();
-          if (kind === "project" || mod === "projects") return 300;
-          if (kind === "page") return 50;
-          return 100;
-        }
-        return score(b) - score(a);
+        return scoreSource(b) - scoreSource(a);
       });
   }
 
   function pickPrimarySource(sources) {
     if (!sources || !sources.length) return null;
-    var ranked = sources.slice().sort(function (a, b) {
-      function score(s) {
-        var kind = String(s.kind || "").toLowerCase();
-        var mod = String(s.module || "").toLowerCase();
-        var title = String(s.title || "").toLowerCase();
-        var n = 100;
-        if (kind === "project" || mod === "projects") n = 300;
-        else if (kind === "page") n = 50;
-        if (
-          title === "programs & projects" ||
-          title === "programs and projects" ||
-          title === "projects"
-        ) {
-          n -= 100;
-        }
-        return n;
-      }
-      return score(b) - score(a);
+    var linkOnly = sources.filter(function (s) {
+      return !isImageSource(s);
+    });
+    var ranked = (linkOnly.length ? linkOnly : sources).slice().sort(function (a, b) {
+      return scoreSource(b) - scoreSource(a);
     });
     return ranked[0];
   }
@@ -296,6 +293,376 @@
       .replace(/"/g, "&quot;");
   }
 
+  /**
+   * Rich Mermaid subset → SVG flowchart (boxes, diamonds, LR/TD, edge labels).
+   * Supports: flowchart LR|TD, A["Label"], A{Decision?}, A -->|Yes| B
+   */
+  function buildFlowchartHtml(src) {
+    var direction = "TD";
+    var nodes = {};
+    var edges = [];
+    var order = [];
+    var seen = {};
+
+    function remember(id) {
+      if (!seen[id]) {
+        seen[id] = true;
+        order.push(id);
+      }
+    }
+
+    String(src || "")
+      .split("\n")
+      .forEach(function (raw) {
+        var line = String(raw || "").trim();
+        if (!line) return;
+        var dir = /^(?:flowchart|graph)\s+(LR|RL|TD|BT)\b/i.exec(line);
+        if (dir) {
+          direction = dir[1].toUpperCase();
+          if (direction === "BT") direction = "TD";
+          if (direction === "RL") direction = "LR";
+          return;
+        }
+        if (/^(?:flowchart|graph)\b/i.test(line)) return;
+
+        var nodeRe = /([A-Za-z][\w]*)\s*(?:\[\s*"?([^\]"]+)"?\s*\]|\{\s*"?([^}"]+)"?\s*\})/g;
+        var m;
+        while ((m = nodeRe.exec(line))) {
+          var id = m[1];
+          var box = (m[2] || "").trim();
+          var dia = (m[3] || "").trim();
+          if (box) {
+            nodes[id] = { label: box, shape: "box" };
+            remember(id);
+          } else if (dia) {
+            nodes[id] = { label: dia, shape: "diamond" };
+            remember(id);
+          }
+        }
+
+        var edge =
+          /^\s*([A-Za-z][\w]*)\s*-->\s*(?:\|([^|]+)\|\s*)?([A-Za-z][\w]*)/.exec(line) ||
+          /^\s*([A-Za-z][\w]*)\s*--\s*([^-\n]+?)\s*-->\s*([A-Za-z][\w]*)/.exec(line);
+        if (edge) {
+          var a = edge[1];
+          var label = (edge[2] || "").trim();
+          var b = edge[3];
+          remember(a);
+          remember(b);
+          if (!nodes[a]) nodes[a] = { label: a, shape: "box" };
+          if (!nodes[b]) nodes[b] = { label: b, shape: "box" };
+          edges.push({ from: a, to: b, label: label });
+        }
+      });
+
+    if (!order.length) {
+      return (
+        '<pre class="mine-chat__md-pre"><code>' +
+        escapeHtml(src) +
+        "</code></pre>"
+      );
+    }
+
+    // Layered layout from edges (Kahn-ish levels).
+    var indeg = {};
+    order.forEach(function (id) {
+      indeg[id] = 0;
+    });
+    edges.forEach(function (e) {
+      if (indeg[e.to] != null) indeg[e.to] += 1;
+    });
+    var levelOf = {};
+    var queue = order.filter(function (id) {
+      return indeg[id] === 0;
+    });
+    if (!queue.length) queue = order.slice(0, 1);
+    queue.forEach(function (id) {
+      levelOf[id] = 0;
+    });
+    var qi = 0;
+    while (qi < queue.length) {
+      var cur = queue[qi++];
+      edges.forEach(function (e) {
+        if (e.from !== cur) return;
+        var nextLvl = (levelOf[cur] || 0) + 1;
+        if (levelOf[e.to] == null || levelOf[e.to] < nextLvl) {
+          levelOf[e.to] = nextLvl;
+        }
+        if (queue.indexOf(e.to) === -1) queue.push(e.to);
+      });
+    }
+    order.forEach(function (id) {
+      if (levelOf[id] == null) levelOf[id] = 0;
+    });
+
+    var levels = {};
+    order.forEach(function (id) {
+      var lv = levelOf[id];
+      if (!levels[lv]) levels[lv] = [];
+      levels[lv].push(id);
+    });
+    var levelKeys = Object.keys(levels)
+      .map(Number)
+      .sort(function (a, b) {
+        return a - b;
+      });
+
+    var isLR = direction === "LR";
+    var nodeW = 128;
+    var nodeH = 44;
+    var gapMain = 72;
+    var gapCross = 28;
+    var pad = 24;
+    var positions = {};
+    var maxCross = 1;
+    levelKeys.forEach(function (lv) {
+      maxCross = Math.max(maxCross, levels[lv].length);
+    });
+
+    levelKeys.forEach(function (lv) {
+      var row = levels[lv];
+      row.forEach(function (id, idx) {
+        var cross = idx * (nodeH + gapCross);
+        var main = lv * (nodeW + gapMain);
+        if (isLR) {
+          positions[id] = { x: pad + main, y: pad + cross };
+        } else {
+          positions[id] = { x: pad + idx * (nodeW + gapCross), y: pad + lv * (nodeH + gapMain) };
+        }
+      });
+    });
+
+    var maxX = 0;
+    var maxY = 0;
+    order.forEach(function (id) {
+      var p = positions[id];
+      maxX = Math.max(maxX, p.x + nodeW);
+      maxY = Math.max(maxY, p.y + nodeH);
+    });
+    var width = Math.max(280, maxX + pad);
+    var height = Math.max(160, maxY + pad);
+
+    function esc(s) {
+      return escapeHtml(String(s || ""));
+    }
+
+    var svgParts = [];
+    svgParts.push(
+      '<svg class="mine-chat__flow-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
+        width +
+        " " +
+        height +
+        '" width="' +
+        width +
+        '" height="' +
+        height +
+        '" role="img" aria-label="AI flowchart">'
+    );
+    svgParts.push(
+      '<defs><marker id="mineFlowArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#0277a8"/></marker></defs>'
+    );
+
+    edges.forEach(function (e) {
+      var a = positions[e.from];
+      var b = positions[e.to];
+      if (!a || !b) return;
+      var x1 = a.x + nodeW / 2;
+      var y1 = a.y + nodeH / 2;
+      var x2 = b.x + nodeW / 2;
+      var y2 = b.y + nodeH / 2;
+      if (isLR) {
+        x1 = a.x + nodeW;
+        x2 = b.x;
+      } else {
+        y1 = a.y + nodeH;
+        y2 = b.y;
+      }
+      svgParts.push(
+        '<line x1="' +
+          x1 +
+          '" y1="' +
+          y1 +
+          '" x2="' +
+          x2 +
+          '" y2="' +
+          y2 +
+          '" stroke="#0277a8" stroke-width="2" marker-end="url(#mineFlowArrow)"/>'
+      );
+      if (e.label) {
+        var mx = (x1 + x2) / 2;
+        var my = (y1 + y2) / 2 - 6;
+        svgParts.push(
+          '<rect x="' +
+            (mx - 18) +
+            '" y="' +
+            (my - 10) +
+            '" width="36" height="16" rx="4" fill="#eef9fe" stroke="#9ad8ef"/>'
+        );
+        svgParts.push(
+          '<text x="' +
+            mx +
+            '" y="' +
+            (my + 2) +
+            '" text-anchor="middle" font-size="10" fill="#0369a1" font-weight="700">' +
+            esc(e.label) +
+            "</text>"
+        );
+      }
+    });
+
+    order.forEach(function (id, idx) {
+      var n = nodes[id];
+      var p = positions[id];
+      var label = n.label || id;
+      if (n.shape === "diamond") {
+        var cx = p.x + nodeW / 2;
+        var cy = p.y + nodeH / 2;
+        var pts =
+          cx +
+          "," +
+          (p.y + 2) +
+          " " +
+          (p.x + nodeW - 2) +
+          "," +
+          cy +
+          " " +
+          cx +
+          "," +
+          (p.y + nodeH - 2) +
+          " " +
+          (p.x + 2) +
+          "," +
+          cy;
+        svgParts.push(
+          '<polygon points="' +
+            pts +
+            '" fill="#fff7ed" stroke="#f59e0b" stroke-width="2"/>'
+        );
+        svgParts.push(
+          '<text x="' +
+            cx +
+            '" y="' +
+            (cy + 4) +
+            '" text-anchor="middle" font-size="11" font-weight="700" fill="#9a3412">' +
+            esc(label.length > 18 ? label.slice(0, 17) + "…" : label) +
+            "</text>"
+        );
+      } else {
+        svgParts.push(
+          '<rect x="' +
+            p.x +
+            '" y="' +
+            p.y +
+            '" width="' +
+            nodeW +
+            '" height="' +
+            nodeH +
+            '" rx="10" fill="#ffffff" stroke="#00aef0" stroke-width="2"/>'
+        );
+        svgParts.push(
+          '<circle cx="' +
+            (p.x + 16) +
+            '" cy="' +
+            (p.y + nodeH / 2) +
+            '" r="9" fill="url(#none)" style="fill:#00aef0"/>'
+        );
+        svgParts.push(
+          '<text x="' +
+            (p.x + 16) +
+            '" y="' +
+            (p.y + nodeH / 2 + 4) +
+            '" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">' +
+            (idx + 1) +
+            "</text>"
+        );
+        svgParts.push(
+          '<text x="' +
+            (p.x + 30) +
+            '" y="' +
+            (p.y + nodeH / 2 + 4) +
+            '" font-size="11" font-weight="650" fill="#0f2740">' +
+            esc(label.length > 16 ? label.slice(0, 15) + "…" : label) +
+            "</text>"
+        );
+      }
+    });
+
+    svgParts.push("</svg>");
+
+    return (
+      '<div class="mine-chat__flow" data-flow-direction="' +
+      direction +
+      '">' +
+      '<div class="mine-chat__flow-toolbar">' +
+      '<p class="mine-chat__flow-label">AI flowchart</p>' +
+      '<div class="mine-chat__flow-exports">' +
+      '<button type="button" class="mine-chat__flow-export" data-flow-export="svg" title="Download SVG">SVG</button>' +
+      '<button type="button" class="mine-chat__flow-export" data-flow-export="png" title="Download PNG">PNG</button>' +
+      "</div></div>" +
+      '<div class="mine-chat__flow-canvas">' +
+      svgParts.join("") +
+      "</div></div>"
+    );
+  }
+
+  function wireFlowExports(rootEl) {
+    if (!rootEl) return;
+    rootEl.querySelectorAll(".mine-chat__flow").forEach(function (flow) {
+      if (flow.getAttribute("data-wired") === "1") return;
+      flow.setAttribute("data-wired", "1");
+      var svg = flow.querySelector("svg");
+      if (!svg) return;
+      flow.querySelectorAll("[data-flow-export]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var kind = btn.getAttribute("data-flow-export");
+          var clone = svg.cloneNode(true);
+          if (!clone.getAttribute("xmlns")) {
+            clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+          }
+          var xml =
+            '<?xml version="1.0" encoding="UTF-8"?>\n' +
+            new XMLSerializer().serializeToString(clone);
+          if (kind === "svg") {
+            downloadBlob(new Blob([xml], { type: "image/svg+xml;charset=utf-8" }), "mine-flowchart.svg");
+            return;
+          }
+          var img = new Image();
+          var url = URL.createObjectURL(new Blob([xml], { type: "image/svg+xml;charset=utf-8" }));
+          img.onload = function () {
+            var canvas = document.createElement("canvas");
+            var scale = 2;
+            canvas.width = Math.max(1, img.width * scale);
+            canvas.height = Math.max(1, img.height * scale);
+            var ctx = canvas.getContext("2d");
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            URL.revokeObjectURL(url);
+            canvas.toBlob(function (blob) {
+              if (blob) downloadBlob(blob, "mine-flowchart.png");
+            }, "image/png");
+          };
+          img.onerror = function () {
+            URL.revokeObjectURL(url);
+          };
+          img.src = url;
+        });
+      });
+    });
+  }
+
+  function downloadBlob(blob, filename) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename || "download";
+    document.body.appendChild(a);
+    a.click();
+    window.setTimeout(function () {
+      URL.revokeObjectURL(a.href);
+      a.remove();
+    }, 500);
+  }
+
   /** Lightweight Markdown → safe HTML for chat bubbles. */
   function renderMarkdown(src) {
     var text = String(src || "").replace(/\r\n/g, "\n");
@@ -303,12 +670,31 @@
     var html = [];
     var inUl = false;
     var inOl = false;
+    var olLiOpen = false;
+    var inNestedUl = false;
     var inCode = false;
     var codeBuf = [];
+    var codeLang = "";
     var inTable = false;
     var tableRows = [];
 
+    function closeNestedUl() {
+      if (inNestedUl) {
+        html.push("</ul>");
+        inNestedUl = false;
+      }
+    }
+
+    function closeOlItem() {
+      closeNestedUl();
+      if (olLiOpen) {
+        html.push("</li>");
+        olLiOpen = false;
+      }
+    }
+
     function closeLists() {
+      closeOlItem();
       if (inUl) {
         html.push("</ul>");
         inUl = false;
@@ -317,6 +703,33 @@
         html.push("</ol>");
         inOl = false;
       }
+    }
+
+    function nextContentLine(from) {
+      for (var j = from + 1; j < lines.length; j++) {
+        if (String(lines[j] || "").trim()) return lines[j];
+      }
+      return "";
+    }
+
+    function isListLine(s) {
+      return /^[-*•]\s+/.test(s) || /^\d+[.)]\s+/.test(s);
+    }
+
+    function flushCodeBlock() {
+      var body = codeBuf.join("\n");
+      codeBuf = [];
+      var lang = String(codeLang || "").toLowerCase();
+      codeLang = "";
+      if (lang === "mermaid") {
+        html.push(buildFlowchartHtml(body));
+        return;
+      }
+      html.push(
+        '<pre class="mine-chat__md-pre"><code>' +
+          escapeHtml(body) +
+          "</code></pre>"
+      );
     }
 
     function closeTable() {
@@ -361,19 +774,17 @@
     for (var i = 0; i < lines.length; i++) {
       var line = lines[i];
 
-      if (/^```/.test(line)) {
+      var fence = /^```\s*(\w+)?\s*$/.exec(line);
+      if (fence) {
         if (inCode) {
-          html.push(
-            '<pre class="mine-chat__md-pre"><code>' +
-              escapeHtml(codeBuf.join("\n")) +
-              "</code></pre>"
-          );
-          codeBuf = [];
+          flushCodeBlock();
           inCode = false;
         } else {
           closeLists();
           closeTable();
           inCode = true;
+          codeLang = fence[1] || "";
+          codeBuf = [];
         }
         continue;
       }
@@ -399,8 +810,28 @@
         continue;
       }
 
+      // Keep one continuous <ol> across blank lines / bullet details so stages number 1,2,3…
+      if (!String(line || "").trim()) {
+        if ((inOl || inUl) && isListLine(nextContentLine(i))) {
+          continue;
+        }
+        closeLists();
+        html.push('<div class="mine-chat__md-gap"></div>');
+        continue;
+      }
+
       var ul = /^[-*•]\s+(.+)$/.exec(line);
       if (ul) {
+        if (inOl && olLiOpen) {
+          // Nest detail bullets INSIDE the stage <li> so they don't steal 2,3,5…
+          if (!inNestedUl) {
+            html.push('<ul class="mine-chat__md-list mine-chat__md-list--nested">');
+            inNestedUl = true;
+          }
+          html.push("<li>" + inlineMd(ul[1]) + "</li>");
+          continue;
+        }
+        closeOlItem();
         if (inOl) {
           html.push("</ol>");
           inOl = false;
@@ -420,27 +851,26 @@
           inUl = false;
         }
         if (!inOl) {
-          html.push('<ol class="mine-chat__md-list">');
+          html.push('<ol class="mine-chat__md-list mine-chat__md-list--ordered">');
           inOl = true;
+        } else {
+          closeOlItem();
         }
-        html.push("<li>" + inlineMd(ol[2]) + "</li>");
+        // Leave <li> open so following `-` bullets nest under this stage.
+        html.push("<li>" + inlineMd(ol[2]));
+        olLiOpen = true;
         continue;
       }
 
       closeLists();
-      if (!line.trim()) {
-        html.push('<div class="mine-chat__md-gap"></div>');
-      } else {
-        html.push('<p class="mine-chat__md-p">' + inlineMd(line) + "</p>");
-      }
+      html.push('<p class="mine-chat__md-p">' + inlineMd(line) + "</p>");
     }
 
     closeLists();
     closeTable();
     if (inCode) {
-      html.push(
-        '<pre class="mine-chat__md-pre"><code>' + escapeHtml(codeBuf.join("\n")) + "</code></pre>"
-      );
+      flushCodeBlock();
+      inCode = false;
     }
     return html.join("");
   }
@@ -451,10 +881,38 @@
     sendBtn.disabled = empty || busy;
   }
 
+  function setExpanded(expanded) {
+    if (!root) return;
+    var on = !!expanded;
+    if (on) {
+      root.classList.add("is-expanded");
+      document.documentElement.classList.add("mine-chat-expanded");
+    } else {
+      root.classList.remove("is-expanded");
+      document.documentElement.classList.remove("mine-chat-expanded");
+    }
+    if (expandBtn) {
+      expandBtn.setAttribute("aria-pressed", on ? "true" : "false");
+      expandBtn.setAttribute(
+        "aria-label",
+        on ? "Exit full page" : "Expand chat"
+      );
+      expandBtn.title = on ? "Exit full page" : "Expand to full page";
+      var grow = expandBtn.querySelector(".mine-chat__expand-icon--grow");
+      var shrink = expandBtn.querySelector(".mine-chat__expand-icon--shrink");
+      if (grow) grow.hidden = on;
+      if (shrink) shrink.hidden = !on;
+    }
+    if (on) {
+      window.setTimeout(scrollToBottom, 60);
+    }
+  }
+
   function setOpen(open) {
     if (!panel) return;
     if (!open) {
       userClosed = true;
+      setExpanded(false);
     }
     if (open) {
       panel.hidden = false;
@@ -557,16 +1015,27 @@
     scrollToBottom();
   }
 
+  var COPY_ICON =
+    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+    '<rect x="8" y="8" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.8"/>' +
+    '<path d="M6 16H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' +
+    "</svg>";
+  var COPIED_ICON =
+    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+    '<path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+    "</svg>";
+
   function copyPlainText(text, btn) {
     var value = String(text || "");
     function markCopied() {
       if (!btn) return;
-      var prev = btn.textContent;
-      btn.textContent = "Copied";
+      btn.innerHTML = COPIED_ICON;
       btn.classList.add("is-copied");
+      btn.setAttribute("aria-label", "Copied");
       window.setTimeout(function () {
-        btn.textContent = prev;
+        btn.innerHTML = COPY_ICON;
         btn.classList.remove("is-copied");
+        btn.setAttribute("aria-label", "Copy reply");
       }, 1400);
     }
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -613,10 +1082,44 @@
     body.className = "mine-chat__md";
     body.innerHTML = renderMarkdown(text || "");
     wrap.appendChild(body);
+    wireFlowExports(wrap);
 
     var usableSources = dedupeSources(sources);
-    if (usableSources.length && !opts.compact) {
-      var top = pickPrimarySource(usableSources) || usableSources[0];
+    var imageSources = usableSources.filter(isImageSource);
+    var linkSources = usableSources.filter(function (s) {
+      return !isImageSource(s);
+    });
+    var hasAiFlow = !!(wrap.querySelector && wrap.querySelector(".mine-chat__flow"));
+    var shouldExpand = !opts.compact && (imageSources.length > 0 || hasAiFlow);
+
+    if (imageSources.length && !opts.compact) {
+      var media = document.createElement("div");
+      media.className = "mine-chat__diagrams";
+      imageSources.slice(0, 2).forEach(function (s) {
+        var fig = document.createElement("figure");
+        fig.className = "mine-chat__diagram";
+        var img = document.createElement("img");
+        img.className = "mine-chat__diagram-img";
+        img.src = s.url;
+        img.alt = s.title || "Domain Knowledge diagram";
+        img.loading = "lazy";
+        img.addEventListener("click", function () {
+          window.open(s.url, "_blank", "noopener");
+        });
+        fig.appendChild(img);
+        if (s.title) {
+          var cap = document.createElement("figcaption");
+          cap.className = "mine-chat__diagram-cap";
+          cap.textContent = s.title;
+          fig.appendChild(cap);
+        }
+        media.appendChild(fig);
+      });
+      wrap.appendChild(media);
+    }
+
+    if (linkSources.length && !opts.compact) {
+      var top = pickPrimarySource(linkSources) || linkSources[0];
       var cta = document.createElement("a");
       cta.className = "mine-chat__open-cta";
       cta.href = top.url;
@@ -624,7 +1127,7 @@
       cta.title = top.title || top.url;
       wrap.appendChild(cta);
 
-      var rest = usableSources.filter(function (s) {
+      var rest = linkSources.filter(function (s) {
         return String(s.url).toLowerCase() !== String(top.url).toLowerCase();
       });
       if (rest.length) {
@@ -659,8 +1162,9 @@
       var copyBtn = document.createElement("button");
       copyBtn.type = "button";
       copyBtn.className = "mine-chat__action";
-      copyBtn.textContent = "Copy";
+      copyBtn.innerHTML = COPY_ICON;
       copyBtn.setAttribute("aria-label", "Copy reply");
+      copyBtn.title = "Copy";
       copyBtn.addEventListener("click", function () {
         copyPlainText(text || "", copyBtn);
       });
@@ -675,6 +1179,9 @@
     }
     syncClearVisible();
     scrollToBottom();
+    if (shouldExpand && !root.classList.contains("is-expanded")) {
+      setExpanded(true);
+    }
   }
 
   function appendError(text) {
@@ -755,6 +1262,132 @@
     });
   }
 
+  function beginBotStream() {
+    var row = document.createElement("div");
+    row.className = "mine-chat__row mine-chat__row--bot";
+    row.appendChild(makeBotAvatar());
+    var wrap = document.createElement("div");
+    wrap.className = "mine-chat__bubble mine-chat__bubble--bot mine-chat__bubble--streaming";
+    var body = document.createElement("div");
+    body.className = "mine-chat__md";
+    body.innerHTML = '<p class="mine-chat__md-p mine-chat__stream-pending">…</p>';
+    wrap.appendChild(body);
+    row.appendChild(makeStack(wrap, new Date()));
+    messages.appendChild(row);
+    scrollToBottom();
+    return { row: row, wrap: wrap, body: body, text: "" };
+  }
+
+  function updateBotStream(streamState, chunk) {
+    if (!streamState) return;
+    streamState.text += chunk || "";
+    // Progressive plain text until done (markdown finalize on complete).
+    streamState.body.textContent = streamState.text;
+    scrollToBottom();
+  }
+
+  function finalizeBotStream(streamState, fullText, sources, followUps) {
+    if (!streamState) {
+      appendBot(fullText, sources, followUps);
+      return;
+    }
+    var text = fullText || streamState.text || "";
+    streamState.wrap.classList.remove("mine-chat__bubble--streaming");
+    streamState.body.className = "mine-chat__md";
+    streamState.body.innerHTML = renderMarkdown(text);
+    wireFlowExports(streamState.wrap);
+
+    var usableSources = dedupeSources(sources);
+    var imageSources = usableSources.filter(isImageSource);
+    var linkSources = usableSources.filter(function (s) {
+      return !isImageSource(s);
+    });
+
+    if (imageSources.length) {
+      var media = document.createElement("div");
+      media.className = "mine-chat__diagrams";
+      imageSources.slice(0, 2).forEach(function (s) {
+        var fig = document.createElement("figure");
+        fig.className = "mine-chat__diagram";
+        var img = document.createElement("img");
+        img.className = "mine-chat__diagram-img";
+        img.src = s.url;
+        img.alt = s.title || "Domain Knowledge diagram";
+        img.loading = "lazy";
+        img.addEventListener("click", function () {
+          window.open(s.url, "_blank", "noopener");
+        });
+        fig.appendChild(img);
+        if (s.title) {
+          var cap = document.createElement("figcaption");
+          cap.className = "mine-chat__diagram-cap";
+          cap.textContent = s.title;
+          fig.appendChild(cap);
+        }
+        media.appendChild(fig);
+      });
+      streamState.wrap.appendChild(media);
+    }
+
+    if (linkSources.length) {
+      var top = pickPrimarySource(linkSources) || linkSources[0];
+      var cta = document.createElement("a");
+      cta.className = "mine-chat__open-cta";
+      cta.href = top.url;
+      cta.textContent = shortOpenLabel(top.title || top.url);
+      cta.title = top.title || top.url;
+      streamState.wrap.appendChild(cta);
+    }
+
+    var actions = document.createElement("div");
+    actions.className = "mine-chat__actions";
+    var copyBtn = document.createElement("button");
+    copyBtn.type = "button";
+    copyBtn.className = "mine-chat__action";
+    copyBtn.innerHTML = COPY_ICON;
+    copyBtn.setAttribute("aria-label", "Copy reply");
+    copyBtn.title = "Copy";
+    copyBtn.addEventListener("click", function () {
+      copyPlainText(text || "", copyBtn);
+    });
+    actions.appendChild(copyBtn);
+    streamState.wrap.appendChild(actions);
+
+    appendFollowUps(followUps);
+    syncClearVisible();
+    scrollToBottom();
+    var hasAiFlow = !!streamState.wrap.querySelector(".mine-chat__flow");
+    if ((imageSources.length || hasAiFlow) && !root.classList.contains("is-expanded")) {
+      setExpanded(true);
+    }
+  }
+
+  function postChatJson(q, historyPayload) {
+    return fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrf,
+      },
+      credentials: "same-origin",
+      body: JSON.stringify({
+        message: q,
+        history: historyPayload,
+        page: currentPage(),
+      }),
+    }).then(function (res2) {
+      return res2.text().then(function (raw) {
+        var data = {};
+        try {
+          data = raw ? JSON.parse(raw) : {};
+        } catch (e) {
+          data = { error: "Unexpected server response. Please try again." };
+        }
+        return { mode: "json", ok: res2.ok, data: data };
+      });
+    });
+  }
+
   function sendMessage(q) {
     q = (q || "").trim();
     if (!q || busy || !input) return;
@@ -773,23 +1406,15 @@
     syncClearVisible();
 
     var requestId = ++activeRequest;
-    var typing = document.createElement("div");
-    typing.className = "mine-chat__typing";
-    typing.setAttribute("aria-live", "polite");
-    typing.innerHTML =
-      '<span class="mine-chat__typing-emoji" aria-hidden="true">🤖</span>' +
-      '<span class="mine-chat__typing-copy">MiNe AI is thinking' +
-      '<span class="mine-chat__typing-dots" aria-hidden="true"><span></span><span></span><span></span></span>' +
-      "</span>" +
-      '<span class="mine-chat__typing-pulse" aria-hidden="true"></span>';
-    messages.appendChild(typing);
-    scrollToBottom();
+    var streamState = beginBotStream();
 
-    fetch(endpoint, {
+    var streamUrl = String(endpoint || "").replace(/\/?$/, "") + "/stream";
+    fetch(streamUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-CSRFToken": csrf,
+        Accept: "text/event-stream",
       },
       credentials: "same-origin",
       body: JSON.stringify({
@@ -799,34 +1424,93 @@
       }),
     })
       .then(function (res) {
-        return res.text().then(function (raw) {
-          var data = {};
+        if (!res.ok || !res.body || !res.body.getReader) {
+          return postChatJson(q, historyPayload);
+        }
+        var reader = res.body.getReader();
+        var decoder = new TextDecoder();
+        var buffer = "";
+        var finalPayload = null;
+        var streamFailed = null;
+
+        function handleEvent(block) {
+          var lines = block.split("\n");
+          var dataLine = "";
+          lines.forEach(function (ln) {
+            if (ln.indexOf("data:") === 0) {
+              dataLine += ln.slice(5).trim();
+            }
+          });
+          if (!dataLine) return;
+          var evt;
           try {
-            data = raw ? JSON.parse(raw) : {};
+            evt = JSON.parse(dataLine);
           } catch (e) {
-            data = { error: "Unexpected server response. Please try again." };
+            return;
           }
-          return { ok: res.ok, status: res.status, data: data };
-        });
+          if (evt.type === "token") {
+            updateBotStream(streamState, evt.text || "");
+          } else if (evt.type === "done") {
+            finalPayload = evt;
+          } else if (evt.type === "error") {
+            streamFailed = evt.error || "Stream failed";
+          }
+        }
+
+        function pump() {
+          return reader.read().then(function (result) {
+            if (result.done) {
+              if (streamFailed || !finalPayload) {
+                // Fall back to classic JSON chat if SSE failed mid-flight.
+                return postChatJson(q, historyPayload);
+              }
+              return { mode: "stream", ok: true, data: finalPayload };
+            }
+            buffer += decoder.decode(result.value, { stream: true });
+            var parts = buffer.split("\n\n");
+            buffer = parts.pop() || "";
+            parts.forEach(handleEvent);
+            if (streamFailed) {
+              try {
+                reader.cancel();
+              } catch (e) {
+                /* ignore */
+              }
+              return postChatJson(q, historyPayload);
+            }
+            return pump();
+          });
+        }
+        return pump();
+      })
+      .catch(function () {
+        // Network / stream transport failure → retry non-stream endpoint.
+        return postChatJson(q, historyPayload);
       })
       .then(function (result) {
         if (requestId !== activeRequest) return;
-        typing.remove();
-        if (!result.ok) {
+        if (!result || !result.ok) {
+          if (streamState && streamState.row) streamState.row.remove();
           appendError(
-            (result.data && result.data.error) ||
+            (result && result.data && result.data.error) ||
               "I couldn't complete that request. Please try again in a moment."
           );
           return;
         }
-        var reply = (result.data && result.data.reply) || "";
-        var followUps = (result.data && result.data.follow_ups) || [];
+        var data = result.data || {};
+        var reply = data.reply || (streamState && streamState.text) || "";
+        var followUps = data.follow_ups || [];
         pushHistory("assistant", reply);
-        appendBot(reply, (result.data && result.data.sources) || [], followUps);
+        if (result.mode === "json") {
+          if (streamState && streamState.row) streamState.row.remove();
+          appendBot(reply, data.sources || [], followUps);
+        } else {
+          finalizeBotStream(streamState, reply, data.sources || [], followUps);
+        }
       })
       .catch(function () {
         if (requestId !== activeRequest) return;
-        typing.remove();
+        if (streamState && streamState.row) streamState.row.remove();
         appendError("Network error. Check your connection and try again.");
       })
       .finally(function () {
@@ -889,6 +1573,40 @@
     });
   }
 
+  function explainThisPage() {
+    if (busy) return;
+    userClosed = false;
+    setOpen(true);
+    var page = currentPage();
+    var title = (page.title || "").trim();
+    var path = (page.path || "").trim();
+    var q = "Explain this page";
+    if (title) {
+      q = 'Explain this page: "' + title.replace(/"/g, "") + '"';
+    } else if (path) {
+      q = "Explain this page (" + path + ")";
+    }
+    window.setTimeout(function () {
+      sendMessage(q);
+    }, 120);
+  }
+
+  if (explainBtn) {
+    explainBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      explainThisPage();
+    });
+  }
+
+  document.querySelectorAll("[data-explain-mine-page]").forEach(function (el) {
+    el.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      explainThisPage();
+    });
+  });
+
   if (clearBtn) {
     clearBtn.addEventListener("click", function (e) {
       e.preventDefault();
@@ -897,9 +1615,21 @@
     });
   }
 
+  if (expandBtn) {
+    expandBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      setExpanded(!root.classList.contains("is-expanded"));
+    });
+  }
+
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Escape") return;
     if (!panel || panel.hidden || panel.classList.contains("is-closed")) return;
+    if (root.classList.contains("is-expanded")) {
+      setExpanded(false);
+      return;
+    }
     setOpen(false);
   });
 

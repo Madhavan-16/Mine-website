@@ -398,12 +398,258 @@ _DOMAIN_CONCEPT_HINTS = (
     "extraction",
     "geology",
     "grade",
+    "value chain",
+    "lifecycle",
+    "fmi process",
+    "process flow",
 )
 
 
 def _is_domain_concept_question(q: str) -> bool:
     qn = f" {_normalize(q)} "
     return any(h in qn or qn.strip().startswith(h.strip()) for h in _DOMAIN_CONCEPT_HINTS)
+
+
+def _is_domain_process_question(q: str) -> bool:
+    """Value-chain / process / flowchart asks belong to Domain Knowledge — not projects."""
+    qn = _normalize(q)
+    if not qn:
+        return False
+    # Explicit project/SOW asks stay on portfolio retrieval.
+    if any(
+        x in qn
+        for x in (
+            "sims",
+            "openflow",
+            "sow",
+            "case stud",
+            "project portfolio",
+            "programs and projects",
+        )
+    ):
+        return False
+    markers = (
+        "value chain",
+        "mining process",
+        "mining processes",
+        "fmi process",
+        "fmi processes",
+        "process flow",
+        "process map",
+        "flow chart",
+        "flowchart",
+        "flow diagram",
+        "architecture diagram",
+        "lifecycle",
+        "life cycle",
+        "pit to port",
+        "end to end mining",
+        "end-to-end mining",
+        "mining stages",
+        "mining operations",
+        "major mining",
+        "give a value chain",
+        "give me a value chain",
+        "show value chain",
+        "show the value chain",
+    )
+    if any(m in qn for m in markers):
+        return True
+    if "fmi" in qn and any(x in qn for x in ("process", "chain", "flow", "lifecycle", "life cycle")):
+        return True
+    return False
+
+
+_DOMAIN_DIAGRAMS: tuple[tuple[tuple[str, ...], str, str], ...] = (
+    (
+        ("value chain", "pit to port", "end to end", "e2e mining", "fmi process", "mining process"),
+        "End-to-end mining value chain",
+        "/open-pit-copper-domain/value-chain-image?v=6",
+    ),
+    (
+        ("lifecycle", "life cycle"),
+        "Mining lifecycle value creation",
+        "/open-pit-copper-domain/lifecycle-image",
+    ),
+    (
+        ("digital enable", "digital mining", "digital value"),
+        "Digital mining value chain mapping",
+        "/open-pit-copper-domain/digital-enablement-image?v=5",
+    ),
+    (
+        ("service map", "service matrix"),
+        "Domain service map",
+        "/open-pit-copper-domain/service-map-image?v=1",
+    ),
+)
+
+
+def _wants_visual_diagram(q: str) -> bool:
+    """User explicitly wants a flowchart / diagram / architecture visual."""
+    qn = _normalize(q)
+    if not qn:
+        return False
+    markers = (
+        "flowchart",
+        "flow chart",
+        "flow diagram",
+        "process flow",
+        "process map",
+        "architecture diagram",
+        "architecture flow",
+        "draw a diagram",
+        "draw diagram",
+        "draw a flow",
+        "generate a diagram",
+        "generate diagram",
+        "generate a flowchart",
+        "generate flowchart",
+        "generate an image",
+        "generate image",
+        "generate a new",
+        "new flowchart",
+        "new diagram",
+        "show a diagram",
+        "show diagram",
+        "show a flowchart",
+        "visual flow",
+        "value chain",
+    )
+    return any(m in qn for m in markers)
+
+
+def _wants_generated_diagram(q: str) -> bool:
+    """
+    User wants a newly generated AI flowchart — not the portal Domain Knowledge image.
+    Checked on the raw user message (before follow-up expansion).
+    """
+    qn = _normalize(q)
+    if not qn:
+        return False
+    markers = (
+        "generate a new",
+        "generate new",
+        "new flowchart",
+        "new diagram",
+        "new flow chart",
+        "another flowchart",
+        "another diagram",
+        "different flowchart",
+        "different diagram",
+        "create a flowchart",
+        "create flowchart",
+        "create a diagram",
+        "create diagram",
+        "draw a new",
+        "draw me a",
+        "regenerate",
+        "generate a flowchart",
+        "generate flowchart",
+        "generate a diagram",
+        "generate diagram",
+        "generate an image",
+        "generate image",
+        "ai flowchart",
+        "ai diagram",
+        "make a flowchart",
+        "make me a flowchart",
+    )
+    return any(m in qn for m in markers)
+
+
+def _domain_diagram_sources(q: str) -> list[dict[str, Any]]:
+    """Return portal Domain Knowledge images only when the topic matches a known diagram."""
+    qn = _normalize(q)
+    out: list[dict[str, Any]] = []
+    for triggers, title, url in _DOMAIN_DIAGRAMS:
+        if any(t in qn for t in triggers):
+            out.append(
+                {
+                    "kind": "image",
+                    "id": f"diagram:{url}",
+                    "title": title,
+                    "summary": "Domain Knowledge infographic",
+                    "url": url,
+                    "module_label": "Domain Knowledge",
+                    "module": "domain_knowledge",
+                }
+            )
+    # Mining / FMI value-chain asks without a narrower trigger still map to the portal image.
+    if not out and any(
+        t in qn
+        for t in (
+            "value chain",
+            "fmi process",
+            "fmi processes",
+            "mining process",
+            "mining processes",
+            "pit to port",
+            "ore to metal",
+            "ore-to-metal",
+        )
+    ):
+        out.append(
+            {
+                "kind": "image",
+                "id": "diagram:value-chain",
+                "title": "End-to-end mining value chain",
+                "summary": "Domain Knowledge infographic",
+                "url": "/open-pit-copper-domain/value-chain-image?v=6",
+                "module_label": "Domain Knowledge",
+                "module": "domain_knowledge",
+            }
+        )
+    return out
+
+
+def _has_portal_diagram(articles: list[dict] | None) -> bool:
+    return any((a.get("kind") or "").lower() == "image" for a in (articles or []))
+
+
+def _mermaid_from_flow_line(text: str) -> str:
+    """Build a mermaid fence from a **Flow:** A → B → C line when the LLM omitted one."""
+    if not text or "```mermaid" in text.lower():
+        return ""
+    flow = ""
+    for line in text.splitlines():
+        s = line.strip()
+        low = s.lower()
+        if low.startswith("**flow:**"):
+            flow = s.split(":", 1)[-1].strip()
+            break
+        if low.startswith("flow:"):
+            flow = s.split(":", 1)[-1].strip()
+            break
+    if not flow:
+        return ""
+    parts = [p.strip(" *") for p in re.split(r"\s*(?:→|->|=>|—|-)\s*", flow) if p.strip(" *")]
+    if len(parts) < 2:
+        return ""
+    lines = ["```mermaid", "flowchart TD"]
+    for i, label in enumerate(parts[:8], start=1):
+        safe = label.replace('"', "'")[:48]
+        if i == 1:
+            lines.append(f'  S{i}["{safe}"]')
+        else:
+            lines.append(f'  S{i-1} --> S{i}["{safe}"]')
+    lines.append("```")
+    return "\n".join(lines)
+
+
+def _with_ai_flowchart(reply: str) -> str:
+    extra = _mermaid_from_flow_line(reply)
+    if not extra:
+        return reply
+    return (reply or "").rstrip() + "\n\n" + extra
+
+
+def _emit_chunks(sink, text: str, *, size: int = 40) -> None:
+    """Push reply text to a streaming sink in small chunks (static / fallback paths)."""
+    if not sink or not text:
+        return
+    step = max(12, int(size))
+    for i in range(0, len(text), step):
+        sink(text[i : i + step])
 
 
 def _is_question_form(qn: str) -> bool:
@@ -634,10 +880,19 @@ def _expand_query_with_context(
             break
 
     qn = _normalize(q)
-    # "Explain this" on a project page → use page title.
-    if qn in {"explain this", "explain", "what is this", "tell me about this"} and title_n:
-        if any(x in path_n for x in ("project", "sow", "knowledge", "domain", "journey")):
-            return q, f"{title_n} {q}"
+    # Explicit "explain this page" → always ground on current page (not chat topic).
+    if qn.startswith("explain this page") or qn in {
+        "explain this",
+        "explain",
+        "what is this",
+        "tell me about this",
+    }:
+        label = title_n or path_n or "this portal page"
+        search = (
+            f"Explain the MiNe portal page “{label}”. "
+            "Summarize its purpose, what the user can do here, and the main sections or actions."
+        )
+        return q, search
 
     if topic and _is_followup_question(q):
         # Avoid duplicating if topic already in the question.
@@ -974,7 +1229,7 @@ def _context_blocks(
 ) -> list[str]:
     blocks: list[str] = []
     page_limit = 1 if concise else 4
-    article_limit = 1 if concise else 6
+    article_limit = 2 if concise else 6
     overview_limit = 220 if concise else 420
     for p in pages[:page_limit]:
         blocks.append(
@@ -982,6 +1237,14 @@ def _context_blocks(
             f"(path: {p.get('url')})"
         )
     for a in articles[:article_limit]:
+        kind = (a.get("kind") or "").strip().lower()
+        if kind == "image":
+            blocks.append(
+                f"- Domain Knowledge diagram will be shown in chat under your reply: "
+                f"{a.get('title')} (path: {a.get('url')}). "
+                "Describe the mining stages clearly; do not invent projects."
+            )
+            continue
         detail = a.get("detail") or {}
         extra = ""
         if detail and not concise:
@@ -1005,19 +1268,44 @@ def _context_blocks(
     return blocks
 
 
+_VALUE_CHAIN_FALLBACK = (
+    "## FMI mining value chain\n\n"
+    "Here is the end-to-end Freeport-style open-pit copper flow:\n\n"
+    "1. **Exploration**\n"
+    "- Identify and evaluate ore bodies\n"
+    "- Define resource and reserve potential\n\n"
+    "2. **Mining**\n"
+    "- Drill, blast, load and haul ore\n"
+    "- Move material from pit to plant or leach pad\n\n"
+    "3. **Ore processing**\n"
+    "- Crush, grind, and concentrate (or leach)\n"
+    "- Separate valuable mineral from waste\n\n"
+    "4. **Smelting / refining**\n"
+    "- Convert concentrate or leach product into metal\n"
+    "- Produce cathode or other finished product\n\n"
+    "5. **Logistics & market**\n"
+    "- Ship product and commercialize output\n\n"
+    "**Flow:** Exploration → Mining → Processing → Refining → Market\n\n"
+    "The Domain Knowledge diagram below illustrates this value chain."
+)
+
+
 def _retrieve_definition_context(q: str, *, guest: bool) -> tuple[list[dict], list[dict]]:
     """Slim context for definition questions — page hint only, no keyword dump."""
     pages: list[dict[str, Any]] = []
-    if _is_domain_concept_question(q):
+    articles: list[dict[str, Any]] = []
+    if _is_domain_concept_question(q) or _is_domain_process_question(q):
         hub = _page_hit("domain_knowledge")
         if hub:
             pages = [hub]
-    return pages, []
+        articles = _domain_diagram_sources(q)
+    return pages, articles
 
 
 def _retrieve_mine_content(q: str, *, guest: bool, concise: bool = False) -> tuple[list[dict], list[dict]]:
     """Prefer website content: projects catalog + knowledge (+ projects DB when allowed)."""
-    if concise:
+    # Domain process / value-chain asks must not pull every project that mentions mining.
+    if concise or _is_domain_process_question(q):
         return _retrieve_definition_context(q, guest=guest)
 
     allowed = _allowed_section_ids(guest=guest)
@@ -1062,10 +1350,15 @@ def _compose_answer(q: str, pages: list[dict], articles: list[dict], *, note: st
     if not q_clean:
         return _HELP_REPLY_GUEST if guest else _HELP_REPLY
 
-    if note and not pages and not articles:
+    if _is_domain_process_question(q_clean):
+        return _VALUE_CHAIN_FALLBACK
+
+    text_articles = [a for a in (articles or []) if (a.get("kind") or "").lower() != "image"]
+
+    if note and not pages and not text_articles:
         return note
 
-    if not pages and not articles:
+    if not pages and not text_articles:
         if guest:
             return (
                 "I couldn't find that information in the Guest-accessible MiNe pages.\n\n"
@@ -1083,9 +1376,9 @@ def _compose_answer(q: str, pages: list[dict], articles: list[dict], *, note: st
     if note:
         parts.append(note)
 
-    if pages and not articles:
+    if pages and not text_articles:
         parts.append(f"Best match for “{q_clean}”:")
-    elif articles and not pages:
+    elif text_articles and not pages:
         parts.append(f"Approved Knowledge items for “{q_clean}”:")
     else:
         parts.append(f"Here’s what matches “{q_clean}”:")
@@ -1097,7 +1390,7 @@ def _compose_answer(q: str, pages: list[dict], articles: list[dict], *, note: st
             line += f" — {blurb}"
         parts.append(line)
 
-    for a in articles[:5]:
+    for a in text_articles[:5]:
         label = a.get("module_label") or "Knowledge"
         line = f"• [{label}] {a['title']}"
         if a.get("summary"):
@@ -1120,42 +1413,114 @@ def _maybe_llm_reply(
     empty_context_ok: bool = False,
     guest: bool = False,
     concise: bool = False,
+    need_ai_diagram: bool = False,
+    has_portal_diagram: bool = False,
+    token_sink=None,
 ) -> dict[str, Any]:
     """
     Returns {"reply", "provider", "error"}.
     Uses LLM when configured; otherwise returns fallback.
     force_llm=True for generic / empty-retrieval questions.
     empty_context_ok=True for greetings (do not claim MiNe miss).
+    token_sink: optional callable(str) for progressive streaming.
     """
-    from mine.chatbot_llm import generate_assistant_reply, llm_configured
+    from mine.chatbot_llm import (
+        generate_assistant_reply,
+        llm_configured,
+        stream_assistant_reply,
+    )
 
     if not llm_configured():
-        return {"reply": fallback, "provider": None, "error": "not_configured"}
+        reply = fallback
+        if need_ai_diagram:
+            reply = _with_ai_flowchart(fallback)
+        if token_sink:
+            _emit_chunks(token_sink, reply)
+        return {"reply": reply, "provider": None, "error": "not_configured"}
 
     # Navigation-only answers stay deterministic unless forced.
     if not force_llm and pages and not articles and len(pages) == 1:
+        if token_sink:
+            _emit_chunks(token_sink, fallback)
         return {"reply": fallback, "provider": None, "error": None}
 
     mine_found = bool(pages or articles) or empty_context_ok
-    result = generate_assistant_reply(
-        q,
-        _context_blocks(pages, articles, concise=concise),
-        history=history,
-        page_context=page_context,
-        mine_found=mine_found,
-        guest=guest,
-        concise=concise,
-    )
+    blocks = _context_blocks(pages, articles, concise=concise)
+    provider = None
+    try:
+        if token_sink is not None:
+            from mine.chatbot_llm import _resolve_provider
+
+            provider = _resolve_provider()
+            buf: list[str] = []
+            for tok in stream_assistant_reply(
+                q,
+                blocks,
+                history=history,
+                page_context=page_context,
+                mine_found=mine_found,
+                guest=guest,
+                concise=concise,
+                need_ai_diagram=need_ai_diagram,
+                has_portal_diagram=has_portal_diagram,
+            ):
+                if not tok:
+                    continue
+                buf.append(tok)
+                token_sink(tok)
+            reply = "".join(buf).strip()
+            if not reply:
+                raise RuntimeError("Empty LLM stream")
+            if need_ai_diagram and "```mermaid" not in reply.lower():
+                extra = _mermaid_from_flow_line(reply)
+                if not extra:
+                    extra = (
+                        "```mermaid\n"
+                        "flowchart LR\n"
+                        '  S1["Start"] --> S2["Process"]\n'
+                        '  S2 --> S3["Deliver"]\n'
+                        "```"
+                    )
+                reply = reply.rstrip() + "\n\n" + extra
+                token_sink("\n\n" + extra)
+            return {"reply": reply, "provider": provider, "error": None}
+
+        result = generate_assistant_reply(
+            q,
+            blocks,
+            history=history,
+            page_context=page_context,
+            mine_found=mine_found,
+            guest=guest,
+            concise=concise,
+            need_ai_diagram=need_ai_diagram,
+            has_portal_diagram=has_portal_diagram,
+        )
+    except Exception as exc:
+        err = str(exc).strip()
+        fb = fallback
+        if need_ai_diagram:
+            fb = _with_ai_flowchart(fallback)
+        if token_sink:
+            _emit_chunks(token_sink, fb)
+        return {"reply": fb, "provider": provider, "error": err or "llm_failed"}
+
     if result.get("ok") and result.get("text"):
+        reply = str(result["text"]).strip()
+        if need_ai_diagram:
+            reply = _with_ai_flowchart(reply)
         return {
-            "reply": str(result["text"]).strip(),
+            "reply": reply,
             "provider": result.get("provider"),
             "error": None,
         }
     # LLM failed — keep portal fallback if we have sources, else explain cleanly.
     err = (result.get("error") or "").strip()
-    if pages or articles:
-        return {"reply": fallback, "provider": None, "error": err or "llm_failed"}
+    if pages or articles or need_ai_diagram:
+        fb = fallback
+        if need_ai_diagram:
+            fb = _with_ai_flowchart(fallback)
+        return {"reply": fb, "provider": None, "error": err or "llm_failed"}
     err_l = err.lower()
     if "401" in err or "403" in err or "invalid" in err_l or "unauthorized" in err_l:
         msg = "The Groq API key looks invalid — check GROQ_API_KEY in Azure App Settings."
@@ -1192,9 +1557,13 @@ def _prepare_sources(sources: list | None) -> list[dict[str, Any]]:
         kind = (item.get("kind") or "").lower()
         module = (item.get("module") or "").lower()
         title = _normalize(str(item.get("title") or ""))
-        # Concrete project / article first; hub pages last.
-        if kind == "project" or module == "projects":
+        # Keep diagrams in the payload; Domain Knowledge page is the preferred CTA.
+        if kind == "image":
+            score = 260
+        elif kind == "project" or module == "projects":
             score = 300
+        elif module == "domain_knowledge" and kind == "page":
+            score = 240
         elif kind == "page":
             score = 40
         else:
@@ -1240,11 +1609,7 @@ def _out(
         "reply": (reply or "").strip(),
         "sources": prepared,
         "query": query,
-        "follow_ups": (
-            follow_ups
-            if follow_ups is not None
-            else _follow_up_suggestions(topic, guest=guest)
-        ),
+        "follow_ups": follow_ups if follow_ups is not None else [],
         "topic": topic or "",
     }
     if provider:
@@ -1263,6 +1628,7 @@ def answer_question(
     page_path: str = "",
     page_title: str = "",
     page_endpoint: str = "",
+    token_sink=None,
 ) -> dict[str, Any]:
     q = (q or "").strip()
     if len(q) > 500:
@@ -1277,12 +1643,14 @@ def answer_question(
     )
     topic = _last_topic_from_history(hist + [{"role": "user", "content": search_q}])
 
-    # Cache only standalone questions (no prior turns).
+    # Cache only standalone questions (no prior turns). Skip cache when streaming.
     cache_key = ""
-    if not hist and not _is_followup_question(q):
-        cache_key = f"{int(guest)}|{_normalize(search_q)}|{_normalize(page_path)}"
+    if not token_sink and not hist and not _is_followup_question(q):
+        cache_key = f"v5|{int(guest)}|{_normalize(search_q)}|{_normalize(page_path)}"
         cached = _cache_get(cache_key)
         if cached:
+            if token_sink:
+                _emit_chunks(token_sink, cached.get("reply") or "")
             return cached
 
     allowed = _allowed_section_ids(guest=guest)
@@ -1290,6 +1658,11 @@ def answer_question(
     # Prefer expanded query for retrieval when follow-up.
     retrieve_q = search_q if search_q != q else q
     retrieve_qn = _normalize(retrieve_q)
+
+    def _static_out(reply: str, **kwargs):
+        if token_sink:
+            _emit_chunks(token_sink, reply)
+        return _out(reply, **kwargs)
 
     # Greetings / small talk — conversational, no source dump.
     if _is_greeting(q):
@@ -1323,11 +1696,14 @@ def answer_question(
             page_context=page_ctx,
             empty_context_ok=True,
             guest=guest,
+            token_sink=token_sink,
         )
         reply, provider, err = llm["reply"], llm["provider"], llm["error"]
         # Never show AI failure noise on a simple hello — fall back to a warm greeting.
         if provider is None:
             reply = fallback
+            if token_sink and not (llm.get("reply") or "").strip():
+                _emit_chunks(token_sink, reply)
         return _out(
             reply,
             query=q,
@@ -1340,7 +1716,7 @@ def answer_question(
 
     # Guests must not receive staff-only project / SOW / kit content.
     if guest and _guest_requests_staff_content(retrieve_q):
-        return _out(
+        return _static_out(
             _GUEST_STAFF_REPLY,
             sources=[h for h in (_page_hit("knowledge"),) if h],
             query=q,
@@ -1349,12 +1725,188 @@ def answer_question(
             guest=True,
         )
 
+    # One-click "Explain this page" — ground on current page, not keyword FTS.
+    if qn.startswith("explain this page") or qn in {
+        "explain this",
+        "what is this",
+        "tell me about this",
+    }:
+        ep = _normalize(page_endpoint)
+        path_n = _normalize(page_path)
+        section_id = None
+        if "open_pit" in ep or "domain" in path_n:
+            section_id = "domain_knowledge"
+        elif ep.startswith("projects") or "/projects" in path_n:
+            section_id = "projects" if not guest else None
+        elif "journey" in ep or "journey" in path_n:
+            section_id = "journey"
+        elif "knowledge" in ep or path_n.rstrip("/").endswith("knowledge"):
+            section_id = "knowledge"
+        elif "fmi_kyc" in ep or "know-your-customer" in path_n or "kyc" in path_n:
+            section_id = "fmi_kyc"
+        pages = []
+        if section_id and section_id in _allowed_section_ids(guest=guest):
+            hit = _page_hit(section_id)
+            if hit:
+                pages = [hit]
+        fallback = (
+            f"You’re on **{(page_title or 'this MiNe page').split('·')[0].strip()}**. "
+            "Use the navigation and main panels on this screen to explore related content. "
+            "Ask me a specific question if you want more detail."
+        )
+        llm = _maybe_llm_reply(
+            retrieve_q or q,
+            pages,
+            [],
+            fallback=fallback,
+            force_llm=True,
+            history=hist,
+            page_context=page_ctx,
+            empty_context_ok=True,
+            guest=guest,
+            concise=True,
+            token_sink=token_sink,
+        )
+        return _out(
+            llm["reply"],
+            sources=pages,
+            query=q,
+            provider=llm["provider"],
+            llm_error=llm["error"],
+            topic="",
+            follow_ups=[],
+            guest=guest,
+        )
+
     db = get_db()
 
     def _finish(payload: dict[str, Any]) -> dict[str, Any]:
         if cache_key and payload.get("reply"):
             _cache_set(cache_key, payload)
         return payload
+
+    # Process / flowchart asks: prefer Domain Knowledge images when they match;
+    # otherwise ask the LLM for a Mermaid flowchart (rendered in chat).
+    # "Generate a new flowchart for this" must NOT reuse the portal image.
+    force_ai_diagram = _wants_generated_diagram(q)
+    wants_process = _is_domain_process_question(q) or _is_domain_process_question(retrieve_q)
+    wants_visual = (
+        force_ai_diagram
+        or _wants_visual_diagram(q)
+        or _wants_visual_diagram(retrieve_q)
+    )
+    if wants_process or wants_visual:
+        topic_q = retrieve_q or q
+        pages, articles = _retrieve_definition_context(topic_q, guest=guest)
+        portal_imgs = [a for a in articles if (a.get("kind") or "").lower() == "image"]
+        if not portal_imgs and not force_ai_diagram:
+            portal_imgs = _domain_diagram_sources(topic_q)
+            articles = list(articles) + portal_imgs
+        if force_ai_diagram:
+            # Keep Domain Knowledge page link if useful, but drop portal images.
+            articles = [a for a in (articles or []) if (a.get("kind") or "").lower() != "image"]
+            portal_imgs = []
+        if guest:
+            pages = _guest_safe_sources(pages)
+            articles = _guest_safe_sources(articles)
+            portal_imgs = [a for a in articles if (a.get("kind") or "").lower() == "image"]
+
+        has_portal = bool(portal_imgs) and not force_ai_diagram
+        qn_topic = _normalize(topic_q)
+
+        if has_portal and (
+            "lifecycle" in qn_topic or "life cycle" in qn_topic
+        ):
+            reply = (
+                "## Mining lifecycle\n\n"
+                "Freeport-style mining creates value across the full asset lifecycle:\n\n"
+                "1. **Discover & plan**\n"
+                "- Explore, evaluate, and design the operation\n\n"
+                "2. **Develop**\n"
+                "- Build infrastructure and prepare the pit/plant\n\n"
+                "3. **Operate**\n"
+                "- Mine, process, refine, and ship product\n\n"
+                "4. **Improve & close**\n"
+                "- Optimize performance, then reclaim and close responsibly\n\n"
+                "**Flow:** Discover → Develop → Operate → Improve → Close\n\n"
+                "The Domain Knowledge diagram below illustrates this lifecycle."
+            )
+            return _finish(
+                _static_out(
+                    reply,
+                    sources=pages + articles,
+                    query=q,
+                    topic="",
+                    follow_ups=[],
+                    guest=guest,
+                )
+            )
+
+        if has_portal and any(
+            t in qn_topic
+            for t in (
+                "value chain",
+                "fmi process",
+                "mining process",
+                "pit to port",
+                "ore to metal",
+                "ore-to-metal",
+            )
+        ):
+            return _finish(
+                _static_out(
+                    _VALUE_CHAIN_FALLBACK,
+                    sources=pages + articles,
+                    query=q,
+                    topic="",
+                    follow_ups=[],
+                    guest=guest,
+                )
+            )
+
+        # Portal image for a related topic, or no portal image → LLM (+ AI flowchart if needed).
+        fallback = (
+            _VALUE_CHAIN_FALLBACK
+            if wants_process and not force_ai_diagram
+            else (
+                "## Process flowchart\n\n"
+                "Here is a clear stage flow for this topic:\n\n"
+                "1. **Start**\n"
+                "- Capture inputs and scope\n\n"
+                "2. **Process**\n"
+                "- Transform and validate\n\n"
+                "3. **Deliver**\n"
+                "- Output results to stakeholders\n\n"
+                "**Flow:** Start → Process → Deliver"
+            )
+        )
+        llm = _maybe_llm_reply(
+            display_q if not force_ai_diagram else q,
+            pages,
+            articles,
+            fallback=fallback,
+            force_llm=True,
+            history=hist,
+            page_context=None,
+            empty_context_ok=True,
+            guest=guest,
+            concise=True,
+            need_ai_diagram=force_ai_diagram or not has_portal,
+            has_portal_diagram=has_portal,
+            token_sink=token_sink,
+        )
+        return _finish(
+            _out(
+                llm["reply"],
+                sources=pages + articles,
+                query=q,
+                provider=llm["provider"],
+                llm_error=llm["error"],
+                topic="",
+                follow_ups=[],
+                guest=guest,
+            )
+        )
 
     # Strong section intent → open that portal page (+ list items for kit/training/etc.).
     exact = _exact_section_intent(q, allowed)
@@ -1428,6 +1980,7 @@ def answer_question(
             history=hist,
             page_context=page_ctx,
             guest=guest,
+            token_sink=token_sink,
         )
         return _finish(
             _out(
@@ -1441,10 +1994,10 @@ def answer_question(
             )
         )
 
-    concise = _is_concise_definition_question(q)
+    concise = _is_concise_definition_question(q) or _is_domain_process_question(q)
 
     # Always try MiNe website content first (projects catalog + knowledge).
-    # Definition asks use slim domain context only — no keyword dump of case studies/projects.
+    # Definition / value-chain asks use Domain Knowledge + diagrams — no project keyword dump.
     pages, articles = _retrieve_mine_content(retrieve_q, guest=guest, concise=concise)
     if guest:
         pages = _guest_safe_sources(pages)
@@ -1486,6 +2039,7 @@ def answer_question(
             empty_context_ok=concise,
             guest=guest,
             concise=concise,
+            token_sink=token_sink,
         )
         return _finish(
             _out(
@@ -1498,15 +2052,7 @@ def answer_question(
                 follow_ups=(
                     _follow_up_suggestions(guest=True)
                     if guest
-                    else (
-                        [
-                            {"label": "Domain Knowledge", "query": "domain knowledge"},
-                            {"label": "Mining operations", "query": "what are the major mining operations"},
-                            {"label": "Knowledge Base", "query": "knowledge"},
-                        ]
-                        if concise
-                        else None
-                    )
+                    else []
                 ),
                 guest=guest,
             )
@@ -1534,6 +2080,7 @@ def answer_question(
         history=hist,
         page_context=page_ctx,
         guest=guest,
+        token_sink=token_sink,
     )
     reply, provider, err = llm["reply"], llm["provider"], llm["error"]
     if provider is None and not llm_configured():
@@ -1590,6 +2137,96 @@ def chat_status():
             "website_site_name": (os.environ.get("WEBSITE_SITE_NAME") or "").strip() or None,
             "probe": probe,
         }
+    )
+
+
+@bp.route("/stream", methods=["POST"])
+@login_required
+def chat_stream():
+    """SSE token stream for progressive replies (Groq stream / chunked fallback)."""
+    import json
+    import queue
+    import threading
+
+    from flask import Response, current_app, stream_with_context
+
+    if not _chatbot_enabled():
+        return jsonify({"error": "Chatbot is disabled."}), 503
+
+    payload = request.get_json(silent=True) or {}
+    message = (payload.get("message") or payload.get("q") or "").strip()
+    if not message:
+        return jsonify({"error": "Please enter a question."}), 400
+
+    history = payload.get("history") or []
+    if not isinstance(history, list):
+        history = []
+    page = payload.get("page") or {}
+    if not isinstance(page, dict):
+        page = {}
+    page_path = (page.get("path") or payload.get("page_path") or "").strip()[:200]
+    page_title = (page.get("title") or payload.get("page_title") or "").strip()[:200]
+    page_endpoint = (page.get("endpoint") or payload.get("page_endpoint") or "").strip()[:120]
+    user = load_current_user()
+    guest = is_guest_user(user)
+    app_obj = current_app._get_current_object()
+
+    events: queue.Queue = queue.Queue()
+
+    def sink(tok: str) -> None:
+        if tok:
+            events.put(("token", tok))
+
+    def worker() -> None:
+        # Background thread needs an explicit app context for get_db / config.
+        with app_obj.app_context():
+            try:
+                result = answer_question(
+                    message,
+                    guest=guest,
+                    history=history,
+                    page_path=page_path,
+                    page_title=page_title,
+                    page_endpoint=page_endpoint,
+                    token_sink=sink,
+                )
+                events.put(("done", result))
+            except Exception as exc:
+                events.put(("error", str(exc)))
+
+    def generate():
+        threading.Thread(target=worker, daemon=True).start()
+        while True:
+            kind, data = events.get()
+            if kind == "token":
+                yield f"data: {json.dumps({'type': 'token', 'text': data}, ensure_ascii=False)}\n\n"
+            elif kind == "done":
+                out = {
+                    "type": "done",
+                    "ok": True,
+                    "reply": data.get("reply") or "",
+                    "sources": data.get("sources") or [],
+                    "query": data.get("query") or message,
+                    "follow_ups": data.get("follow_ups") or [],
+                    "topic": data.get("topic") or "",
+                }
+                if data.get("provider"):
+                    out["provider"] = data["provider"]
+                if data.get("llm_error"):
+                    out["llm_error"] = data["llm_error"]
+                yield f"data: {json.dumps(out, ensure_ascii=False)}\n\n"
+                break
+            else:
+                yield f"data: {json.dumps({'type': 'error', 'error': data or 'Stream failed'}, ensure_ascii=False)}\n\n"
+                break
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
     )
 
 

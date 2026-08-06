@@ -18,6 +18,11 @@
       <span class="portal-eyebrow">Delivery portfolio</span>
       <h1 class="portal-hero__title">Programs &amp; projects</h1>
       <p class="portal-lede">Explore the Freeport delivery portfolio — open any engagement for scope and technology detail, or switch to the delivery runway to see how engagements overlap in time.</p>
+      {% if config.get('CHATBOT_ENABLED', True) %}
+      <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">
+        <button type="button" class="btn btn-secondary" data-explain-mine-page>Explain this page</button>
+      </div>
+      {% endif %}
     </div>
     <div class="portal-hero__aside">
       <div class="portal-stat" role="status">

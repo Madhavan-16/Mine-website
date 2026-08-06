@@ -1,5 +1,5 @@
 {% if current_user and config.get('CHATBOT_ENABLED', True) and not _is_auth_page and (request.endpoint or '') != 'main.landing' %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=18" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=25" />
 <div
   id="mine-chatbot"
   class="mine-chat"
@@ -57,6 +57,15 @@
       <div class="mine-chat__header-actions">
         <button
           type="button"
+          class="mine-chat__explain"
+          id="mine-chat-explain"
+          aria-label="Explain this page"
+          title="Explain this page"
+        >
+          Explain page
+        </button>
+        <button
+          type="button"
           class="mine-chat__clear"
           id="mine-chat-clear"
           aria-label="Clear chat"
@@ -64,6 +73,21 @@
           hidden
         >
           Clear
+        </button>
+        <button
+          type="button"
+          class="mine-chat__expand"
+          id="mine-chat-expand"
+          aria-label="Expand chat"
+          aria-pressed="false"
+          title="Expand to full page"
+        >
+          <svg class="mine-chat__expand-icon mine-chat__expand-icon--grow" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <svg class="mine-chat__expand-icon mine-chat__expand-icon--shrink" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" hidden>
+            <path d="M10 4H4v6M14 20h6v-6M4 4l7 7M20 20l-7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </button>
         <button type="button" class="mine-chat__close" id="mine-chat-close" aria-label="Close chat" title="Close">
           <span aria-hidden="true">&times;</span>
@@ -92,5 +116,5 @@
     </form>
   </section>
 </div>
-<script src="{{ url_for('static', filename='js/chatbot.js') }}?v=17" defer></script>
+<script src="{{ url_for('static', filename='js/chatbot.js') }}?v=25" defer></script>
 {% endif %}
