@@ -19,9 +19,12 @@ logger = logging.getLogger(__name__)
 _SYSTEM_PROMPT = (
     "You are MiNe AI — a professional, friendly, enterprise assistant for the Hexaware–Freeport MiNe portal.\n"
     "Personality: helpful, concise, conversational, context-aware. Never robotic. Avoid repetitive greetings.\n"
+    "Intent first: decide whether the user wants (a) a portfolio/project list, (b) details on a named project/SOW, "
+    "(c) a Knowledge article series, (d) a mining/domain explanation, (e) portal navigation, or (f) a follow-up "
+    "on the prior topic — then answer that intent directly.\n"
     "Knowledge priority (strict):\n"
-    "1) MiNe portal notes / projects / SOW / knowledge articles / synced SharePoint–Teams training "
-    "documents provided in this turn — use them only when they directly answer the user’s question\n"
+    "1) MiNe portal notes / projects / SOW / knowledge articles provided in this turn — "
+    "use them only when they directly answer the user’s question\n"
     "2) Conversation history (resolve pronouns like it/this/they to the last discussed project or topic)\n"
     "3) General AI knowledge when notes do not cover the question\n"
     "Never invent Freeport/Hexaware project facts, dates, budgets, or SOW details.\n"
@@ -31,6 +34,8 @@ _SYSTEM_PROMPT = (
     "do not substitute unrelated public definitions.\n"
     "Critical: Answer the user’s actual question. Do not dump unrelated projects, case studies, or SOWs "
     "just because a keyword appears in the notes.\n"
+    "For portfolio / active-projects list asks: give a short intro sentence, then a clean bullet list of "
+    "project names with one-line summaries from the notes. Do not say you could not find projects when notes list them.\n"
     "For mining value-chain / FMI process / flowchart / lifecycle questions: explain the mining stages only. "
     "Do not mention SIMS, OpenFlow, SOWs, or portfolio projects unless the user asked for them.\n"
     "Response style:\n"
@@ -133,73 +138,64 @@ def _build_user_prompt(
     need_ai_diagram: bool = False,
     has_portal_diagram: bool = False,
 ) -> str:
-    parts = [f"Current user question:\n{question.strip()}"]
+    """Keep the real user question primary; attach notes and mode flags after."""
+    modes: list[str] = []
     if guest:
-        parts.append(
-            "GUEST MODE: This user is Guest. Only discuss Knowledge repository, Domain Knowledge "
+        modes.append(
+            "GUEST MODE: Only discuss Knowledge repository, Domain Knowledge "
             "(copper mining), Freeport–Hexaware Journey, and Know your Customer. "
             "Do not provide Programs & projects, SOW, Onboarding, Training, Innovation, or Hall of Fame details. "
-            "If asked about those, say they need a full MiNe account and suggest Guest-allowed topics."
+            "If asked about those, say they need a full MiNe account."
         )
     if concise:
-        parts.append(
-            "CONCISE / DOMAIN MODE:\n"
-            "- Answer only what the user asked.\n"
-            "- Keep it short: 1 summary sentence + a clear structure (bullets or numbered stages).\n"
-            "- Do not list projects, case studies, SOWs, programmes, SIMS, OpenFlow, or engagement details "
-            "unless the user explicitly asked for them.\n"
-            "- If portal notes are off-topic, ignore them and answer from clear domain knowledge.\n"
-            "- For value chain / FMI process / flowchart / lifecycle asks:\n"
-            "  • Use ONE ordered list numbered 1. 2. 3. 4. … (never restart at 1 for each stage)\n"
-            "  • Under each stage, 1–2 short `-` detail bullets\n"
-            "  • End with **Flow:** StageA → StageB → StageC\n"
-            "  • About 4–6 stages is enough unless the user asks for more depth"
+        modes.append(
+            "CONCISE / DOMAIN MODE: Answer only what was asked. "
+            "1 summary sentence + clear bullets/stages. "
+            "Do not list projects, case studies, SOWs, SIMS, or OpenFlow unless explicitly asked. "
+            "Ignore off-topic portal notes. "
+            "For value-chain / process asks: one ordered list 1. 2. 3. … with short `-` bullets, "
+            "then **Flow:** A → B → C."
         )
     if has_portal_diagram:
-        parts.append(
-            "PORTAL DIAGRAM AVAILABLE: A Domain Knowledge infographic will be shown under your reply. "
-            "Briefly mention it. Do NOT add a mermaid/code flowchart."
+        modes.append(
+            "PORTAL DIAGRAM AVAILABLE under your reply — briefly mention it; do NOT add mermaid."
         )
     if need_ai_diagram:
-        parts.append(
-            "AI FLOWCHART REQUIRED (do not reuse a portal screenshot):\n"
-            "- Create a NEW flowchart for the topic in conversation (resolve “this/it” from history).\n"
-            "- After the numbered stages, include exactly ONE mermaid fence.\n"
-            "- Prefer `flowchart LR` (left-to-right) for value chains; use `flowchart TD` only if clearer.\n"
-            "- Process steps: S1[\"Label\"]  Decision points: D1{\"Question?\"}\n"
-            "- Branch with edge labels: D1 -->|Yes| S2[\"...\"] and D1 -->|No| S3[\"...\"]\n"
-            "- Example:\n"
-            "```mermaid\n"
-            "flowchart LR\n"
-            "  S1[\"Explore\"] --> D1{\"Viable?\"}\n"
-            "  D1 -->|Yes| S2[\"Mine\"]\n"
-            "  D1 -->|No| S3[\"Stop\"]\n"
-            "  S2 --> S4[\"Process\"]\n"
-            "```\n"
-            "- Use 4–8 nodes; keep labels short (2–4 words).\n"
-            "- Do not claim you cannot draw diagrams.\n"
-            "- Do not produce raster/photo images; the chat UI will render this flowchart.\n"
-            "- Do not mention SIMS, OpenFlow, or unrelated projects."
+        modes.append(
+            "AI FLOWCHART REQUIRED: after numbered stages, include exactly ONE mermaid fence "
+            "(`flowchart LR` preferred). Use 4–8 short nodes; decisions as diamonds with Yes/No edges. "
+            "Do not mention unrelated projects."
         )
+
+    parts: list[str] = [f"Question:\n{(question or '').strip()}"]
     if page_context and not concise:
-        parts.append(f"User is currently viewing: {page_context}")
+        parts.append(f"User is viewing: {page_context}")
+    if modes:
+        parts.append("Mode flags:\n- " + "\n- ".join(modes))
     if context_blocks:
         parts.append(
-            "MiNe portal notes (use only if they directly help answer the question):\n"
+            "Relevant MiNe notes (use only when they match the Question):\n"
             + "\n".join(context_blocks)
         )
-        if not concise:
+        if mine_found and not concise:
             parts.append(
-                "Answer using the MiNe portal notes above when they match the question. "
-                "Stay specific to Freeport/Hexaware content when relevant."
+                "MiNe notes above appear relevant — answer from them when they match the Question."
+            )
+        elif not concise:
+            parts.append(
+                "MiNe notes may be weak/partial — answer the Question carefully; "
+                "do not invent portal facts from off-topic notes."
             )
     elif mine_found is False and not concise:
         parts.append(
-            "No matching MiNe portal notes were found for this question. "
+            "No matching MiNe portal notes were found. "
             "Start with: I couldn't find this information in the MiNe knowledge repository. "
-            "Then offer a careful general explanation if helpful, and ask if they want that."
+            "Then offer a careful general explanation if helpful."
         )
-    parts.append("Write the assistant reply now in polished Markdown.")
+    parts.append(
+        "Write a polished Markdown reply that directly answers the Question. "
+        "Do not restate these instructions."
+    )
     return "\n\n".join(parts)
 
 

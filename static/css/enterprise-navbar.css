@@ -125,7 +125,7 @@
   border-bottom: 1px solid var(--hex-grey-200);
 }
 
-/* Portal nav — hidden until hover over dock below search (desktop) */
+/* Portal nav — always visible on desktop portal pages; Domain Knowledge keeps hover-reveal */
 .portal-nav-reveal {
   display: none;
   width: 100%;
@@ -135,10 +135,31 @@
 @media (min-width: 1025px) {
   body.layout-portal .portal-nav-reveal {
     display: block;
+    min-height: 0;
+  }
+
+  body.layout-portal .portal-nav-reveal__dock,
+  body.layout-portal .portal-nav-reveal__hint {
+    display: none;
+  }
+
+  body.layout-portal .portal-nav-bar {
+    display: block;
+    max-height: none;
+    opacity: 1;
+    overflow: visible;
+    pointer-events: auto;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid var(--hex-grey-200);
+  }
+
+  /* Domain Knowledge only — hide portal nav until hover / focus / pinned dropdown */
+  body.layout-portal:has(.domain-knowledge-page) .portal-nav-reveal {
     min-height: 18px;
   }
 
-  body.layout-portal .portal-nav-reveal__dock {
+  body.layout-portal:has(.domain-knowledge-page) .portal-nav-reveal__dock {
+    display: block;
     height: 5px;
     margin: 0 clamp(12px, 2.2vw, 28px);
     border-radius: 999px;
@@ -147,7 +168,8 @@
     transition: opacity var(--duration-medium) var(--ease-out), height var(--duration-medium) var(--ease-out);
   }
 
-  body.layout-portal .portal-nav-reveal__hint {
+  body.layout-portal:has(.domain-knowledge-page) .portal-nav-reveal__hint {
+    display: block;
     margin: 0;
     padding: 2px clamp(12px, 2.2vw, 28px) 4px;
     font-size: 10px;
@@ -158,8 +180,7 @@
     transition: opacity var(--duration-medium) var(--ease-out);
   }
 
-  body.layout-portal .portal-nav-bar {
-    display: block;
+  body.layout-portal:has(.domain-knowledge-page) .portal-nav-bar {
     max-height: 0;
     opacity: 0;
     overflow: hidden;
@@ -172,9 +193,9 @@
       border-color var(--duration-slow) var(--ease-out);
   }
 
-  body.layout-portal .portal-nav-reveal:hover .portal-nav-bar,
-  body.layout-portal .portal-nav-reveal:focus-within .portal-nav-bar,
-  body.layout-portal .portal-nav-reveal.is-pinned .portal-nav-bar {
+  body.layout-portal:has(.domain-knowledge-page) .portal-nav-reveal:hover .portal-nav-bar,
+  body.layout-portal:has(.domain-knowledge-page) .portal-nav-reveal:focus-within .portal-nav-bar,
+  body.layout-portal:has(.domain-knowledge-page) .portal-nav-reveal.is-pinned .portal-nav-bar {
     max-height: 120px;
     opacity: 1;
     overflow: visible;
@@ -183,16 +204,16 @@
     border-bottom: 1px solid var(--hex-grey-200);
   }
 
-  body.layout-portal .portal-nav-reveal:hover .portal-nav-reveal__dock,
-  body.layout-portal .portal-nav-reveal:focus-within .portal-nav-reveal__dock,
-  body.layout-portal .portal-nav-reveal.is-pinned .portal-nav-reveal__dock {
+  body.layout-portal:has(.domain-knowledge-page) .portal-nav-reveal:hover .portal-nav-reveal__dock,
+  body.layout-portal:has(.domain-knowledge-page) .portal-nav-reveal:focus-within .portal-nav-reveal__dock,
+  body.layout-portal:has(.domain-knowledge-page) .portal-nav-reveal.is-pinned .portal-nav-reveal__dock {
     height: 0;
     opacity: 0;
   }
 
-  body.layout-portal .portal-nav-reveal:hover .portal-nav-reveal__hint,
-  body.layout-portal .portal-nav-reveal:focus-within .portal-nav-reveal__hint,
-  body.layout-portal .portal-nav-reveal.is-pinned .portal-nav-reveal__hint {
+  body.layout-portal:has(.domain-knowledge-page) .portal-nav-reveal:hover .portal-nav-reveal__hint,
+  body.layout-portal:has(.domain-knowledge-page) .portal-nav-reveal:focus-within .portal-nav-reveal__hint,
+  body.layout-portal:has(.domain-knowledge-page) .portal-nav-reveal.is-pinned .portal-nav-reveal__hint {
     opacity: 0;
     height: 0;
     padding: 0;
@@ -201,7 +222,7 @@
 }
 
 @media (min-width: 1025px) and (prefers-reduced-motion: reduce) {
-  body.layout-portal .portal-nav-bar {
+  body.layout-portal:has(.domain-knowledge-page) .portal-nav-bar {
     max-height: none;
     opacity: 1;
     overflow: visible;
@@ -210,8 +231,8 @@
     border-bottom: 1px solid var(--hex-grey-200);
   }
 
-  body.layout-portal .portal-nav-reveal__dock,
-  body.layout-portal .portal-nav-reveal__hint {
+  body.layout-portal:has(.domain-knowledge-page) .portal-nav-reveal__dock,
+  body.layout-portal:has(.domain-knowledge-page) .portal-nav-reveal__hint {
     display: none;
   }
 }

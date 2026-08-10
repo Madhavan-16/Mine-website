@@ -256,15 +256,170 @@ def _exact_section_intent(q: str, allowed: frozenset[str]) -> str | None:
     return best[1] if best else None
 
 
+def _wants_project_portfolio_list(q: str) -> bool:
+    """True when the user wants the Programs & projects portfolio list (not one named SOW)."""
+    qn = _normalize(q)
+    if not qn:
+        return False
+    exact = {
+        "project",
+        "projects",
+        "program",
+        "programs",
+        "programme",
+        "programmes",
+        "active project",
+        "active projects",
+        "project list",
+        "projects list",
+        "list of projects",
+        "list projects",
+        "list of programmes",
+        "list of programs",
+        "all projects",
+        "all programmes",
+        "all programs",
+        "show projects",
+        "show me projects",
+        "show the projects",
+        "show me the projects",
+        "what projects",
+        "what projects do we have",
+        "what projects are there",
+        "which projects",
+        "our projects",
+        "our programmes",
+        "our programs",
+        "programs and projects",
+        "programmes and projects",
+        "portfolio",
+        "project portfolio",
+        "engagement projects",
+    }
+    if qn in exact:
+        return True
+    # Avoid named-project asks (“tell me about SIMS”, “SOW for OpenFlow”).
+    if any(x in qn for x in ("what is", "tell me about", "sow for", "scope of", "architecture for")):
+        return False
+    if len(qn.split()) > 10:
+        return False
+    return any(
+        p in qn
+        for p in (
+            "active project",
+            "list of project",
+            "list project",
+            "project list",
+            "all project",
+            "show project",
+            "show me project",
+            "show the project",
+            "what project",
+            "which project",
+            "our project",
+            "projects do we",
+            "programmes do we",
+            "programs do we",
+            "portfolio of project",
+        )
+    )
+
+
+def _list_active_portfolio_projects(*, limit: int = 8) -> list[dict[str, Any]]:
+    """Active Programs & projects catalog entries with deep-links when available."""
+    try:
+        from mine.project_catalog import load_project_section_catalog
+
+        entries = [
+            e
+            for e in (load_project_section_catalog().get("entries") or [])
+            if e.get("is_active", True)
+        ][: max(1, min(20, int(limit)))]
+    except Exception:
+        current_app.logger.exception("Portfolio list load failed")
+        return []
+
+    out: list[dict[str, Any]] = []
+    for e in entries:
+        title = (e.get("title") or "").strip()
+        if not title:
+            continue
+        cid = e.get("content_id")
+        url = "/projects"
+        if cid is not None:
+            try:
+                url = _result_url_for_content("projects", int(cid))
+            except Exception:
+                url = "/projects"
+        overview = ((e.get("sections") or {}).get("overview") or "").strip()
+        engagement = e.get("engagement_details") or {}
+        out.append(
+            {
+                "kind": "project",
+                "id": cid or e.get("catalog_key") or title,
+                "title": title,
+                "summary": _snippet(overview, 220),
+                "url": url,
+                "module_label": "Programs & projects",
+                "module": "projects",
+                "detail": {
+                    "overview": overview,
+                    "scope": ((e.get("sections") or {}).get("scope_of_work") or "").strip(),
+                    "technologies": ((e.get("sections") or {}).get("technologies") or "").strip(),
+                    "client": (engagement.get("client") or "").strip(),
+                    "sow_title": (engagement.get("sow_title") or "").strip(),
+                },
+            }
+        )
+    return out
+
+
+def _strong_project_match(q: str) -> dict[str, Any] | None:
+    """Best catalog project when the question names it (e.g. SIMS, OpenFlow)."""
+    hits = _project_catalog_hits(q, limit=1)
+    if not hits:
+        return None
+    hit = hits[0]
+    title_n = _normalize(str(hit.get("title") or ""))
+    tokens = _query_tokens(q)
+    qn = _normalize(q)
+    if not title_n:
+        return None
+    if tokens and any(t in title_n for t in tokens):
+        return hit
+    # Acronym / compact title in the question (SIMS, OpenFlow).
+    for part in title_n.split():
+        if len(part) >= 3 and (part in qn or _compact(part) in _compact(qn)):
+            return hit
+    return None
+
+
 def _module_intent(q: str) -> str | None:
     qn = _normalize(q)
-    if _is_general_knowledge_question(qn):
+    if not qn:
         return None
+    # Named portfolio projects are not Knowledge-series intents.
+    if _strong_project_match(q):
+        return None
+    if _is_general_knowledge_question(qn) and not any(
+        a in qn for a in ("case stud", "newsletter", "kyc", "kya", "term of the week", "rfp", "blog")
+    ):
+        return None
+    best: tuple[int, str] | None = None
     for aliases, module in _MODULE_INTENT:
         for alias in aliases:
-            if qn == alias or qn == _normalize(alias):
-                return module
-    return None
+            an = _normalize(alias)
+            if not an:
+                continue
+            if qn == an:
+                score = 1000 + len(an)
+            elif len(an) >= 4 and (f" {an} " in f" {qn} " or qn.startswith(an + " ") or qn.endswith(" " + an)):
+                score = 500 + len(an)
+            else:
+                continue
+            if not best or score > best[0]:
+                best = (score, module)
+    return best[1] if best else None
 
 
 def _is_greeting(q: str) -> bool:
@@ -292,6 +447,12 @@ def _is_general_knowledge_question(qn: str) -> bool:
     qn = (qn or "").strip()
     if not qn:
         return False
+    # Named MiNe projects stay on portal retrieval (e.g. “what is SIMS”).
+    try:
+        if _strong_project_match(qn):
+            return False
+    except Exception:
+        pass
     # Explicit portal ask still uses MiNe retrieval + links.
     portal_force = (
         "freeport",
@@ -308,6 +469,9 @@ def _is_general_knowledge_question(qn: str) -> bool:
         "rfp",
         "journey page",
         "our portal",
+        "sims",
+        "openflow",
+        "sow",
     )
     if any(m in qn for m in portal_force):
         return False
@@ -345,6 +509,11 @@ def _is_concise_definition_question(q: str) -> bool:
     qn = _normalize(q)
     if not qn or len(qn.split()) > 12:
         return False
+    try:
+        if _strong_project_match(q) or _wants_project_portfolio_list(q):
+            return False
+    except Exception:
+        pass
     # Explicit delivery / portfolio asks stay on full retrieval.
     heavy = (
         "project",
@@ -820,6 +989,12 @@ def _last_topic_from_history(history: list[dict[str, str]]) -> str:
         m = re.search(r"[\"']([^\"']{2,60})[\"']", raw)
         if m:
             return m.group(1).strip()
+        try:
+            hit = _strong_project_match(raw)
+            if hit and hit.get("title"):
+                return str(hit["title"]).strip()
+        except Exception:
+            pass
         tokens = _query_tokens(raw)
         if tokens:
             # Keep a compact phrase from meaningful tokens.
@@ -830,9 +1005,10 @@ def _last_topic_from_history(history: list[dict[str, str]]) -> str:
 
 
 _FOLLOWUP_RE = re.compile(
-    r"\b(it|its|they|them|their|this|that|these|those)\b|"
+    r"\b(it|its|they|them|their)\b|"
     r"^(related |what technologies|who (developed|built|created)|"
-    r"compare |show architecture|explain (this|business)|open document)",
+    r"compare |show architecture|explain (this|business)|open document|"
+    r"more about (it|this|that)|and (its|the) )",
     re.I,
 )
 
@@ -841,6 +1017,12 @@ def _is_followup_question(q: str) -> bool:
     qn = _normalize(q)
     if not qn:
         return False
+    # Bare "this/that/these/those" alone is too noisy — only with short follow-ups.
+    if re.search(r"\b(this|that|these|those)\b", qn) and len(qn.split()) <= 6:
+        if _FOLLOWUP_RE.search(qn) or any(
+            x in qn for x in ("about", "project", "mean", "explain", "more", "related")
+        ):
+            return True
     if _FOLLOWUP_RE.search(qn):
         return True
     # Short vague asks after a prior topic.
@@ -957,7 +1139,7 @@ def _guest_safe_sources(sources: list | None) -> list[dict[str, Any]]:
             continue
         mod = (item.get("module") or "").strip().lower()
         kind = (item.get("kind") or "").strip().lower()
-        if mod in staff_modules or kind == "project" or kind == "sharepoint" or mod == "sharepoint_training":
+        if mod in staff_modules or kind == "project":
             continue
         sid = str(item.get("id") or "")
         if sid in _STAFF_SECTION_IDS:
@@ -1211,12 +1393,19 @@ def _filter_relevant_articles(q: str, articles: list[dict], *, concise: bool = F
             continue
         title_n = _normalize(str(a.get("title") or ""))
         blob = _normalize(f"{a.get('title') or ''} {a.get('summary') or ''}")
+        title_hits = sum(1 for t in tokens if t in title_n)
+        blob_hits = sum(1 for t in tokens if t in blob)
         if concise:
             # Prefer title overlap for short definition asks.
-            if any(t in title_n for t in tokens):
+            if title_hits:
                 kept.append(a)
             continue
-        if any(t in blob for t in tokens):
+        # Require a title hit, or at least two token hits in title/summary.
+        if title_hits >= 1 or blob_hits >= 2:
+            kept.append(a)
+            continue
+        # Single distinctive token (≥5 chars) in the body/title is enough.
+        if len(tokens) == 1 and len(tokens[0]) >= 5 and blob_hits >= 1:
             kept.append(a)
     return kept
 
@@ -1259,10 +1448,6 @@ def _context_blocks(
                 bits.append(f"Scope: {_snippet(detail['scope'], 320)}")
             if detail.get("technologies"):
                 bits.append(f"Technologies: {_snippet(detail['technologies'], 220)}")
-            if detail.get("source"):
-                bits.append(f"Source: {detail['source']}")
-            if detail.get("path"):
-                bits.append(f"Path: {detail['path']}")
             extra = " | ".join(bits)
         summary = _snippet(a.get("summary") or "", 180 if concise else 320)
         blocks.append(
@@ -1294,69 +1479,6 @@ _VALUE_CHAIN_FALLBACK = (
 )
 
 
-def _sharepoint_hits(q: str, *, limit: int = 5, list_if_empty: bool = False) -> list[dict[str, Any]]:
-    """Search synced Teams/SharePoint training folder documents."""
-    from mine.sharepoint_kb import sharepoint_search_enabled
-
-    if not sharepoint_search_enabled(current_app):
-        return []
-    try:
-        from mine.sharepoint_kb import search_sharepoint_docs
-
-        return search_sharepoint_docs(get_db(), q, limit=limit, list_if_empty=list_if_empty)
-    except Exception:
-        current_app.logger.exception("SharePoint KB search failed")
-        return []
-
-
-def _merge_sharepoint_articles(
-    articles: list[dict[str, Any]],
-    q: str,
-    *,
-    limit: int = 6,
-    list_if_empty: bool = False,
-) -> list[dict[str, Any]]:
-    """Prepend Teams/SharePoint hits so onboarding/training answers include channel docs."""
-    sp_hits = _sharepoint_hits(q, limit=limit, list_if_empty=list_if_empty)
-    if not sp_hits:
-        return articles
-    seen: set[str] = set()
-    merged: list[dict[str, Any]] = []
-    for item in sp_hits + list(articles or []):
-        key = _normalize(str(item.get("title") or "")) or str(item.get("id"))
-        if not key or key in seen:
-            continue
-        seen.add(key)
-        merged.append(item)
-    return merged
-
-
-def _wants_sharepoint_training(q: str) -> bool:
-    qn = _normalize(q)
-    if not qn:
-        return False
-    needles = (
-        "onboarding",
-        "onboarding kit",
-        "training",
-        "training corner",
-        "training document",
-        "teams channel",
-        "sharepoint",
-        "fmi offshore",
-        "new joiner",
-        "new joiners",
-        "ramp up",
-        "orientation",
-    )
-    padded = f" {qn} "
-    for n in needles:
-        nn = _normalize(n)
-        if padded.find(f" {nn} ") >= 0 or qn.startswith(nn + " ") or qn == nn:
-            return True
-    return False
-
-
 def _retrieve_definition_context(q: str, *, guest: bool) -> tuple[list[dict], list[dict]]:
     """Slim context for definition questions — page hint only, no keyword dump."""
     pages: list[dict[str, Any]] = []
@@ -1380,32 +1502,30 @@ def _retrieve_mine_content(q: str, *, guest: bool, concise: bool = False) -> tup
     pages = _static_page_hits(q, allowed)
     articles: list[dict[str, Any]] = []
 
+    want_list = (not guest) and ("projects" in allowed) and _wants_project_portfolio_list(q)
+    named = None if guest or "projects" not in allowed else _strong_project_match(q)
+
     if not guest and "projects" in allowed:
-        articles.extend(_project_catalog_hits(q, limit=4))
+        if want_list:
+            articles.extend(_list_active_portfolio_projects(limit=8))
+        else:
+            articles.extend(_project_catalog_hits(q, limit=4))
+            if named and not any(_normalize(a.get("title") or "") == _normalize(named.get("title") or "") for a in articles):
+                articles.insert(0, named)
 
     # Knowledge + approved project content rows.
     fts = _knowledge_hits(
         db,
         q,
         limit=6,
-        include_projects=(not guest and "projects" in allowed),
+        include_projects=(not guest and "projects" in allowed and bool(named or want_list)),
     )
     fts = _filter_relevant_articles(q, fts, concise=False)
 
-    sp_hits: list[dict[str, Any]] = []
-    if not guest:
-        sp_limit = 6 if _wants_sharepoint_training(q) else 3
-        sp_hits = _sharepoint_hits(
-            q,
-            limit=sp_limit,
-            list_if_empty=_wants_sharepoint_training(q),
-        )
-
-    # Deduplicate by title/id while keeping project-catalog hits first,
-    # then SharePoint training docs (important for onboarding/training asks).
+    # Deduplicate by title/id while keeping project-catalog hits first.
     seen: set[str] = set()
     merged: list[dict[str, Any]] = []
-    for item in articles + sp_hits + fts:
+    for item in articles + fts:
         key = _normalize(str(item.get("title") or "")) or str(item.get("id"))
         if not key or key in seen:
             continue
@@ -1419,14 +1539,7 @@ def _retrieve_mine_content(q: str, *, guest: bool, concise: bool = False) -> tup
             if hub and not any(p.get("id") == "projects" for p in pages):
                 pages = [hub] + pages
 
-    if merged and not guest and sp_hits and _wants_sharepoint_training(q):
-        for sid in ("onboarding", "training"):
-            if sid in allowed:
-                hub = _page_hit(sid)
-                if hub and not any(p.get("id") == sid for p in pages):
-                    pages = pages + [hub]
-
-    return pages, merged[:10]
+    return pages, merged[:8]
 
 
 def _compose_answer(q: str, pages: list[dict], articles: list[dict], *, note: str | None = None, guest: bool = False) -> str:
@@ -1456,14 +1569,32 @@ def _compose_answer(q: str, pages: list[dict], articles: list[dict], *, note: st
             "or **know your customer**."
         )
 
-    parts: list[str] = []
+    project_items = [
+        a for a in text_articles if (a.get("module") or "").lower() == "projects" or (a.get("kind") or "") == "project"
+    ]
+    if project_items and (_wants_project_portfolio_list(q_clean) or len(project_items) >= 3):
+        parts: list[str] = []
+        if note:
+            parts.append(note)
+        parts.append(
+            f"Here are the active Freeport–Hexaware programmes and projects that match “{q_clean}”:"
+        )
+        for a in project_items[:8]:
+            line = f"• **{a.get('title')}**"
+            if a.get("summary"):
+                line += f" — {a['summary']}"
+            parts.append(line)
+        parts.append("Open a source link below for details on any item.")
+        return "\n".join(parts)
+
+    parts = []
     if note:
         parts.append(note)
 
     if pages and not text_articles:
         parts.append(f"Best match for “{q_clean}”:")
     elif text_articles and not pages:
-        parts.append(f"Approved Knowledge items for “{q_clean}”:")
+        parts.append(f"Here’s what I found for “{q_clean}”:")
     else:
         parts.append(f"Here’s what matches “{q_clean}”:")
 
@@ -1530,6 +1661,28 @@ def _maybe_llm_reply(
 
     mine_found = bool(pages or articles) or empty_context_ok
     blocks = _context_blocks(pages, articles, concise=concise)
+    # Weak / off-topic blocks should not force “answer from MiNe notes”.
+    if mine_found and not empty_context_ok and blocks:
+        text_arts = [a for a in (articles or []) if (a.get("kind") or "").lower() != "image"]
+        if text_arts:
+            tokens = _query_tokens(q)
+            strong = False
+            for a in text_arts:
+                title_n = _normalize(str(a.get("title") or ""))
+                if tokens and any(t in title_n for t in tokens):
+                    strong = True
+                    break
+                if (a.get("kind") or "") == "project" and tokens:
+                    strong = True
+                    break
+            if not strong and not pages:
+                # Keep notes for the model, but don't claim a confident MiNe hit.
+                mine_found = False
+        elif pages and not text_arts:
+            # Page-only hits are fine for navigation answers.
+            mine_found = True
+    elif mine_found and not empty_context_ok and not blocks:
+        mine_found = False
     provider = None
     try:
         if token_sink is not None:
@@ -1632,45 +1785,69 @@ def _maybe_llm_reply(
     return {"reply": msg, "provider": None, "error": err or "llm_failed"}
 
 
-def _prepare_sources(sources: list | None) -> list[dict[str, Any]]:
+def _prepare_sources(sources: list | None, *, query: str = "") -> list[dict[str, Any]]:
     """Deduplicate and rank sources so the top item is the best deep-link CTA."""
     if not sources:
         return []
+
+    tokens = _query_tokens(query)
+    qn = _normalize(query)
 
     def rank(item: dict[str, Any]) -> tuple[int, int]:
         kind = (item.get("kind") or "").lower()
         module = (item.get("module") or "").lower()
         title = _normalize(str(item.get("title") or ""))
+        url = (item.get("url") or "").strip().lower()
+        score = 0
         # Keep diagrams in the payload; Domain Knowledge page is the preferred CTA.
         if kind == "image":
             score = 260
         elif kind == "project" or module == "projects":
-            score = 300
+            score = 220
+            if tokens and any(t in title for t in tokens):
+                score += 120
+            if url.rstrip("/") == "/projects" and title in {
+                "programs and projects",
+                "programs & projects",
+                "projects",
+            }:
+                score -= 100
         elif module == "domain_knowledge" and kind == "page":
             score = 240
         elif kind == "page":
-            score = 40
+            score = 80
+            if tokens and any(t in title for t in tokens):
+                score += 60
         else:
-            score = 180
+            score = 160
+            if tokens and any(t in title for t in tokens):
+                score += 80
         # Prefer named project pages over the portfolio hub label.
         if title in {"programs and projects", "programs & projects", "projects"}:
-            score -= 80
+            score -= 60
+        # Boost title overlap with the full query string.
+        if qn and title and (title in qn or qn in title):
+            score += 40
         return (score, len(str(item.get("summary") or "")))
 
-    best_by_url: dict[str, tuple[tuple[int, int], dict[str, Any]]] = {}
+    best_by_key: dict[str, tuple[tuple[int, int], dict[str, Any]]] = {}
     for item in sources:
         if not isinstance(item, dict):
             continue
         url = (item.get("url") or "").strip()
         if not url:
             continue
-        key = url.lower()
+        kind = (item.get("kind") or "").strip().lower()
+        iid = str(item.get("id") or "")
+        title = _normalize(str(item.get("title") or ""))
+        # Dedupe by identity when possible — do not collapse every project onto /projects.
+        key = f"{kind}|{iid}|{url.lower()}" if iid else f"{kind}|{title}|{url.lower()}"
         score = rank(item)
-        prev = best_by_url.get(key)
+        prev = best_by_key.get(key)
         if not prev or score > prev[0]:
-            best_by_url[key] = (score, item)
+            best_by_key[key] = (score, item)
 
-    cleaned = [pair[1] for pair in best_by_url.values()]
+    cleaned = [pair[1] for pair in best_by_key.values()]
     cleaned.sort(key=rank, reverse=True)
     return cleaned[:8]
 
@@ -1686,7 +1863,7 @@ def _out(
     topic: str = "",
     guest: bool = False,
 ) -> dict[str, Any]:
-    prepared = _prepare_sources(sources)
+    prepared = _prepare_sources(sources, query=query)
     if guest:
         prepared = _guest_safe_sources(prepared)
     payload: dict[str, Any] = {
@@ -1730,7 +1907,7 @@ def answer_question(
     # Cache only standalone questions (no prior turns). Skip cache when streaming.
     cache_key = ""
     if not token_sink and not hist and not _is_followup_question(q):
-        cache_key = f"v6|{int(guest)}|{_normalize(search_q)}|{_normalize(page_path)}"
+        cache_key = f"v8|{int(guest)}|{_normalize(search_q)}|{_normalize(page_path)}"
         cached = _cache_get(cache_key)
         if cached:
             if token_sink:
@@ -1771,7 +1948,7 @@ def answer_question(
             else "Say a short friendly hello and ask how you can help. Do not list portal pages."
         )
         llm = _maybe_llm_reply(
-            q or greet_prompt,
+            greet_prompt if _is_greeting(q) else (q or greet_prompt),
             [],
             [],
             fallback=fallback,
@@ -1994,6 +2171,8 @@ def answer_question(
 
     # Strong section intent → open that portal page (+ list items for kit/training/etc.).
     exact = _exact_section_intent(q, allowed)
+    if not exact and not guest and "projects" in allowed and _wants_project_portfolio_list(q):
+        exact = "projects"
     if exact:
         page = _page_hit(exact)
         pages = [page] if page else []
@@ -2002,55 +2181,85 @@ def answer_question(
             articles = _knowledge_hits(
                 db, q, limit=8, module=exact, list_module_if_empty=True
             )
-            if not guest and exact in ("onboarding", "training"):
-                articles = _merge_sharepoint_articles(
-                    articles, q, limit=8, list_if_empty=True
-                )
             note = f"Here’s the {module_label(exact)} page and available items."
-            if not guest and exact in ("onboarding", "training"):
-                from mine.sharepoint_kb import docs_count
-
-                if docs_count(db) == 0:
-                    note += (
-                        " Teams/SharePoint training docs are not indexed yet — "
-                        "sync from Security settings or copy files into data/teams_training."
-                    )
-            reply = _compose_answer(q, pages, articles, note=note, guest=guest)
-        elif exact == "projects" and not guest:
-            articles = _project_catalog_hits("project", limit=6) or _knowledge_hits(
-                db, q, limit=6, module="projects", list_module_if_empty=True, include_projects=True
+            fallback = _compose_answer(q, pages, articles, note=note, guest=guest)
+            llm = _maybe_llm_reply(
+                display_q,
+                pages,
+                articles,
+                fallback=fallback,
+                force_llm=True,
+                history=hist,
+                page_context=page_ctx,
+                guest=guest,
+                token_sink=token_sink,
             )
-            # For bare "projects", list portfolio hub without forcing a weak FTS query.
-            if qn in {"project", "projects", "program", "programs", "programme", "programmes"}:
-                try:
-                    from mine.project_catalog import load_project_section_catalog
-
-                    entries = [
-                        e
-                        for e in (load_project_section_catalog().get("entries") or [])
-                        if e.get("is_active", True)
-                    ][:8]
-                    articles = []
-                    for e in entries:
-                        articles.append(
-                            {
-                                "kind": "project",
-                                "id": e.get("content_id") or e.get("catalog_key"),
-                                "title": e.get("title"),
-                                "summary": _snippet((e.get("sections") or {}).get("overview") or "", 220),
-                                "url": "/projects",
-                                "module_label": "Programs & projects",
-                                "module": "projects",
-                            }
-                        )
-                except Exception:
-                    pass
-            reply = _compose_answer(
-                q, pages, articles, note="Programs & projects in the MiNe portfolio.", guest=guest
+            return _finish(
+                _out(
+                    llm["reply"],
+                    sources=pages + articles,
+                    query=q,
+                    provider=llm["provider"],
+                    llm_error=llm["error"],
+                    topic=topic,
+                    follow_ups=(
+                        _follow_up_suggestions(guest=True)
+                        if guest
+                        else (_follow_up_suggestions(topic or module_label(exact), guest=False)[:4])
+                    ),
+                    guest=guest,
+                )
+            )
+        elif exact == "projects" and not guest:
+            articles = _list_active_portfolio_projects(limit=8)
+            if not articles:
+                articles = _project_catalog_hits(q, limit=6) or _knowledge_hits(
+                    db, q, limit=6, module="projects", list_module_if_empty=True, include_projects=True
+                )
+            note = "Programs & projects in the MiNe portfolio."
+            fallback = _compose_answer(q, pages, articles, note=note, guest=guest)
+            llm = _maybe_llm_reply(
+                display_q,
+                pages,
+                articles,
+                fallback=fallback,
+                force_llm=True,
+                history=hist,
+                page_context=page_ctx,
+                guest=guest,
+                token_sink=token_sink,
+            )
+            topic_out = topic
+            for a in articles:
+                if a.get("title"):
+                    topic_out = str(a["title"])
+                    break
+            return _finish(
+                _out(
+                    llm["reply"],
+                    sources=pages + articles,
+                    query=q,
+                    provider=llm["provider"],
+                    llm_error=llm["error"],
+                    topic=topic_out,
+                    follow_ups=_follow_up_suggestions(topic_out, guest=False)[:4],
+                    guest=guest,
+                )
             )
         else:
             reply = _compose_answer(q, pages, [], guest=guest)
-        return _finish(_out(reply, sources=pages + articles, query=q, topic=topic, guest=guest))
+        return _finish(
+            _out(
+                reply,
+                sources=pages + articles,
+                query=q,
+                topic=topic,
+                follow_ups=_follow_up_suggestions(topic, guest=guest)[:4] if topic and not guest else (
+                    _follow_up_suggestions(guest=True) if guest else []
+                ),
+                guest=guest,
+            )
+        )
 
     # Knowledge-series intent (e.g. "case studies") → filter that module.
     mod = _module_intent(q)
@@ -2072,7 +2281,7 @@ def answer_question(
             pages,
             articles,
             fallback=fallback,
-            force_llm=False,
+            force_llm=True,
             history=hist,
             page_context=page_ctx,
             guest=guest,
@@ -2086,6 +2295,11 @@ def answer_question(
                 provider=llm["provider"],
                 llm_error=llm["error"],
                 topic=topic,
+                follow_ups=(
+                    _follow_up_suggestions(guest=True)
+                    if guest
+                    else (_follow_up_suggestions(topic, guest=False)[:4] if topic else [])
+                ),
                 guest=guest,
             )
         )
@@ -2148,7 +2362,11 @@ def answer_question(
                 follow_ups=(
                     _follow_up_suggestions(guest=True)
                     if guest
-                    else []
+                    else (
+                        []
+                        if concise
+                        else _follow_up_suggestions(topic, guest=False)[:4]
+                    )
                 ),
                 guest=guest,
             )

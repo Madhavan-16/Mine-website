@@ -30,7 +30,13 @@
   /** Prefer the collapsed height so hover/pin expand never leaves a gap when the bar closes. */
   var collapsedPortalOffsetPx = null;
 
+  function isDomainKnowledgePage() {
+    return !!document.querySelector(".domain-knowledge-page");
+  }
+
   function portalNavIsExpanded(reveal) {
+    /* Outside Domain Knowledge the bar stays visible — always treat as expanded. */
+    if (!isDomainKnowledgePage()) return true;
     if (!reveal) return false;
     return (
       reveal.classList.contains("is-pinned") ||
@@ -43,10 +49,21 @@
     if (!header || !header.classList.contains("header-shell--enterprise")) return;
 
     var reveal = header.querySelector(".portal-nav-reveal");
+    var domainPage = isDomainKnowledgePage();
     var expanded = portalNavIsExpanded(reveal);
 
-    /* While expanded, keep the last collapsed offset so content does not jump —
-       and so collapse cannot leave an empty band under the chrome. */
+    /* Static portal nav: always use full measured header height. */
+    if (!domainPage) {
+      var fullH = header.getBoundingClientRect().height;
+      if (!fullH) return;
+      document.documentElement.style.setProperty(
+        "--portal-header-offset",
+        Math.ceil(fullH + 4) + "px"
+      );
+      return;
+    }
+
+    /* Domain Knowledge hover-reveal: keep collapsed offset while expanded so content does not jump. */
     if (expanded && collapsedPortalOffsetPx != null) {
       document.documentElement.style.setProperty(
         "--portal-header-offset",

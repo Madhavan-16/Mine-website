@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}MiNe{% endblock %} · Mining Intelligence and Knowledge Enablement</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=portal-nav-15" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=portal-nav-16" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/content-cards.css') }}" />
     {% if current_user and (request.endpoint or '') not in ('main.landing', 'main.welcome') %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/portal-list.css') }}" />
@@ -384,6 +384,6 @@
     {% if request.endpoint not in ('main.landing', 'main.welcome') and request.endpoint != 'reference.fmi_kyc' and request.endpoint != 'main.open_pit_copper_domain' and not _is_auth_page %}
     <script src="{{ url_for('static', filename='js/site-motion.bundle.js') }}" defer></script>
     {% endif %}
-    <script src="{{ url_for('static', filename='js/navbar.js') }}?v=portal-offset-2" defer></script>
+    <script src="{{ url_for('static', filename='js/navbar.js') }}?v=portal-offset-3" defer></script>
   </body>
 </html>
