@@ -185,7 +185,7 @@ def extract_pdf(data: bytes, filename: str) -> tuple[str, str, str]:
     title = _clean_autofill_title(title)
     raw_s, norm_s = _strip_series_header_for_summary(blob, blob_norm, title)
     summary = _gist_summary(raw_s, norm_s) if norm_s else ""
-    return title, summary, ""
+    return title, summary, blob
 
 
 def extract_docx(data: bytes, filename: str) -> tuple[str, str, str]:
@@ -225,7 +225,7 @@ def extract_docx(data: bytes, filename: str) -> tuple[str, str, str]:
 
     raw_s, norm_s = _strip_series_header_for_summary(blob, blob_norm, title)
     summary = _gist_summary(raw_s, norm_s) if norm_s else ""
-    return title, summary, ""
+    return title, summary, blob
 
 
 def _pptx_iter_shapes(shapes):
@@ -815,7 +815,7 @@ def extract_pptx(data: bytes, filename: str) -> tuple[str, str, str]:
 
     raw_s, norm_s = _strip_series_header_for_summary(blob, blob_norm, title)
     summary = _gist_summary(raw_s, norm_s) if norm_s else ""
-    return title, summary, ""
+    return title, summary, blob
 
 
 def extract_xlsx(data: bytes, filename: str) -> tuple[str, str, str]:
@@ -857,9 +857,35 @@ def extract_xlsx(data: bytes, filename: str) -> tuple[str, str, str]:
         title = _clean_autofill_title(title[:500])
         raw_s, norm_s = _strip_series_header_for_summary(blob, blob_norm, title)
         summary = _gist_summary(raw_s, norm_s) if norm_s else ""
-        return title, summary, ""
+        return title, summary, blob
     finally:
         wb.close()
+
+
+def extract_document_text(filename: str, data: bytes) -> tuple[str, str, str]:
+    """Return (title, summary, body) for indexing (PDF/DOCX/PPTX/XLSX/TXT/MD)."""
+    name = filename or "file"
+    ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+    title = title_from_filename(name)
+    if ext == "pdf":
+        return extract_pdf(data, name)
+    if ext == "docx":
+        return extract_docx(data, name)
+    if ext == "pptx":
+        return extract_pptx(data, name)
+    if ext == "xlsx":
+        return extract_xlsx(data, name)
+    if ext in ("txt", "md", "csv", "log"):
+        try:
+            blob = data.decode("utf-8")
+        except UnicodeDecodeError:
+            blob = data.decode("latin-1", errors="ignore")
+        blob = _truncate_blob(blob)
+        blob_norm = _norm_ws(blob)
+        title = _clean_autofill_title(_first_line_title(blob, title))
+        summary = _gist_summary(blob, blob_norm) if blob_norm else ""
+        return title, summary, blob
+    return title, "", ""
 
 
 def suggest_from_upload(filename: str, data: bytes, *, module: str | None = None) -> dict[str, str]:

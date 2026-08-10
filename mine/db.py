@@ -150,9 +150,19 @@ def ensure_projects_is_active_column():
         db.commit()
 
 
+def ensure_sharepoint_docs_table():
+    """Existing DBs: SharePoint/Teams training docs cache + FTS."""
+    from mine.sharepoint_kb import ensure_sharepoint_docs_table as _ensure
+
+    _ensure(get_db())
+
+
 def init_app(app):
     app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command)
+    from mine.sharepoint_kb import sync_sharepoint_command
+
+    app.cli.add_command(sync_sharepoint_command)
 
 
 @click.command("init-db")

@@ -957,7 +957,7 @@ def _guest_safe_sources(sources: list | None) -> list[dict[str, Any]]:
             continue
         mod = (item.get("module") or "").strip().lower()
         kind = (item.get("kind") or "").strip().lower()
-        if mod in staff_modules or kind == "project":
+        if mod in staff_modules or kind == "project" or kind == "sharepoint" or mod == "sharepoint_training":
             continue
         sid = str(item.get("id") or "")
         if sid in _STAFF_SECTION_IDS:
@@ -1259,6 +1259,10 @@ def _context_blocks(
                 bits.append(f"Scope: {_snippet(detail['scope'], 320)}")
             if detail.get("technologies"):
                 bits.append(f"Technologies: {_snippet(detail['technologies'], 220)}")
+            if detail.get("source"):
+                bits.append(f"Source: {detail['source']}")
+            if detail.get("path"):
+                bits.append(f"Path: {detail['path']}")
             extra = " | ".join(bits)
         summary = _snippet(a.get("summary") or "", 180 if concise else 320)
         blocks.append(
@@ -1288,6 +1292,69 @@ _VALUE_CHAIN_FALLBACK = (
     "**Flow:** Exploration → Mining → Processing → Refining → Market\n\n"
     "The Domain Knowledge diagram below illustrates this value chain."
 )
+
+
+def _sharepoint_hits(q: str, *, limit: int = 5, list_if_empty: bool = False) -> list[dict[str, Any]]:
+    """Search synced Teams/SharePoint training folder documents."""
+    from mine.sharepoint_kb import sharepoint_search_enabled
+
+    if not sharepoint_search_enabled(current_app):
+        return []
+    try:
+        from mine.sharepoint_kb import search_sharepoint_docs
+
+        return search_sharepoint_docs(get_db(), q, limit=limit, list_if_empty=list_if_empty)
+    except Exception:
+        current_app.logger.exception("SharePoint KB search failed")
+        return []
+
+
+def _merge_sharepoint_articles(
+    articles: list[dict[str, Any]],
+    q: str,
+    *,
+    limit: int = 6,
+    list_if_empty: bool = False,
+) -> list[dict[str, Any]]:
+    """Prepend Teams/SharePoint hits so onboarding/training answers include channel docs."""
+    sp_hits = _sharepoint_hits(q, limit=limit, list_if_empty=list_if_empty)
+    if not sp_hits:
+        return articles
+    seen: set[str] = set()
+    merged: list[dict[str, Any]] = []
+    for item in sp_hits + list(articles or []):
+        key = _normalize(str(item.get("title") or "")) or str(item.get("id"))
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        merged.append(item)
+    return merged
+
+
+def _wants_sharepoint_training(q: str) -> bool:
+    qn = _normalize(q)
+    if not qn:
+        return False
+    needles = (
+        "onboarding",
+        "onboarding kit",
+        "training",
+        "training corner",
+        "training document",
+        "teams channel",
+        "sharepoint",
+        "fmi offshore",
+        "new joiner",
+        "new joiners",
+        "ramp up",
+        "orientation",
+    )
+    padded = f" {qn} "
+    for n in needles:
+        nn = _normalize(n)
+        if padded.find(f" {nn} ") >= 0 or qn.startswith(nn + " ") or qn == nn:
+            return True
+    return False
 
 
 def _retrieve_definition_context(q: str, *, guest: bool) -> tuple[list[dict], list[dict]]:
@@ -1325,10 +1392,20 @@ def _retrieve_mine_content(q: str, *, guest: bool, concise: bool = False) -> tup
     )
     fts = _filter_relevant_articles(q, fts, concise=False)
 
-    # Deduplicate by title/id while keeping project-catalog hits first.
+    sp_hits: list[dict[str, Any]] = []
+    if not guest:
+        sp_limit = 6 if _wants_sharepoint_training(q) else 3
+        sp_hits = _sharepoint_hits(
+            q,
+            limit=sp_limit,
+            list_if_empty=_wants_sharepoint_training(q),
+        )
+
+    # Deduplicate by title/id while keeping project-catalog hits first,
+    # then SharePoint training docs (important for onboarding/training asks).
     seen: set[str] = set()
     merged: list[dict[str, Any]] = []
-    for item in articles + fts:
+    for item in articles + sp_hits + fts:
         key = _normalize(str(item.get("title") or "")) or str(item.get("id"))
         if not key or key in seen:
             continue
@@ -1342,7 +1419,14 @@ def _retrieve_mine_content(q: str, *, guest: bool, concise: bool = False) -> tup
             if hub and not any(p.get("id") == "projects" for p in pages):
                 pages = [hub] + pages
 
-    return pages, merged[:8]
+    if merged and not guest and sp_hits and _wants_sharepoint_training(q):
+        for sid in ("onboarding", "training"):
+            if sid in allowed:
+                hub = _page_hit(sid)
+                if hub and not any(p.get("id") == sid for p in pages):
+                    pages = pages + [hub]
+
+    return pages, merged[:10]
 
 
 def _compose_answer(q: str, pages: list[dict], articles: list[dict], *, note: str | None = None, guest: bool = False) -> str:
@@ -1646,7 +1730,7 @@ def answer_question(
     # Cache only standalone questions (no prior turns). Skip cache when streaming.
     cache_key = ""
     if not token_sink and not hist and not _is_followup_question(q):
-        cache_key = f"v5|{int(guest)}|{_normalize(search_q)}|{_normalize(page_path)}"
+        cache_key = f"v6|{int(guest)}|{_normalize(search_q)}|{_normalize(page_path)}"
         cached = _cache_get(cache_key)
         if cached:
             if token_sink:
@@ -1918,7 +2002,19 @@ def answer_question(
             articles = _knowledge_hits(
                 db, q, limit=8, module=exact, list_module_if_empty=True
             )
+            if not guest and exact in ("onboarding", "training"):
+                articles = _merge_sharepoint_articles(
+                    articles, q, limit=8, list_if_empty=True
+                )
             note = f"Here’s the {module_label(exact)} page and available items."
+            if not guest and exact in ("onboarding", "training"):
+                from mine.sharepoint_kb import docs_count
+
+                if docs_count(db) == 0:
+                    note += (
+                        " Teams/SharePoint training docs are not indexed yet — "
+                        "sync from Security settings or copy files into data/teams_training."
+                    )
             reply = _compose_answer(q, pages, articles, note=note, guest=guest)
         elif exact == "projects" and not guest:
             articles = _project_catalog_hits("project", limit=6) or _knowledge_hits(

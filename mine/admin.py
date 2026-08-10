@@ -583,8 +583,58 @@ def _render_password_form(form=None):
 @roles_required("admin")
 def settings():
     from mine import mail as mailmod
+    from mine.sharepoint_kb import docs_count, local_training_dir, sharepoint_graph_ready, sharepoint_kb_ready
 
-    return render_template("admin/settings.html", mail_ready=mailmod.mail_ready(current_app))
+    sp_ready = sharepoint_kb_ready(current_app)
+    sp_graph = sharepoint_graph_ready(current_app)
+    sp_count = 0
+    try:
+        sp_count = docs_count()
+    except Exception:
+        current_app.logger.exception("SharePoint docs count failed")
+    return render_template(
+        "admin/settings.html",
+        mail_ready=mailmod.mail_ready(current_app),
+        sharepoint_ready=sp_ready,
+        sharepoint_graph=sp_graph,
+        sharepoint_docs=sp_count,
+        sharepoint_enabled=bool(current_app.config.get("SHAREPOINT_KB_ENABLED")),
+        sharepoint_folder=(current_app.config.get("SHAREPOINT_KB_FOLDER_URL") or "")[:120],
+        sharepoint_local=str(local_training_dir(current_app)),
+    )
+
+
+@bp.route("/settings/sync-sharepoint", methods=["POST"])
+@login_required
+@roles_required("admin")
+def sync_sharepoint():
+    from mine.sharepoint_kb import sharepoint_kb_ready, sync_sharepoint_folder
+
+    if not sharepoint_kb_ready(current_app):
+        flash(
+            "SharePoint training sync is not configured. Set SHAREPOINT_KB_ENABLED=1 "
+            "(and Graph credentials for live Teams sync, or drop files into data/teams_training).",
+            "warning",
+        )
+        return redirect(url_for("admin.settings"))
+    try:
+        result = sync_sharepoint_folder(current_app, force=True)
+        if result.get("ok"):
+            errs = result.get("errors") or []
+            flash(
+                f"Training sync complete: {result.get('synced', 0)} updated, "
+                f"{result.get('skipped', 0)} unchanged, {result.get('docs', 0)} docs indexed"
+                + (f" ({len(errs)} warnings)." if errs else "."),
+                "success" if result.get("docs", 0) or not errs else "warning",
+            )
+            for err in errs[:3]:
+                flash(str(err), "warning")
+        else:
+            flash(result.get("error") or "SharePoint sync failed.", "danger")
+    except Exception as exc:
+        current_app.logger.exception("Admin SharePoint sync failed")
+        flash(f"SharePoint sync failed: {exc}", "danger")
+    return redirect(url_for("admin.settings"))
 
 
 @bp.route("/mail", methods=["GET", "POST"])

@@ -15,6 +15,7 @@ from mine.db import (
     ensure_attachment_slide_preview_column,
     ensure_notifications_scope,
     ensure_projects_is_active_column,
+    ensure_sharepoint_docs_table,
     ensure_user_mail_tokens_table,
     get_db,
     init_app as db_init_app,
@@ -151,6 +152,10 @@ def create_app():
         ensure_notifications_scope()
         ensure_user_mail_tokens_table()
         ensure_projects_is_active_column()
+        try:
+            ensure_sharepoint_docs_table()
+        except Exception:
+            app.logger.exception("sharepoint_docs table ensure failed on startup")
         from mine.fts import ensure_content_fts
         from mine.upload_paths import normalize_attachment_paths_in_db
 
@@ -170,6 +175,16 @@ def create_app():
             merge_knowledge_persist_into_live(app)
         except Exception:
             app.logger.exception("Knowledge persist merge failed on startup")
+
+        if app.config.get("SHAREPOINT_KB_ENABLED") and app.config.get("SHAREPOINT_KB_SYNC_ON_STARTUP"):
+            try:
+                from mine.sharepoint_kb import sharepoint_kb_ready, sync_sharepoint_folder
+
+                if sharepoint_kb_ready(app):
+                    result = sync_sharepoint_folder(app, force=False)
+                    app.logger.info("SharePoint KB sync on startup: %s", result)
+            except Exception:
+                app.logger.exception("SharePoint KB sync on startup failed")
 
         if app.config.get("BACKFILL_ATTACHMENT_PREVIEWS", True):
             try:

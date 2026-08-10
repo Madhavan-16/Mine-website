@@ -152,3 +152,33 @@ CREATE TRIGGER IF NOT EXISTS content_au AFTER UPDATE ON content BEGIN
     (SELECT coalesce(group_concat(meta_value, ' '), '') FROM content_meta WHERE content_id = new.id AND meta_key = 'tag')
   );
 END;
+
+-- SharePoint / Teams training folder cache for Ask MiNe
+CREATE TABLE IF NOT EXISTS sharepoint_docs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  drive_id TEXT NOT NULL,
+  item_id TEXT NOT NULL,
+  name TEXT NOT NULL DEFAULT '',
+  path TEXT NOT NULL DEFAULT '',
+  web_url TEXT,
+  mime_type TEXT,
+  etag TEXT,
+  last_modified TEXT,
+  size_bytes INTEGER DEFAULT 0,
+  title TEXT NOT NULL DEFAULT '',
+  summary TEXT NOT NULL DEFAULT '',
+  body TEXT NOT NULL DEFAULT '',
+  synced_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(drive_id, item_id)
+);
+CREATE INDEX IF NOT EXISTS idx_sharepoint_docs_name ON sharepoint_docs(name);
+CREATE VIRTUAL TABLE IF NOT EXISTS sharepoint_docs_fts USING fts5(
+  title,
+  summary,
+  body,
+  name,
+  path,
+  content='sharepoint_docs',
+  content_rowid='id',
+  tokenize = 'porter unicode61'
+);

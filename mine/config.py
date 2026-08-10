@@ -138,6 +138,20 @@ class Config:
     # Optional Graph API override; defaults to v1 endpoint.
     MS_GRAPH_BASE_URL = (os.environ.get("MS_GRAPH_BASE_URL") or "https://graph.microsoft.com/v1.0").strip()
 
+    # SharePoint / Teams training folder → Ask MiNe knowledge (app-only Graph).
+    SHAREPOINT_KB_ENABLED = os.environ.get("SHAREPOINT_KB_ENABLED", "0").lower() in ("1", "true", "yes")
+    SHAREPOINT_KB_FOLDER_URL = (os.environ.get("SHAREPOINT_KB_FOLDER_URL") or "").strip()
+    SHAREPOINT_KB_SYNC_ON_STARTUP = os.environ.get("SHAREPOINT_KB_SYNC_ON_STARTUP", "0").lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    SHAREPOINT_KB_SYNC_INTERVAL_HOURS = float(os.environ.get("SHAREPOINT_KB_SYNC_INTERVAL_HOURS", "6") or 6)
+    SHAREPOINT_KB_MAX_FILES = int(os.environ.get("SHAREPOINT_KB_MAX_FILES", "200") or 200)
+    SHAREPOINT_KB_MAX_FILE_MB = float(os.environ.get("SHAREPOINT_KB_MAX_FILE_MB", "25") or 25)
+    # Optional local mirror of the Teams folder (indexed without Graph).
+    SHAREPOINT_KB_LOCAL_DIR = (os.environ.get("SHAREPOINT_KB_LOCAL_DIR") or "data/teams_training").strip()
+
     # Knowledge chatbot (FTS + optional free-tier LLM: Groq or Gemini).
     CHATBOT_ENABLED = os.environ.get("CHATBOT_ENABLED", "1").lower() not in ("0", "false", "no")
     # Provider: auto | groq | gemini | none

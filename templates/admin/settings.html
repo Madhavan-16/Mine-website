@@ -3,10 +3,39 @@
 {% block content %}
   <h1>Security</h1>
 
-  <div class="card" style="margin-top: 12px; max-width: 560px;">
+  <div class="card" style="margin-top: 12px; max-width: 640px;">
     <p class="meta">Signed in as <strong>{{ current_user.username }}</strong> (admin).</p>
     <div class="toolbar" style="margin-top: 14px; flex-wrap: wrap; gap: 8px;">
       <a class="btn btn-primary" href="{{ url_for('admin.settings_password') }}">Change password</a>
     </div>
+  </div>
+
+  <div class="card" style="margin-top: 16px; max-width: 640px;">
+    <h2 style="font-size: 1.05rem; margin: 0 0 8px;">Teams / SharePoint training</h2>
+    <p class="meta" style="margin: 0 0 10px;">
+      Ask MiNe answers onboarding/training from the FMI Offshore SharePoint folder after sync
+      (live Graph and/or files copied into the local mirror folder).
+    </p>
+    {% if sharepoint_enabled %}
+      <p class="meta">
+        Indexed docs: <strong>{{ sharepoint_docs }}</strong>
+        · Graph live sync:
+        {% if sharepoint_graph %}<strong>ready</strong>{% else %}<strong>not ready</strong> (need MS_CLIENT_ID + tenant GUID){% endif %}
+      </p>
+      {% if sharepoint_folder %}
+        <p class="meta" style="word-break: break-all;">Folder link: {{ sharepoint_folder }}{% if sharepoint_folder|length >= 120 %}…{% endif %}</p>
+      {% endif %}
+      {% if sharepoint_local %}
+        <p class="meta" style="word-break: break-all;">Local mirror: <code>{{ sharepoint_local }}</code></p>
+      {% endif %}
+      <form method="post" action="{{ url_for('admin.sync_sharepoint') }}" style="margin-top: 12px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-primary" {% if not sharepoint_ready %}disabled{% endif %}>
+          Sync training docs now
+        </button>
+      </form>
+    {% else %}
+      <p class="meta">Disabled. Set <code>SHAREPOINT_KB_ENABLED=1</code> in <code>.env</code> — see docs/sharepoint-kb-setup.md.</p>
+    {% endif %}
   </div>
 {% endblock %}
