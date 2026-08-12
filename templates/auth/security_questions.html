@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}{% if forced %}Set up security questions{% else %}Security questions{% endif %}{% endblock %}
+{% block content %}
+  {% if forced %}
+  <div class="security-setup-overlay" data-motion-skip>
+    <div class="card auth-card security-setup-card">
+      <header class="auth-login__header">
+        <h1 class="auth-login__title">Set up security questions</h1>
+        <p class="auth-login__subtitle">
+          Required once after sign-in. Choose <strong>three different</strong> questions and answers so you can reset your password later without email.
+        </p>
+      </header>
+  {% else %}
+  <h1>Security questions</h1>
+  <p class="meta" style="max-width: 640px;">
+    Choose <strong>three different</strong> questions and answers. Answers are stored securely (hashed).
+    On <strong>Forgot password</strong>, you’ll be asked <strong>one</strong> of them — a correct answer unlocks password reset.
+  </p>
+
+  {% if enrolled %}
+    <p class="meta" style="color: var(--hex-success, #0a7a3e);">You already have recovery questions set. Saving again will replace them.</p>
+  {% else %}
+    <p class="meta" style="color: var(--hex-warning, #a15c00);">Not set up yet — complete this once so you can recover your password without email.</p>
+  {% endif %}
+
+  <div class="card" style="margin-top: 12px; max-width: 640px;">
+  {% endif %}
+
+    <form method="post" class="form{% if forced %} auth-login__form{% endif %}" action="{{ url_for('auth.account_security_questions', setup=1 if forced else None) }}">
+      {{ form.hidden_tag() }}
+      {% if form.errors %}
+        <ul class="form-errors">
+          {% for field, errs in form.errors.items() %}
+            {% for err in errs %}<li>{{ err }}</li>{% endfor %}
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <label for="question_1">{{ form.question_1.label.text }}</label>
+      {{ form.question_1(id="question_1") }}
+      <label for="answer_1">{{ form.answer_1.label.text }}</label>
+      {{ form.answer_1(id="answer_1", autocomplete="off", placeholder="Your answer") }}
+
+      <label for="question_2" style="margin-top: 14px;">{{ form.question_2.label.text }}</label>
+      {{ form.question_2(id="question_2") }}
+      <label for="answer_2">{{ form.answer_2.label.text }}</label>
+      {{ form.answer_2(id="answer_2", autocomplete="off", placeholder="Your answer") }}
+
+      <label for="question_3" style="margin-top: 14px;">{{ form.question_3.label.text }}</label>
+      {{ form.question_3(id="question_3") }}
+      <label for="answer_3">{{ form.answer_3.label.text }}</label>
+      {{ form.answer_3(id="answer_3", autocomplete="off", placeholder="Your answer") }}
+
+      <div class="toolbar" style="margin-top: 18px; gap: 8px; flex-wrap: wrap;">
+        <button class="btn btn-primary{% if forced %} auth-login__submit{% endif %}" type="submit" style="{% if forced %}width:100%;{% endif %}">
+          {% if forced %}Save and continue{% else %}Save security questions{% endif %}
+        </button>
+        {% if not forced %}
+          {% if is_admin %}
+            <a class="btn btn-secondary" href="{{ url_for('admin.settings') }}">Cancel</a>
+          {% else %}
+            <a class="btn btn-secondary" href="{{ url_for('auth.account_settings') }}">Cancel</a>
+          {% endif %}
+        {% endif %}
+      </div>
+    </form>
+
+    {% if forced %}
+      <form method="post" action="{{ url_for('auth.logout') }}" style="margin-top: 14px; text-align: center;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-secondary" style="background: transparent; border: none; color: inherit; text-decoration: underline; box-shadow: none;">
+          Sign out instead
+        </button>
+      </form>
+    {% endif %}
+  </div>
+  {% if forced %}</div>{% endif %}
+
+  {% if forced %}
+  <style>
+    .security-setup-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 48px 16px 24px;
+      overflow: auto;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(4px);
+    }
+    .security-setup-card {
+      width: min(560px, 100%);
+      margin: 0 auto 40px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+    }
+    body.layout-portal .security-setup-overlay ~ *,
+    body.layout-portal:has(.security-setup-overlay) .portal-nav-bar,
+    body.layout-portal:has(.security-setup-overlay) .sidebar {
+      pointer-events: none;
+    }
+    body.layout-portal:has(.security-setup-overlay) .security-setup-overlay,
+    body.layout-portal:has(.security-setup-overlay) .security-setup-overlay * {
+      pointer-events: auto;
+    }
+  </style>
+  {% endif %}
+{% endblock %}

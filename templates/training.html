@@ -4,16 +4,110 @@
   <div class="page-head">
     <nav class="breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('reference.fmi_kyc') }}">Program map</a><span class="breadcrumb-sep" aria-hidden="true">›</span><a href="{{ url_for('main.training') }}">Training corner</a></nav>
     <h1 class="page-title" style="text-transform:none;">Training corner</h1>
-    <p class="page-lede">Materials, certifications, and skill tracks for the account.</p>
+    <p class="page-lede">Pick a topic, then open the folder in Teams. Contents stay in the channel for members with access.</p>
   </div>
 {% endblock %}
 {% block content %}
   {% include "includes/back_program_map.html" %}
 
-  {% if current_user.role in ['admin','moderator'] %}
-  <div class="toolbar" style="margin-bottom: 12px;">
-    <a class="btn btn-primary" href="{{ url_for('repo_standalone.repo_new', segment='training') }}">Add training item</a>
-  </div>
-  {% endif %}
-  {% include "_content_cards.html" %}
+  <section class="teams-training" aria-labelledby="teams-training-heading" data-teams-training>
+    <div class="teams-training-intro">
+      <div class="teams-training-intro__copy">
+        <h2 id="teams-training-heading" class="teams-training-intro__title">Teams training library</h2>
+        <p class="meta" style="margin:0;">{{ teams_folder_count }} folders · FMI Offshore · Training_Documents</p>
+      </div>
+      {% if teams_root_url %}
+        <a class="btn btn-primary" href="{{ teams_root_url }}" target="_blank" rel="noopener noreferrer">Open full library in Teams</a>
+      {% endif %}
+    </div>
+
+    <div class="teams-training-controls">
+      <label class="teams-training-search">
+        <span class="visually-hidden">Filter folders</span>
+        <input type="search" placeholder="Filter folders…" data-teams-filter autocomplete="off" />
+      </label>
+      <div class="teams-training-tabs" role="tablist" aria-label="Folder topics">
+        <button type="button" class="teams-training-tab is-active" role="tab" aria-selected="true" data-teams-topic="all">All</button>
+        {% for group in teams_groups %}
+          <button type="button" class="teams-training-tab" role="tab" aria-selected="false" data-teams-topic="{{ group.key }}">{{ group.label }}</button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="teams-training-groups">
+      {% for group in teams_groups %}
+        <section class="teams-training-group" data-teams-group="{{ group.key }}" aria-labelledby="teams-group-{{ group.key }}">
+          <h3 id="teams-group-{{ group.key }}" class="teams-training-group__label">
+            <span>{{ group.label }}</span>
+            <span class="teams-training-group__count">{{ group.folders|length }}</span>
+          </h3>
+          <ul class="teams-training-tiles" role="list">
+            {% for folder in group.folders %}
+              <li data-teams-name="{{ folder.name|lower }}">
+                <a class="teams-training-tile" href="{{ folder.teams_url }}" target="_blank" rel="noopener noreferrer">
+                  <span class="teams-training-tile__mark" aria-hidden="true">{{ folder.initial }}</span>
+                  <span class="teams-training-tile__body">
+                    <span class="teams-training-tile__name">{{ folder.name }}</span>
+                    <span class="teams-training-tile__cta">Open in Teams</span>
+                  </span>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endfor %}
+    </div>
+    <p class="meta teams-training-empty" data-teams-empty hidden>No folders match that filter.</p>
+  </section>
+
+  <section class="portal-training" style="margin-top: 2.5rem;" aria-labelledby="portal-training-heading">
+    <div class="toolbar" style="margin-bottom: 12px;">
+      <h2 id="portal-training-heading" style="margin: 0; font-size: 1.05rem;">Portal training items</h2>
+      {% if current_user.role in ['admin','moderator'] %}
+        <a class="btn btn-primary" href="{{ url_for('repo_standalone.repo_new', segment='training') }}">Add training item</a>
+      {% endif %}
+    </div>
+    {% include "_content_cards.html" %}
+  </section>
+
+  <script>
+  (function () {
+    var root = document.querySelector("[data-teams-training]");
+    if (!root) return;
+    var input = root.querySelector("[data-teams-filter]");
+    var empty = root.querySelector("[data-teams-empty]");
+    var topic = "all";
+
+    function apply() {
+      var q = ((input && input.value) || "").trim().toLowerCase();
+      var visible = 0;
+      root.querySelectorAll("[data-teams-group]").forEach(function (group) {
+        var key = group.getAttribute("data-teams-group");
+        var topicMatch = topic === "all" || topic === key;
+        var any = false;
+        group.querySelectorAll("[data-teams-name]").forEach(function (item) {
+          var name = item.getAttribute("data-teams-name") || "";
+          var show = topicMatch && (!q || name.indexOf(q) !== -1);
+          item.hidden = !show;
+          if (show) { any = true; visible += 1; }
+        });
+        group.hidden = !any;
+      });
+      if (empty) empty.hidden = visible > 0;
+    }
+
+    root.querySelectorAll("[data-teams-topic]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        topic = btn.getAttribute("data-teams-topic") || "all";
+        root.querySelectorAll("[data-teams-topic]").forEach(function (b) {
+          var on = b === btn;
+          b.classList.toggle("is-active", on);
+          b.setAttribute("aria-selected", on ? "true" : "false");
+        });
+        apply();
+      });
+    });
+    if (input) input.addEventListener("input", apply);
+  })();
+  </script>
 {% endblock %}

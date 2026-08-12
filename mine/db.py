@@ -157,6 +157,13 @@ def ensure_sharepoint_docs_table():
     _ensure(get_db())
 
 
+def ensure_security_questions_table():
+    """Existing DBs: security questions for forgot-password recovery."""
+    from mine.security_questions import ensure_security_questions_table as _ensure
+
+    _ensure(get_db())
+
+
 def init_app(app):
     app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command)

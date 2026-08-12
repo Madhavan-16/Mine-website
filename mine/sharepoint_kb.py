@@ -32,7 +32,10 @@ def sharepoint_graph_ready(app=None) -> bool:
         return False
     if client_id.upper().startswith("REPLACE_WITH_"):
         return False
-    url = (app.config.get("SHAREPOINT_KB_FOLDER_URL") or "").strip()
+    url = (
+        (app.config.get("SHAREPOINT_KB_FOLDER_URL") or "").strip()
+        or (app.config.get("TEAMS_TRAINING_FOLDER_URL") or "").strip()
+    )
     return bool(url)
 
 

@@ -138,9 +138,17 @@ class Config:
     # Optional Graph API override; defaults to v1 endpoint.
     MS_GRAPH_BASE_URL = (os.environ.get("MS_GRAPH_BASE_URL") or "https://graph.microsoft.com/v1.0").strip()
 
+    # Teams Training_Documents (Training corner cards / Open in Teams).
+    TEAMS_TRAINING_FOLDER_URL = (
+        os.environ.get("TEAMS_TRAINING_FOLDER_URL")
+        or "https://hexawareonline.sharepoint.com/:f:/r/sites/FMIOFFSHORE/Shared%20Documents/General/Training_Documents?d=w24d68d1588544e6e9051c2c3319b305b&csf=1&web=1&e=b0cwDR"
+    ).strip()
+
     # SharePoint / Teams training folder → Ask MiNe knowledge (app-only Graph).
     SHAREPOINT_KB_ENABLED = os.environ.get("SHAREPOINT_KB_ENABLED", "0").lower() in ("1", "true", "yes")
-    SHAREPOINT_KB_FOLDER_URL = (os.environ.get("SHAREPOINT_KB_FOLDER_URL") or "").strip()
+    SHAREPOINT_KB_FOLDER_URL = (
+        os.environ.get("SHAREPOINT_KB_FOLDER_URL") or TEAMS_TRAINING_FOLDER_URL or ""
+    ).strip()
     SHAREPOINT_KB_SYNC_ON_STARTUP = os.environ.get("SHAREPOINT_KB_SYNC_ON_STARTUP", "0").lower() in (
         "1",
         "true",

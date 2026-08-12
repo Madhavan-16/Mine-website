@@ -118,6 +118,19 @@ CREATE INDEX IF NOT EXISTS idx_content_author ON content(author_id);
 CREATE INDEX IF NOT EXISTS idx_meta_content ON content_meta(content_id);
 CREATE INDEX IF NOT EXISTS idx_user_mail_tokens_user ON user_mail_tokens(user_id);
 
+-- Security questions for password recovery (no email required)
+CREATE TABLE IF NOT EXISTS user_security_answers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  question_id TEXT NOT NULL,
+  answer_hash TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, question_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_user_security_answers_user ON user_security_answers(user_id);
+
 CREATE VIRTUAL TABLE IF NOT EXISTS content_fts USING fts5(
   title,
   summary,

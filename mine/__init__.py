@@ -15,6 +15,7 @@ from mine.db import (
     ensure_attachment_slide_preview_column,
     ensure_notifications_scope,
     ensure_projects_is_active_column,
+    ensure_security_questions_table,
     ensure_sharepoint_docs_table,
     ensure_user_mail_tokens_table,
     get_db,
@@ -134,6 +135,50 @@ def create_app():
         flash("Guest accounts can only view Knowledge, Domain Knowledge, Journey, and Know your Customer.", "warning")
         return redirect(url_for("main.knowledge"))
 
+    @app.before_request
+    def enforce_security_questions_setup():
+        """First login after feature: require 3 security questions before using the portal."""
+        from flask import redirect, request, session, url_for
+
+        from mine.auth_utils import load_current_user
+        from mine.db import get_db
+        from mine.guest import is_guest_user
+        from mine.security_questions import user_has_security_answers
+
+        if request.endpoint and (
+            request.endpoint.startswith("static")
+            or request.endpoint in (
+                "auth.login",
+                "auth.login_guest",
+                "auth.logout",
+                "auth.forgot_password",
+                "auth.forgot_password_challenge",
+                "auth.forgot_password_reset",
+                "auth.account_security_questions",
+            )
+        ):
+            return None
+
+        user = load_current_user()
+        if not user or is_guest_user(user):
+            return None
+
+        # Session cache so we don't hit SQLite on every request after setup.
+        if session.get("security_questions_ok"):
+            return None
+
+        try:
+            enrolled = user_has_security_answers(get_db(), int(user["id"]))
+        except Exception:
+            return None
+
+        if enrolled:
+            session["security_questions_ok"] = True
+            return None
+
+        session["force_security_questions"] = True
+        return redirect(url_for("auth.account_security_questions", setup=1))
+
     with app.app_context():
         if not Path(app.config["DATABASE"]).exists():
             init_db()
@@ -152,6 +197,10 @@ def create_app():
         ensure_notifications_scope()
         ensure_user_mail_tokens_table()
         ensure_projects_is_active_column()
+        try:
+            ensure_security_questions_table()
+        except Exception:
+            app.logger.exception("security questions table ensure failed on startup")
         try:
             ensure_sharepoint_docs_table()
         except Exception:

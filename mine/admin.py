@@ -584,6 +584,7 @@ def _render_password_form(form=None):
 def settings():
     from mine import mail as mailmod
     from mine.sharepoint_kb import docs_count, local_training_dir, sharepoint_graph_ready, sharepoint_kb_ready
+    from mine.security_questions import user_has_security_answers
 
     sp_ready = sharepoint_kb_ready(current_app)
     sp_graph = sharepoint_graph_ready(current_app)
@@ -592,6 +593,12 @@ def settings():
         sp_count = docs_count()
     except Exception:
         current_app.logger.exception("SharePoint docs count failed")
+    user = load_current_user()
+    security_enrolled = False
+    try:
+        security_enrolled = user_has_security_answers(get_db(), user["id"]) if user else False
+    except Exception:
+        current_app.logger.exception("Security questions status failed")
     return render_template(
         "admin/settings.html",
         mail_ready=mailmod.mail_ready(current_app),
@@ -601,6 +608,7 @@ def settings():
         sharepoint_enabled=bool(current_app.config.get("SHAREPOINT_KB_ENABLED")),
         sharepoint_folder=(current_app.config.get("SHAREPOINT_KB_FOLDER_URL") or "")[:120],
         sharepoint_local=str(local_training_dir(current_app)),
+        security_enrolled=security_enrolled,
     )
 
 

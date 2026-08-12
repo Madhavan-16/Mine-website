@@ -855,9 +855,20 @@ def innovation():
 @bp.route("/training")
 @login_required
 def training():
+    from mine.teams_training import catalog_groups, root_folder_url
+
     qtext = (request.args.get("q") or "").strip() or None
     rows = _approved_list("training", 100, qtext)
-    return render_template("training.html", rows=rows, q=qtext or "")
+    groups = catalog_groups()
+    folder_count = sum(len(g["folders"]) for g in groups)
+    return render_template(
+        "training.html",
+        rows=rows,
+        q=qtext or "",
+        teams_groups=groups,
+        teams_folder_count=folder_count,
+        teams_root_url=root_folder_url(),
+    )
 
 
 @bp.route("/hall-of-fame")
