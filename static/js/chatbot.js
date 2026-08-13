@@ -10,7 +10,6 @@
   var closeBtn = document.getElementById("mine-chat-close");
   var clearBtn = document.getElementById("mine-chat-clear");
   var expandBtn = document.getElementById("mine-chat-expand");
-  var explainBtn = document.getElementById("mine-chat-explain");
   var panel = document.getElementById("mine-chat-panel");
   var form = document.getElementById("mine-chat-form");
   var input = document.getElementById("mine-chat-input");
@@ -242,19 +241,21 @@
 
   var QUICK_ACTIONS = isGuest
     ? [
-        { label: "📚 Knowledge Base", query: "knowledge" },
-        { label: "⛏ Domain Knowledge", query: "domain knowledge" },
-        { label: "🗺 Journey", query: "journey" },
-        { label: "👤 Know your Customer", query: "know your customer" },
-        { label: "⛏ Mining Process", query: "what are the major mining operations" },
+        { label: "Explain this page", explain: true },
+        { label: "Knowledge Base", query: "knowledge" },
+        { label: "Domain Knowledge", query: "domain knowledge" },
+        { label: "Journey", query: "journey" },
+        { label: "Know your Customer", query: "know your customer" },
+        { label: "Mining Process", query: "what are the major mining operations" },
       ]
     : [
-        { label: "📁 Programs & Projects", query: "projects" },
-        { label: "📄 Search SOW", query: "SOW documents" },
-        { label: "💻 Technologies", query: "technologies used in Freeport engagement" },
-        { label: "⛏ Mining Process", query: "what are the major mining operations" },
-        { label: "📚 New Employee Guide", query: "onboarding" },
-        { label: "🔍 Search Knowledge Base", query: "knowledge" },
+        { label: "Explain this page", explain: true },
+        { label: "Programs & Projects", query: "projects" },
+        { label: "Search SOW", query: "SOW documents" },
+        { label: "Technologies", query: "technologies used in Freeport engagement" },
+        { label: "Mining Process", query: "what are the major mining operations" },
+        { label: "New Employee Guide", query: "onboarding" },
+        { label: "Search Knowledge Base", query: "knowledge" },
       ];
 
   function formatTime(date) {
@@ -881,6 +882,21 @@
     sendBtn.disabled = empty || busy;
   }
 
+  function autosizeInput() {
+    if (!input) return;
+    input.style.height = "auto";
+    var max = 132;
+    var next = Math.min(input.scrollHeight, max);
+    input.style.height = Math.max(36, next) + "px";
+    input.style.overflowY = input.scrollHeight > max ? "auto" : "hidden";
+  }
+
+  function resetInputSize() {
+    if (!input) return;
+    input.style.height = "36px";
+    input.style.overflowY = "hidden";
+  }
+
   function setExpanded(expanded) {
     if (!root) return;
     var on = !!expanded;
@@ -1242,10 +1258,14 @@
     QUICK_ACTIONS.forEach(function (action) {
       var btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "mine-chat__chip";
+      btn.className = "mine-chat__chip" + (action.explain ? " mine-chat__chip--explain" : "");
       btn.textContent = action.label;
       btn.addEventListener("click", function () {
         if (busy) return;
+        if (action.explain) {
+          explainThisPage();
+          return;
+        }
         sendMessage(action.query);
       });
       chips.appendChild(btn);
@@ -1269,19 +1289,30 @@
     var wrap = document.createElement("div");
     wrap.className = "mine-chat__bubble mine-chat__bubble--bot mine-chat__bubble--streaming";
     var body = document.createElement("div");
-    body.className = "mine-chat__md";
-    body.innerHTML = '<p class="mine-chat__md-p mine-chat__stream-pending">…</p>';
+    body.className = "mine-chat__md mine-chat__md--streaming";
+    body.setAttribute("aria-busy", "true");
+    body.innerHTML =
+      '<div class="mine-chat__typing-inline" aria-hidden="true">' +
+      '<span class="mine-chat__typing-dots"><span></span><span></span><span></span></span>' +
+      "</div>";
     wrap.appendChild(body);
     row.appendChild(makeStack(wrap, new Date()));
     messages.appendChild(row);
     scrollToBottom();
-    return { row: row, wrap: wrap, body: body, text: "" };
+    return { row: row, wrap: wrap, body: body, text: "", pending: true };
   }
 
   function updateBotStream(streamState, chunk) {
     if (!streamState) return;
-    streamState.text += chunk || "";
-    // Progressive plain text until done (markdown finalize on complete).
+    var piece = chunk || "";
+    if (!piece) return;
+    streamState.text += piece;
+    if (streamState.pending) {
+      streamState.pending = false;
+      streamState.body.removeAttribute("aria-busy");
+      streamState.body.textContent = "";
+    }
+    // Plain text while streaming keeps layout stable; markdown on finalize.
     streamState.body.textContent = streamState.text;
     scrollToBottom();
   }
@@ -1292,8 +1323,12 @@
       return;
     }
     var text = fullText || streamState.text || "";
+    if (streamState.pending) {
+      streamState.pending = false;
+    }
     streamState.wrap.classList.remove("mine-chat__bubble--streaming");
     streamState.body.className = "mine-chat__md";
+    streamState.body.removeAttribute("aria-busy");
     streamState.body.innerHTML = renderMarkdown(text);
     wireFlowExports(streamState.wrap);
 
@@ -1393,6 +1428,7 @@
     if (!q || busy || !input) return;
 
     input.value = "";
+    resetInputSize();
     syncSendEnabled();
     removeStaleFollowups();
     appendUser(q);
@@ -1591,14 +1627,6 @@
     }, 120);
   }
 
-  if (explainBtn) {
-    explainBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      explainThisPage();
-    });
-  }
-
   document.querySelectorAll("[data-explain-mine-page]").forEach(function (el) {
     el.addEventListener("click", function (e) {
       e.preventDefault();
@@ -1649,7 +1677,10 @@
   }
 
   if (input) {
-    input.addEventListener("input", syncSendEnabled);
+    input.addEventListener("input", function () {
+      autosizeInput();
+      syncSendEnabled();
+    });
     input.addEventListener("keydown", function (e) {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -1657,6 +1688,7 @@
         sendMessage(input.value);
       }
     });
+    resetInputSize();
   }
 
   if (form) {
