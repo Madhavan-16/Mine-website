@@ -22,9 +22,12 @@
   --hex-grey-800: #3e3d4d;
   --hex-grey-900: #272931;
 
-  /* Copper accent — FCX marketing / earth tones */
+  /* Copper accent — FCX marketing / earth tones (heritage accents, not primary actions) */
   --hex-copper: #b37743;
   --hex-copper-light: #d87b61;
+  --hex-copper-wash: rgba(179, 119, 67, 0.1);
+  --hex-copper-muted: rgba(179, 119, 67, 0.55);
+  --hex-copper-rule: rgba(179, 119, 67, 0.35);
 
   --color-success: #28a745;
   --color-warning: #f5a623;
@@ -60,11 +63,15 @@
   /* Legacy aliases */
   --border-radius: var(--radius-sm);
 
-  /* Elevation — subtle, cool-neutral (performance: no blur in box-shadow) */
+  /* Elevation — three levels site-wide: flat · soft · raised */
   --shadow-xs: 0 1px 2px rgba(2, 3, 5, 0.04);
   --shadow-sm: 0 1px 3px rgba(2, 3, 5, 0.06), 0 1px 2px rgba(2, 3, 5, 0.04);
   --shadow-md: 0 4px 14px rgba(16, 63, 90, 0.08), 0 2px 4px rgba(2, 3, 5, 0.04);
   --shadow-lg: 0 12px 36px rgba(16, 63, 90, 0.1), 0 4px 12px rgba(2, 3, 5, 0.06);
+  --elev-flat: none;
+  --elev-soft: var(--shadow-sm);
+  --elev-raised: var(--shadow-md);
+  --elev-hover-border: rgba(0, 174, 240, 0.35);
   --shadow-header: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 1px 0 rgba(2, 3, 5, 0.06),
     0 8px 28px rgba(16, 63, 90, 0.09);
 
@@ -101,6 +108,24 @@
   --focus-ring: 0 0 0 3px rgba(0, 174, 240, 0.35);
   --focus-ring-inset: inset 0 0 0 2px rgba(0, 174, 240, 0.28);
   --tap-min: 44px;
+
+  /* Semantic surfaces (shadcn-inspired aliases — same Hexaware / FCX colors) */
+  --ui-bg: var(--hex-white);
+  --ui-fg: var(--hex-grey-900);
+  --ui-muted: var(--hex-grey-50);
+  --ui-muted-fg: var(--hex-grey-500);
+  --ui-border: var(--hex-grey-200);
+  --ui-border-subtle: rgba(189, 191, 192, 0.42);
+  --ui-ring: rgba(0, 174, 240, 0.35);
+  --ui-primary: var(--hex-blue);
+  --ui-primary-fg: var(--hex-white);
+  --ui-primary-hover: var(--hex-blue-hover);
+  --ui-destructive: var(--color-danger);
+  --ui-control-h: 40px;
+  --ui-control-h-sm: 32px;
+  --ui-control-radius: var(--radius-md);
+  --ui-gap: var(--space-4);
+  --ui-section-gap: var(--space-8);
 
   /* Stacking */
   --z-header: 100;

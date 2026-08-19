@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="Jira">
+  <title>Jira</title>
+  <!-- Classic Atlassian Jira: two blue chevrons forming a diamond -->
+  <path fill="#2684FF" d="M24 6.5 11.2 19.3a2 2 0 0 0 0 2.85L24 35.0l12.8-12.85a2 2 0 0 0 0-2.85L24 6.5zm0 8.3 7.1 7.1L24 29.0l-7.1-7.1L24 14.8z"/>
+  <path fill="#0052CC" d="M24 14.8 16.9 21.9 24 29l7.1-7.1L24 14.8z" opacity=".35"/>
+  <path fill="#fff" d="M24 19.6 21.2 22.4a1.1 1.1 0 0 0 0 1.55L24 26.75l2.8-2.8a1.1 1.1 0 0 0 0-1.55L24 19.6z"/>
+</svg>

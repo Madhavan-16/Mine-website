@@ -6,10 +6,7 @@
 #main .card:not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):not(.journey-digital) {
   border: 1px solid rgba(189, 191, 192, 0.38);
   border-radius: calc(var(--radius-lg) + 2px);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.92) inset,
-    0 1px 2px rgba(16, 63, 90, 0.048),
-    0 10px 30px rgba(16, 63, 90, 0.07);
+  box-shadow: var(--elev-soft);
   padding: clamp(var(--space-5), 1vw + 0.6rem, 1.5rem) clamp(var(--space-5), 1.8vw + 0.75rem, 1.875rem);
   transition:
     border-color var(--transition-ui),
@@ -18,19 +15,13 @@
 }
 
 #main .card:not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):not(.journey-digital):hover {
-  border-color: rgba(0, 174, 240, 0.22);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.98) inset,
-    0 4px 16px rgba(16, 63, 90, 0.08),
-    0 20px 46px rgba(16, 63, 90, 0.1);
+  border-color: var(--elev-hover-border);
+  box-shadow: var(--elev-soft);
 }
 
 #main .card:not(.landing-quick-tile):not(.dashboard-timeline-card):not(.landing-why-mine-card):not(.journey-digital):focus-within {
-  border-color: rgba(0, 174, 240, 0.26);
-  box-shadow:
-    0 0 0 3px rgba(0, 174, 240, 0.11),
-    0 10px 30px rgba(16, 63, 90, 0.08),
-    0 1px 2px rgba(16, 63, 90, 0.04);
+  border-color: var(--elev-hover-border);
+  box-shadow: var(--elev-soft), 0 0 0 3px rgba(0, 174, 240, 0.11);
 }
 
 @media (prefers-reduced-motion: no-preference) {

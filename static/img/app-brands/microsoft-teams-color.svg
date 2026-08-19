@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Microsoft Teams">
+  <title>Microsoft Teams</title>
+  <rect x="11" y="7" width="15" height="18" rx="3" fill="#5059C9"/>
+  <path fill="#fff" d="M14.2 12.1h8.4v1.55h-8.4zm0 3.15h8.4v1.55h-8.4zm0 3.15h5.6v1.55h-5.6z"/>
+  <circle cx="8.5" cy="12.5" r="3.2" fill="#7B83EB"/>
+  <path fill="#7B83EB" d="M3.6 20.8c0-2.4 2.2-4.3 4.9-4.3s4.9 1.9 4.9 4.3v.7H3.6z"/>
+  <rect x="3" y="14.5" width="6.2" height="8.2" rx="1.2" fill="#4B53BC"/>
+</svg>

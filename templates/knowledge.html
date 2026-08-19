@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% from "includes/catalog_pagination.html" import catalog_pagination %}
+{% from "includes/mine_icon.html" import mine_icon %}
+{% from "includes/empty_state.html" import empty_state %}
 {% block title %}Knowledge Repository{% endblock %}
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/knowledge-repo.css') }}" />
@@ -10,13 +12,13 @@
 {% block page_header %}{% endblock %}
 {% block content %}
 {% set module_icons = {
-  'kyc': '📋',
-  'kya': '🎯',
-  'domain_term': '📖',
-  'newsletter': '📬',
-  'case_study': '📊',
-  'rfp_snippet': '📝',
-  'blog': '📄'
+  'kyc': 'clipboard',
+  'kya': 'target',
+  'domain_term': 'book',
+  'newsletter': 'mail',
+  'case_study': 'chart',
+  'rfp_snippet': 'edit',
+  'blog': 'document'
 } %}
 
 <div class="krepo{% if not landing %} krepo--list{% endif %}">
@@ -73,8 +75,8 @@
     <ul class="krepo-cat-grid" role="list">
       {% for key, label in modules_meta %}
         <li>
-          <a class="krepo-cat" href="{{ url_for('main.knowledge', module=key) }}" data-module="{{ key }}">
-            <span class="krepo-cat__icon" aria-hidden="true">{{ module_icons.get(key, '📁') }}</span>
+          <a class="krepo-cat surface-interactive" href="{{ url_for('main.knowledge', module=key) }}" data-module="{{ key }}">
+            <span class="krepo-cat__icon mine-icon-tile" aria-hidden="true">{{ mine_icon(module_icons.get(key, 'folder'), 20) }}</span>
             <span class="krepo-cat__body">
               <span class="krepo-cat__name">{{ label }}</span>
               <span class="krepo-cat__count">{{ module_counts.get(key, 0) }} items</span>
@@ -207,9 +209,12 @@
             {{ catalog_pagination('main.knowledge', catalog) }}
           </footer>
         {% else %}
-          <div class="krepo-empty krepo-empty--panel">
-            <p>No matching approved items. Adjust filters or <a href="{{ url_for('main.knowledge') }}">return to the overview</a>.</p>
-          </div>
+          {{ empty_state(
+            'No matching items',
+            'Adjust your filters or browse the full catalogue to find approved knowledge articles.',
+            url_for('main.knowledge'),
+            'Reset filters'
+          ) }}
         {% endif %}
       </div>
     </div>

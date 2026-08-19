@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% from "includes/mine_icon.html" import mine_icon %}
+{% from "includes/empty_state.html" import empty_state %}
 {% block title %}Innovation Center{% endblock %}
 {% block page_header %}
   <div class="page-head">
@@ -17,8 +19,8 @@
 
   <div class="innov-stats">
     {% for s in innovation_stats %}
-      <div class="innov-stat-card">
-        <span class="icon" aria-hidden="true">{{ s.icon }}</span>
+      <div class="innov-stat-card surface-soft">
+        <span class="icon mine-icon-tile" aria-hidden="true">{{ mine_icon(s.icon, 20) }}</span>
         <div>
           <div class="label">{{ s.label }}</div>
           <div class="count">({{ s.count }})</div>
@@ -30,9 +32,9 @@
   <div class="section-rule">Featured innovations</div>
   {% if rows and rows|length > 0 %}
     {% for item in rows %}
-      <article class="innov-card">
-        <h3>💡 {{ item.title }}</h3>
-        <p class="sub">🏷️ Innovation · {{ item.module }}</p>
+      <article class="innov-card surface-soft surface-interactive">
+        <h3><span class="innov-card__icon mine-icon-tile" aria-hidden="true">{{ mine_icon('bulb', 18) }}</span> {{ item.title }}</h3>
+        <p class="sub"><span class="innov-card__tag-icon" aria-hidden="true">{{ mine_icon('tag', 14) }}</span> Innovation · {{ item.module }}</p>
         {% if item.summary %}
           <p class="impact">Impact: {{ item.summary|e }}</p>
         {% endif %}
@@ -41,6 +43,11 @@
       </article>
     {% endfor %}
   {% else %}
-    <div class="card meta">Nothing published here yet.</div>
+    {{ empty_state(
+      'No innovations published yet',
+      'Approved customer value adds and innovation records will appear here once moderators publish them.',
+      url_for('repo_standalone.repo_new', segment='innovation') if current_user.role in ['admin','moderator'] else none,
+      'Submit innovation' if current_user.role in ['admin','moderator'] else none
+    ) }}
   {% endif %}
 {% endblock %}

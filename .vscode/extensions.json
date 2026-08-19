@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    "naumovs.color-highlight",
+    "zignd.html-css-class-completion",
+    "pranaygp.vscode-css-peek",
+    "ecook.html-css-support",
+    "esbenp.prettier-vscode",
+    "usernamehw.errorlens",
+    "stylelint.vscode-stylelint",
+    "deque-systems.vscode-axe-linter",
+    "streetsidesoftware.code-spell-checker",
+    "oderwat.indent-rainbow",
+    "jock.svg"
+  ]
+}

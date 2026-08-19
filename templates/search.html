@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "includes/empty_state.html" import empty_state %}
 
 {% block title %}Search{% endblock %}
 
@@ -96,11 +97,12 @@
 
   {% if not q %}
 
-    <div class="search-page__empty card">
-
-      <p>Enter a query to search the approved catalogue and MiNe sections — try <strong>case studies</strong>, <strong>training</strong>, or <strong>programs and projects</strong>.</p>
-
-    </div>
+    {{ empty_state(
+      'Start your search',
+      'Enter a query to search the approved catalogue and MiNe sections — try case studies, training, or programs and projects.',
+      url_for('main.knowledge'),
+      'Browse knowledge'
+    ) }}
 
   {% else %}
 
@@ -216,21 +218,12 @@
 
         <h2 class="search-page__results-subtitle">Catalogue items</h2>
 
-        <div class="search-page__empty card">
-
-          <p>No catalogue matches for <strong>{{ q }}</strong>{% if section_shortcuts %} (related pages above may still help){% endif %}. Try a title word, tag, or change the section filter.</p>
-
-          <p class="search-page__empty-links">
-
-            <a href="{{ url_for('main.knowledge', module='case_study') }}">Case studies</a> ·
-
-            <a href="{{ url_for('projects.project_list') }}">Programs &amp; projects</a> ·
-
-            <a href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
-
-          </p>
-
-        </div>
+        {{ empty_state(
+          'No catalogue matches',
+          'Try a title word, tag, or change the section filter. Related pages above may still help.',
+          url_for('main.knowledge'),
+          'Browse knowledge repository'
+        ) }}
 
       {% endif %}
 

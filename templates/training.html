@@ -67,6 +67,11 @@
         <a class="btn btn-primary" href="{{ url_for('repo_standalone.repo_new', segment='training') }}">Add training item</a>
       {% endif %}
     </div>
+    {% set empty_message = 'Approved training items will appear in this catalogue once they are published.' %}
+    {% if current_user.role in ['admin','moderator'] %}
+      {% set empty_cta_href = url_for('repo_standalone.repo_new', segment='training') %}
+      {% set empty_cta_label = 'Add training item' %}
+    {% endif %}
     {% include "_content_cards.html" %}
   </section>
 

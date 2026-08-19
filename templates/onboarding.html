@@ -1,5 +1,10 @@
 {% extends "base.html" %}
+{% from "includes/mine_icon.html" import mine_icon %}
+{% from "includes/empty_state.html" import empty_state %}
 {% block title %}Onboarding Kit{% endblock %}
+{% block head_extra %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/onboarding.css') }}?v=ob-7" />
+{% endblock %}
 {% block page_header %}
   <div class="page-head">
     <nav class="breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('reference.fmi_kyc') }}">Program map</a><span class="breadcrumb-sep" aria-hidden="true">›</span><a href="{{ url_for('main.onboarding') }}">Onboarding kit</a></nav>
@@ -10,79 +15,203 @@
   {% include "includes/back_program_map.html" %}
 
   {% if current_user.role in ['admin','moderator'] %}
-  <div class="toolbar" style="margin-bottom: 12px;">
+  <div class="toolbar ob-toolbar">
     <a class="btn btn-primary" href="{{ url_for('repo_standalone.repo_new', segment='onboarding') }}">Add onboarding note</a>
   </div>
   {% endif %}
 
-  <div class="tabs-radios card" style="padding: 16px 18px 8px;">
-    <input type="radio" name="ob-tab" id="ob-tab-dos" checked />
-    <input type="radio" name="ob-tab" id="ob-tab-tools" />
-    <input type="radio" name="ob-tab" id="ob-tab-who" />
-    <div class="tab-labels">
-      <label for="ob-tab-dos">Do’s &amp; don’ts</label>
-      <label for="ob-tab-tools">Software &amp; tools</label>
-      <label for="ob-tab-who">Who’s who</label>
-    </div>
-    <div class="tab-panels">
-      <div class="tab-panel tab-panel--dos">
-        <div class="dos-dont-grid">
-          <div class="dos-col">
-            <h3>✅ Do’s</h3>
-            <ul>
-              <li>Follow Freeport naming conventions and document standards.</li>
-              <li>Use approved communication channels for account work.</li>
-              <li>Attend weekly account standups and governance forums.</li>
-              <li>Log decisions and assets in MiNe so others can reuse them.</li>
-            </ul>
-          </div>
-          <div class="dont-col">
-            <h3>❌ Don’ts</h3>
-            <ul>
-              <li>Never share client data outside approved collaboration spaces.</li>
-              <li>Don’t install unapproved software on account devices.</li>
-              <li>Never bypass change management for production-impacting work.</li>
-            </ul>
-          </div>
-        </div>
+  <div class="ob-kit">
+    <div class="tabs-radios ob-tabs">
+      <input type="radio" name="ob-tab" id="ob-tab-dos" checked />
+      <input type="radio" name="ob-tab" id="ob-tab-tools" />
+      <input type="radio" name="ob-tab" id="ob-tab-master" />
+      <div class="tab-labels" role="tablist" aria-label="Onboarding sections">
+        <label for="ob-tab-dos" role="tab">Do’s &amp; don’ts</label>
+        <label for="ob-tab-tools" role="tab">Software &amp; tools</label>
+        <label for="ob-tab-master" role="tab">Master tools</label>
       </div>
-      <div class="tab-panel tab-panel--tools">
-        <div class="tools-table-wrap">
-          <table class="tools-table">
-            <thead>
-              <tr><th scope="col">Tool</th><th scope="col">Purpose</th><th scope="col">Required</th><th scope="col">Link</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>MS Teams</td><td>Communication</td><td>✅ Yes</td><td><a href="#" aria-label="External (placeholder)">↗</a></td></tr>
-              <tr><td>ServiceNow</td><td>ITSM</td><td>✅ Yes</td><td><a href="#" aria-label="External (placeholder)">↗</a></td></tr>
-              <tr><td>Jira</td><td>Project management</td><td>✅ Yes</td><td><a href="#" aria-label="External (placeholder)">↗</a></td></tr>
-              <tr><td>Confluence</td><td>Knowledge base</td><td>Optional</td><td><a href="#" aria-label="External (placeholder)">↗</a></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="meta" style="margin-top:12px;">Replace links with your tenant URLs. Published onboarding articles below may add more tools.</p>
-      </div>
-      <div class="tab-panel tab-panel--who">
-        <div class="who-filters">
-          <div class="field">
-            <label for="who-dept">Department</label>
-            <select id="who-dept" disabled><option>All departments</option></select>
-          </div>
-          <div class="field">
-            <label for="who-prog">Program</label>
-            <select id="who-prog" disabled><option>All programs</option></select>
-          </div>
-        </div>
-        <p class="meta">Directory filters wire to your HR source in a later phase. Sample cards:</p>
-        <div class="who-card-grid">
-          <div class="who-card"><div class="avatar" aria-hidden="true"></div><div class="name">R. Kumar</div><div class="meta">Account · Director · ERP program</div></div>
-          <div class="who-card"><div class="avatar" aria-hidden="true"></div><div class="name">A. Sharma</div><div class="meta">Delivery · Tech lead · Data platform</div></div>
-          <div class="who-card"><div class="avatar" aria-hidden="true"></div><div class="name">P. Verma</div><div class="meta">Engineering · Developer · Service desk</div></div>
-        </div>
-      </div>
-    </div>
-  </div>
+      <div class="tab-panels">
+        <div class="tab-panel tab-panel--dos">
+          <div class="ob-guidance">
+            <article class="ob-guidance-card ob-guidance-card--dos">
+              <div class="ob-guidance-card__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M7 11v10M14 22H7a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.3l1.4-5.1A2 2 0 0 1 14.6 3h.2a1.8 1.8 0 0 1 1.7 2.3L15.5 11H19a2 2 0 0 1 2 2.3l-1 6A2 2 0 0 1 18 22h-4Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+              </div>
+              <header class="ob-guidance-card__head">
+                <span class="ob-guidance-card__icon" aria-hidden="true">{{ mine_icon('check', 22) }}</span>
+                <h2 class="ob-guidance-card__title">Do’s</h2>
+              </header>
+              <ul class="ob-guidance-list">
+                <li><span class="ob-guidance-list__bullet" aria-hidden="true">{{ mine_icon('check', 16) }}</span><span>Follow Freeport naming conventions and document standards.</span></li>
+                <li><span class="ob-guidance-list__bullet" aria-hidden="true">{{ mine_icon('check', 16) }}</span><span>Use approved communication channels for account work.</span></li>
+                <li><span class="ob-guidance-list__bullet" aria-hidden="true">{{ mine_icon('check', 16) }}</span><span>Attend weekly account standups and governance forums.</span></li>
+                <li><span class="ob-guidance-list__bullet" aria-hidden="true">{{ mine_icon('check', 16) }}</span><span>Log decisions and assets in MiNe so others can reuse them.</span></li>
+              </ul>
+            </article>
 
-  <div class="section-rule">Published onboarding</div>
-  {% include "_content_cards.html" %}
+            <article class="ob-guidance-card ob-guidance-card--donts">
+              <div class="ob-guidance-card__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M8 13V6.5a1.5 1.5 0 0 1 3 0V12M11 11.5V5.5a1.5 1.5 0 0 1 3 0V12M14 11V7.5a1.5 1.5 0 0 1 3 0V14c0 4-2.5 6-5.5 6H11a5 5 0 0 1-5-5v-3.5a1.5 1.5 0 0 1 3 0V13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <header class="ob-guidance-card__head">
+                <span class="ob-guidance-card__icon" aria-hidden="true">{{ mine_icon('x', 22) }}</span>
+                <h2 class="ob-guidance-card__title">Don’ts</h2>
+              </header>
+              <ul class="ob-guidance-list">
+                <li><span class="ob-guidance-list__bullet" aria-hidden="true">{{ mine_icon('x', 16) }}</span><span>Never share client data outside approved collaboration spaces.</span></li>
+                <li><span class="ob-guidance-list__bullet" aria-hidden="true">{{ mine_icon('x', 16) }}</span><span>Don’t install unapproved software on account devices.</span></li>
+                <li><span class="ob-guidance-list__bullet" aria-hidden="true">{{ mine_icon('x', 16) }}</span><span>Never bypass change management for production-impacting work.</span></li>
+              </ul>
+            </article>
+          </div>
+        </div>
+
+        <div class="tab-panel tab-panel--tools">
+          <div class="tools-table-wrap">
+            <table class="tools-table">
+              <thead>
+                <tr><th scope="col">Tool</th><th scope="col">Purpose</th><th scope="col">Required</th><th scope="col">Link</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <span class="ob-tool-name">
+                      <span class="ob-tool-name__icon ob-tool-name__icon--brand" aria-hidden="true">
+                        <img src="{{ url_for('static', filename='img/app-brands/microsoft-teams-official.svg') }}" alt="" width="20" height="20" loading="lazy" decoding="async" />
+                      </span>
+                      MS Teams
+                    </span>
+                  </td>
+                  <td>Communication</td>
+                  <td><span class="ob-req ob-req--yes">{{ mine_icon('check', 14) }} Yes</span></td>
+                  <td><a href="https://www.microsoft.com/microsoft-teams/download-app" target="_blank" rel="noopener noreferrer" aria-label="Download Microsoft Teams">Open →</a></td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="ob-tool-name">
+                      <span class="ob-tool-name__icon ob-tool-name__icon--brand" aria-hidden="true">
+                        <img src="{{ url_for('static', filename='img/app-brands/servicenow-official.svg') }}" alt="" width="20" height="20" loading="lazy" decoding="async" />
+                      </span>
+                      ServiceNow
+                    </span>
+                  </td>
+                  <td>ITSM</td>
+                  <td><span class="ob-req ob-req--yes">{{ mine_icon('check', 14) }} Yes</span></td>
+                  <td><a href="https://www.servicenow.com/products/now-mobile.html" target="_blank" rel="noopener noreferrer" aria-label="Download ServiceNow Now Mobile">Open →</a></td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="ob-tool-name">
+                      <span class="ob-tool-name__icon ob-tool-name__icon--brand" aria-hidden="true">
+                        <img src="{{ url_for('static', filename='img/app-brands/jira-official.svg') }}" alt="" width="20" height="20" loading="lazy" decoding="async" />
+                      </span>
+                      Jira
+                    </span>
+                  </td>
+                  <td>Project management</td>
+                  <td><span class="ob-req ob-req--yes">{{ mine_icon('check', 14) }} Yes</span></td>
+                  <td><a href="https://www.atlassian.com/software/jira/download" target="_blank" rel="noopener noreferrer" aria-label="Download Jira">Open →</a></td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="ob-tool-name">
+                      <span class="ob-tool-name__icon ob-tool-name__icon--brand" aria-hidden="true">
+                        <img src="{{ url_for('static', filename='img/app-brands/confluence-official.svg') }}" alt="" width="20" height="20" loading="lazy" decoding="async" />
+                      </span>
+                      Confluence
+                    </span>
+                  </td>
+                  <td>Knowledge base</td>
+                  <td><span class="ob-req ob-req--opt">Optional</span></td>
+                  <td><a href="https://www.atlassian.com/software/confluence/download" target="_blank" rel="noopener noreferrer" aria-label="Download Confluence">Open →</a></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="meta" style="margin-top:12px;">Links open the official download or product pages. Use your account tenant URLs after install. Published onboarding articles below may add more tools.</p>
+        </div>
+
+        <div class="tab-panel tab-panel--master">
+          <div class="ob-master-card">
+            <table class="ob-master-table">
+              <thead>
+                <tr>
+                  <th scope="col">Category</th>
+                  <th scope="col">Tool / platform</th>
+                  <th scope="col">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Development &amp; IDE</td>
+                  <td class="ob-master-table__placeholder">—</td>
+                  <td>e.g. VS Code, Azure DevOps, Git</td>
+                </tr>
+                <tr>
+                  <td>Collaboration</td>
+                  <td class="ob-master-table__placeholder">—</td>
+                  <td>e.g. MiNe, Teams, Jira</td>
+                </tr>
+                <tr>
+                  <td>Mining / OT systems</td>
+                  <td class="ob-master-table__placeholder">—</td>
+                  <td>Account-specific applications</td>
+                </tr>
+                <tr>
+                  <td>Data &amp; reporting</td>
+                  <td class="ob-master-table__placeholder">—</td>
+                  <td>Dashboards, analytics, exports</td>
+                </tr>
+                <tr>
+                  <td>Other</td>
+                  <td class="ob-master-table__placeholder">—</td>
+                  <td>Add rows as the master list matures</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="meta" style="margin-top:12px;">Replace the placeholders above with the approved master list. New tools can be documented here and linked from onboarding and training as needed.</p>
+        </div>
+      </div>
+    </div>
+
+    <section class="ob-published" aria-labelledby="ob-published-title">
+      <header class="ob-published__head ob-published__head--rule">
+        <h2 id="ob-published-title" class="ob-published__title">Published onboarding</h2>
+      </header>
+
+      {% if rows and rows|length > 0 %}
+        {% set accent_cycle = ['cyan', 'green', 'violet'] %}
+        {% set icon_cycle = ['graduation', 'badge', 'people'] %}
+        <ul class="ob-card-grid ob-card-grid--row" role="list">
+          {% for item in rows %}
+            {% set accent = accent_cycle[loop.index0 % 3] %}
+            {% set icon_name = icon_cycle[loop.index0 % 3] %}
+            <li>
+              <article class="ob-pub-card ob-pub-card--row ob-pub-card--{{ accent }}">
+                <span class="ob-pub-card__icon" aria-hidden="true">{{ mine_icon(icon_name, 22) }}</span>
+                <div class="ob-pub-card__body">
+                  <div class="ob-pub-card__top">
+                    <h3 class="ob-pub-card__title">
+                      <a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a>
+                    </h3>
+                    <span class="ob-pub-card__badge">Onboarding</span>
+                  </div>
+                  <p class="ob-pub-card__summary">{{ item.summary or "No summary provided." }}</p>
+                  <a class="ob-pub-card__cta" href="{{ url_for('content.content_view', cid=item.id) }}">View details →</a>
+                </div>
+              </article>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {{ empty_state(
+          'Nothing published here yet',
+          'Published onboarding articles and notes will appear here once moderators approve them.',
+          url_for('repo_standalone.repo_new', segment='onboarding') if current_user.role in ['admin','moderator'] else none,
+          'Add onboarding note' if current_user.role in ['admin','moderator'] else none
+        ) }}
+      {% endif %}
+    </section>
+  </div>
 {% endblock %}

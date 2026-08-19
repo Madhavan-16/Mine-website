@@ -1,12 +1,20 @@
 {% extends "base.html" %}
+{% from "includes/mine_icon.html" import mine_icon %}
 {% block title %}Dashboard{% endblock %}
 {% block head_extra %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=dash-redesign-2" />
 {% endblock %}
 {% block page_header %}{% endblock %}
 {% block content %}
 <div class="dashboard-page">
-  <header class="dashboard-hero card" data-motion-skip>
+  <header class="dashboard-hero card dashboard-hero--command" data-motion-skip>
+    <div class="dashboard-hero-graphic" aria-hidden="true">
+      <svg class="dashboard-hero-contour" viewBox="0 0 240 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 118 C40 98 55 72 90 78 S150 52 180 44 S220 28 240 22" stroke="currentColor" stroke-width="1.2" opacity="0.35"/>
+        <path d="M0 128 C50 108 70 88 110 92 S170 68 200 58 S230 48 240 40" stroke="currentColor" stroke-width="1" opacity="0.22"/>
+        <path d="M0 108 C30 95 48 82 75 86 S120 70 155 62 S195 50 240 38" stroke="currentColor" stroke-width="0.8" opacity="0.18"/>
+      </svg>
+    </div>
     <div class="dashboard-hero-copy">
       <p class="dashboard-kicker">Freeport · Hexaware</p>
       <h1 class="dashboard-title">Welcome back{% if current_user.display_name %}, {{ current_user.display_name }}{% endif %}</h1>
@@ -15,12 +23,21 @@
       </p>
       <div class="dashboard-hero-actions">
         <a class="btn btn-primary" href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
-        <a class="btn btn-secondary" href="{{ url_for('search.search') }}">Advanced search</a>
         {% if config.get('CHATBOT_ENABLED', True) %}
-        <button type="button" class="btn btn-secondary" data-open-mine-chat>
+        <button type="button" class="btn btn-secondary dashboard-hero-actions__chat" data-open-mine-chat>
+          <img
+            class="dashboard-hero-actions__chat-icon"
+            src="{{ url_for('static', filename='img/mine-ai-bot.svg') }}"
+            width="18"
+            height="18"
+            alt=""
+            decoding="async"
+            draggable="false"
+          />
           Ask MiNe
         </button>
         {% endif %}
+        <a class="btn btn-ghost" href="{{ url_for('search.search') }}">Advanced search</a>
         {% if pending_moderation is not none and pending_moderation > 0 %}
           <a class="btn btn-secondary dashboard-pill-alert" href="{{ url_for('admin.moderation') }}">
             Moderation queue ({{ pending_moderation }})
@@ -30,22 +47,22 @@
     </div>
     <div class="dashboard-hero-widgets" aria-label="Key totals">
       <a class="dashboard-stat-widget" href="{{ url_for('main.knowledge') }}">
-        <span class="dashboard-stat-ic" aria-hidden="true">📚</span>
+        <span class="dashboard-stat-icon" aria-hidden="true">{{ mine_icon('document', 20) }}</span>
         <span class="dashboard-stat-value">{{ portal_stats.knowledge_items }}</span>
         <span class="dashboard-stat-label">Catalog items</span>
       </a>
       <a class="dashboard-stat-widget" href="{{ url_for('projects.project_list') }}">
-        <span class="dashboard-stat-ic" aria-hidden="true">📊</span>
+        <span class="dashboard-stat-icon" aria-hidden="true">{{ mine_icon('chart', 20) }}</span>
         <span class="dashboard-stat-value">{{ portal_stats.projects }}</span>
         <span class="dashboard-stat-label">Active projects</span>
       </a>
       <a class="dashboard-stat-widget" href="{{ url_for('main.innovation') }}">
-        <span class="dashboard-stat-ic" aria-hidden="true">💡</span>
+        <span class="dashboard-stat-icon" aria-hidden="true">{{ mine_icon('bulb', 20) }}</span>
         <span class="dashboard-stat-value">{{ portal_stats.innovations }}</span>
         <span class="dashboard-stat-label">Innovation posts</span>
       </a>
       <span class="dashboard-stat-widget dashboard-stat-widget--static">
-        <span class="dashboard-stat-ic" aria-hidden="true">👥</span>
+        <span class="dashboard-stat-icon" aria-hidden="true">{{ mine_icon('people', 20) }}</span>
         <span class="dashboard-stat-value">{{ portal_stats.team_members }}</span>
         <span class="dashboard-stat-label">Active associates</span>
       </span>
@@ -64,23 +81,27 @@
     </p>
     <div id="dash-timeline-motion" class="dash-strategic-timeline">
       <div class="dash-strategic-timeline__command" data-timeline-command>
+        <nav class="dash-strategic-timeline__spine" aria-label="Jump to strategic era">
+          <div class="dash-strategic-timeline__spine-rail" aria-hidden="true"></div>
+          {% for beat in timeline %}
+            <button
+              type="button"
+              class="dash-strategic-timeline__spine-btn{% if loop.first %} is-active{% endif %}"
+              data-timeline-jump="{{ loop.index0 }}"
+              style="--era-accent: {{ beat.c }};"
+              aria-label="{{ beat.y }} — {{ beat.t }}"
+            >
+              <span class="dash-strategic-timeline__spine-dot" aria-hidden="true"></span>
+              <span class="dash-strategic-timeline__spine-year">{{ beat.y }}</span>
+            </button>
+          {% endfor %}
+        </nav>
         <div class="dash-strategic-timeline__live" aria-live="polite" aria-atomic="true">
           <span class="dash-strategic-timeline__live-kicker">Now exploring</span>
           <span class="dash-strategic-timeline__live-year" data-timeline-live-year>{{ timeline[0].y }}</span>
           <h3 class="dash-strategic-timeline__live-title" data-timeline-live-title>{{ timeline[0].t }}</h3>
           <p class="dash-strategic-timeline__live-desc" data-timeline-live-desc>{{ timeline[0].b }}</p>
         </div>
-        <nav class="dash-strategic-timeline__nav" aria-label="Jump to strategic era">
-          {% for beat in timeline %}
-            <button
-              type="button"
-              class="dash-strategic-timeline__nav-btn{% if loop.first %} is-active{% endif %}"
-              data-timeline-jump="{{ loop.index0 }}"
-              style="--era-accent: {{ beat.c }};"
-              aria-label="{{ beat.y }} — {{ beat.t }}"
-            >{{ beat.y }}</button>
-          {% endfor %}
-        </nav>
       </div>
       <p class="dash-strategic-timeline__hint" aria-hidden="true">Drag or scroll the runway · tap an era above · copper marks today</p>
       <div class="dash-strategic-timeline__viewport" data-timeline-viewport tabindex="0" aria-label="Freeport strategic timeline by era">

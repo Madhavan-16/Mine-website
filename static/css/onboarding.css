@@ -1,0 +1,482 @@
+/**
+ * Onboarding kit — Do’s/Don’ts guidance cards + published catalogue.
+ * Brand: navy / cyan / copper; success & danger reserved for guidance polarity.
+ */
+
+.ob-toolbar {
+  margin-bottom: 12px;
+}
+
+.ob-kit {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+/* ——— Tabs ——— */
+.ob-tabs.tabs-radios {
+  margin-top: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ob-tabs .tab-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-bottom: 1px solid var(--hex-grey-100);
+  margin-bottom: 0;
+  background: transparent;
+}
+
+.ob-tabs .tab-labels label {
+  padding: 0.75rem 1.1rem;
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--hex-grey-500);
+  cursor: pointer;
+  border: none;
+  border-radius: 0;
+  margin-bottom: 0;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.ob-tabs .tab-labels label:hover {
+  color: var(--hex-blue-dark);
+}
+
+.ob-tabs #ob-tab-dos:checked ~ .tab-labels label[for="ob-tab-dos"],
+.ob-tabs #ob-tab-tools:checked ~ .tab-labels label[for="ob-tab-tools"],
+.ob-tabs #ob-tab-master:checked ~ .tab-labels label[for="ob-tab-master"] {
+  color: var(--hex-blue);
+  background: transparent;
+  border-color: transparent;
+  border-bottom-color: var(--hex-blue);
+}
+
+.ob-tabs .tab-panel {
+  padding: 1.25rem 0 0;
+}
+
+/* ——— Do’s / Don’ts guidance ——— */
+.ob-guidance {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(14px, 2vw, 20px);
+}
+
+@media (max-width: 760px) {
+  .ob-guidance {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ob-guidance-card {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(1.15rem, 2vw, 1.4rem) clamp(1.15rem, 2vw, 1.5rem);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--ui-border-subtle);
+  background: var(--hex-white);
+  box-shadow: var(--elev-soft, var(--shadow-sm));
+  min-height: 220px;
+}
+
+.ob-guidance-card--dos {
+  border-color: color-mix(in srgb, var(--color-success) 22%, var(--hex-grey-200));
+  background: linear-gradient(165deg, #fff 0%, color-mix(in srgb, var(--color-success) 6%, white) 100%);
+}
+
+.ob-guidance-card--donts {
+  border-color: color-mix(in srgb, var(--color-danger) 20%, var(--hex-grey-200));
+  background: linear-gradient(165deg, #fff 0%, color-mix(in srgb, var(--color-danger) 5%, white) 100%);
+}
+
+.ob-guidance-card__mark {
+  position: absolute;
+  right: -0.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 7.5rem;
+  height: 7.5rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  opacity: 0.14;
+}
+
+.ob-guidance-card--dos .ob-guidance-card__mark {
+  background: color-mix(in srgb, var(--color-success) 18%, transparent);
+  color: var(--color-success);
+}
+
+.ob-guidance-card--donts .ob-guidance-card__mark {
+  background: color-mix(in srgb, var(--color-danger) 16%, transparent);
+  color: var(--color-danger);
+}
+
+.ob-guidance-card__mark svg {
+  width: 3rem;
+  height: 3rem;
+}
+
+.ob-guidance-card__head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.9rem;
+}
+
+.ob-guidance-card__icon {
+  display: inline-flex;
+  color: inherit;
+}
+
+.ob-guidance-card--dos .ob-guidance-card__icon,
+.ob-guidance-card--dos .ob-guidance-card__title {
+  color: var(--color-success);
+}
+
+.ob-guidance-card--donts .ob-guidance-card__icon,
+.ob-guidance-card--donts .ob-guidance-card__title {
+  color: var(--color-danger-dark, #b02a37);
+}
+
+.ob-guidance-card__title {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: var(--letter-tight);
+}
+
+.ob-guidance-list {
+  position: relative;
+  z-index: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.7rem;
+  max-width: calc(100% - 4.5rem);
+}
+
+.ob-guidance-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: var(--text-md);
+  line-height: var(--leading-body);
+  color: var(--hex-grey-800);
+}
+
+.ob-guidance-list__bullet {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.ob-guidance-card--dos .ob-guidance-list__bullet {
+  color: var(--color-success);
+}
+
+.ob-guidance-card--donts .ob-guidance-list__bullet {
+  color: var(--color-danger);
+}
+
+/* ——— Tools (brand logos in Tool column only; table uses wireframe .tools-table) ——— */
+.ob-tool-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 600;
+  color: var(--hex-grey-900);
+}
+
+.ob-tool-name__icon--brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  flex-shrink: 0;
+  background: var(--hex-white);
+  border: 1px solid var(--hex-grey-100);
+  border-radius: var(--radius-sm);
+  padding: 1px;
+  overflow: hidden;
+}
+
+.ob-tool-name__icon--brand img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ob-req {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.ob-req--yes {
+  color: var(--color-success);
+}
+
+.ob-req--opt {
+  color: var(--hex-grey-500);
+}
+
+.ob-master-card {
+  background: var(--hex-white);
+  border: 1px solid var(--ui-border-subtle, var(--hex-grey-200));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elev-soft, var(--shadow-sm));
+  overflow: hidden;
+}
+
+.ob-master-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.ob-master-table th,
+.ob-master-table td {
+  padding: 0.9rem 1.1rem;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--hex-grey-100);
+}
+
+.ob-master-table thead th {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--hex-grey-500);
+  background: var(--hex-white);
+}
+
+.ob-master-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.ob-master-table tbody td {
+  color: var(--hex-grey-800);
+}
+
+.ob-master-table__placeholder {
+  color: var(--hex-grey-400);
+}
+
+/* ——— Published onboarding ——— */
+.ob-published__head--rule {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.15rem;
+}
+
+.ob-published__head--rule::before,
+.ob-published__head--rule::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--hex-grey-100);
+}
+
+.ob-published__title {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hex-grey-500);
+  white-space: nowrap;
+}
+
+.ob-card-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: clamp(12px, 2vw, 18px);
+}
+
+.ob-card-grid--row {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 900px) {
+  .ob-card-grid--row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.ob-pub-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  height: 100%;
+  padding: 1.1rem 1.15rem 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--ui-border-subtle);
+  background: var(--hex-white);
+  box-shadow: var(--elev-soft, var(--shadow-sm));
+  transition:
+    border-color var(--transition-ui),
+    box-shadow var(--transition-ui),
+    transform var(--transition-ui);
+}
+
+.ob-pub-card--row {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 1rem 1.1rem;
+}
+
+.ob-pub-card:hover {
+  border-color: var(--elev-hover-border, rgba(0, 174, 240, 0.35));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ob-pub-card:hover {
+    transform: translateY(var(--lift-subtle, -1px));
+  }
+}
+
+.ob-pub-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.ob-pub-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ob-pub-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.ob-pub-card--cyan .ob-pub-card__icon {
+  background: var(--hex-blue-light);
+  color: var(--hex-blue-dark);
+}
+
+.ob-pub-card--green .ob-pub-card__icon {
+  background: color-mix(in srgb, var(--color-success) 14%, white);
+  color: #1e7a36;
+}
+
+.ob-pub-card--violet .ob-pub-card__icon {
+  background: color-mix(in srgb, #6b4fbb 12%, white);
+  color: #5a3fa0;
+}
+
+.ob-pub-card--copper .ob-pub-card__icon {
+  background: var(--hex-copper-wash, rgba(179, 119, 67, 0.12));
+  color: var(--hex-copper);
+}
+
+.ob-pub-card__badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.4rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius-full);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.ob-pub-card--cyan .ob-pub-card__badge {
+  background: var(--hex-teal-light, #e6f7fc);
+  color: var(--hex-teal-dark, #004157);
+}
+
+.ob-pub-card--green .ob-pub-card__badge {
+  background: color-mix(in srgb, var(--color-success) 12%, white);
+  color: #1e7a36;
+}
+
+.ob-pub-card--violet .ob-pub-card__badge {
+  background: color-mix(in srgb, #6b4fbb 12%, white);
+  color: #5a3fa0;
+}
+
+.ob-pub-card--copper .ob-pub-card__badge {
+  background: var(--hex-copper-wash, rgba(179, 119, 67, 0.12));
+  color: var(--hex-copper);
+}
+
+.ob-pub-card__title {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--hex-blue-dark);
+}
+
+.ob-pub-card__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.ob-pub-card__title a:hover {
+  color: var(--hex-blue);
+  text-decoration: underline;
+}
+
+.ob-pub-card__summary {
+  margin: 0;
+  flex: 1;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--hex-grey-700);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ob-pub-card__cta {
+  margin-top: 0.15rem;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--hex-blue);
+  text-decoration: none;
+}
+
+.ob-pub-card__cta:hover {
+  text-decoration: underline;
+  color: var(--hex-blue-hover);
+}

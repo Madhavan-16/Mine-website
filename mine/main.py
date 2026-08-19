@@ -269,9 +269,9 @@ def _innovation_bucket_counts(rows):
         return n
 
     return [
-        {"label": "Automation", "icon": "⚙", "count": cnt(auto_kw)},
-        {"label": "Process improvement", "icon": "📋", "count": cnt(proc_kw)},
-        {"label": "AI & analytics", "icon": "🤖", "count": cnt(ai_kw)},
+        {"label": "Automation", "icon": "gear", "count": cnt(auto_kw)},
+        {"label": "Process improvement", "icon": "clipboard", "count": cnt(proc_kw)},
+        {"label": "AI & analytics", "icon": "chip", "count": cnt(ai_kw)},
     ]
 
 
