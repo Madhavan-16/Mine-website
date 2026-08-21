@@ -1,11 +1,24 @@
 {% extends "base.html" %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}Training Corner{% endblock %}
 {% block page_header %}
-  <div class="page-head">
-    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('reference.fmi_kyc') }}">Program map</a><span class="breadcrumb-sep" aria-hidden="true">›</span><a href="{{ url_for('main.training') }}">Training corner</a></nav>
-    <h1 class="page-title" style="text-transform:none;">Training corner</h1>
-    <p class="page-lede">Pick a topic, then open the folder in Teams. Contents stay in the channel for members with access.</p>
-  </div>
+  {% call mine_page_head(
+      title='Training corner',
+      lede='Pick a topic, then open the folder in Teams. Contents stay in the channel for members with access.',
+      meta=[
+        teams_folder_count ~ ' Teams folders',
+        'FMI Offshore',
+        'Training_Documents'
+      ],
+      breadcrumbs=[
+        {'label': 'Program map', 'href': url_for('reference.fmi_kyc')},
+        {'label': 'Training corner', 'href': none}
+      ]
+    ) %}
+    {% if teams_root_url %}
+      <a class="btn btn-primary" href="{{ teams_root_url }}" target="_blank" rel="noopener noreferrer">Open full library in Teams</a>
+    {% endif %}
+  {% endcall %}
 {% endblock %}
 {% block content %}
   {% include "includes/back_program_map.html" %}
@@ -13,12 +26,9 @@
   <section class="teams-training" aria-labelledby="teams-training-heading" data-teams-training>
     <div class="teams-training-intro">
       <div class="teams-training-intro__copy">
-        <h2 id="teams-training-heading" class="teams-training-intro__title">Teams training library</h2>
-        <p class="meta" style="margin:0;">{{ teams_folder_count }} folders · FMI Offshore · Training_Documents</p>
+        <h2 id="teams-training-heading" class="teams-training-intro__title mine-section-title">Teams training library</h2>
+        <p class="meta teams-training-intro__meta">{{ teams_folder_count }} folders · FMI Offshore · Training_Documents</p>
       </div>
-      {% if teams_root_url %}
-        <a class="btn btn-primary" href="{{ teams_root_url }}" target="_blank" rel="noopener noreferrer">Open full library in Teams</a>
-      {% endif %}
     </div>
 
     <div class="teams-training-controls">
@@ -60,9 +70,9 @@
     <p class="meta teams-training-empty" data-teams-empty hidden>No folders match that filter.</p>
   </section>
 
-  <section class="portal-training" style="margin-top: 2.5rem;" aria-labelledby="portal-training-heading">
-    <div class="toolbar" style="margin-bottom: 12px;">
-      <h2 id="portal-training-heading" style="margin: 0; font-size: 1.05rem;">Portal training items</h2>
+  <section class="portal-training" aria-labelledby="portal-training-heading">
+    <div class="mine-section-head portal-training__head">
+      <h2 id="portal-training-heading" class="mine-section-title">Portal training items</h2>
       {% if current_user.role in ['admin','moderator'] %}
         <a class="btn btn-primary" href="{{ url_for('repo_standalone.repo_new', segment='training') }}">Add training item</a>
       {% endif %}

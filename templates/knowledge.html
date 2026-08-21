@@ -51,6 +51,18 @@
           Knowledge catalogue
         {% endif %}
       </h1>
+      <p class="page-lede krepo-lede">
+        {% if landing %}
+          Browse approved Freeport account knowledge by series, then open the items you need.
+        {% else %}
+          Filtered catalogue results with search, module, and author controls.
+        {% endif %}
+      </p>
+      <div class="mine-page-head__meta" aria-label="Catalogue context">
+        <span>{{ catalog.total }} items</span>
+        <span class="mine-page-head__meta-sep" aria-hidden="true">·</span>
+        <span>{% if landing %}Overview{% elif module %}{{ active_module_label }}{% else %}Filtered{% endif %}</span>
+      </div>
     </div>
     <div class="krepo-hero__aside">
       <div class="krepo-stat" role="status">

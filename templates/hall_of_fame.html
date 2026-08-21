@@ -1,43 +1,56 @@
 {% extends "base.html" %}
+{% from "includes/empty_state.html" import empty_state %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
+{% from "includes/mine_icon.html" import mine_icon %}
 {% block title %}Hall of Fame{% endblock %}
 {% block page_header %}
-  <div class="page-head">
-    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('reference.fmi_kyc') }}">Program map</a><span class="breadcrumb-sep" aria-hidden="true">›</span><a href="{{ url_for('main.hall_of_fame') }}">Hall of Fame</a></nav>
-    <h1 class="page-title" style="text-transform:none;">🏆 Hall of fame</h1>
-    <p class="page-lede">Celebrating excellence on the Freeport account.</p>
-  </div>
+  {% call mine_page_head(
+      title='Hall of fame',
+      lede='Celebrating excellence and standout delivery on the Freeport account.',
+      meta=[
+        (year_filter ~ ' filter') if year_filter else 'All years',
+        (rows|length ~ ' highlights') if rows else 'No highlights yet'
+      ],
+      breadcrumbs=[
+        {'label': 'Program map', 'href': url_for('reference.fmi_kyc')},
+        {'label': 'Hall of Fame', 'href': none}
+      ]
+    ) %}
+    {% if current_user.role in ['admin','moderator'] %}
+      <a class="btn btn-primary" href="{{ url_for('repo_standalone.repo_new', segment='hall-of-fame') }}">Nominate highlight</a>
+    {% endif %}
+  {% endcall %}
 {% endblock %}
 {% block content %}
   {% include "includes/back_program_map.html" %}
 
-  <div class="hof-year-bar">
-    <span class="label">Filter: Year</span>
+  <div class="hof-year-bar mine-table-toolbar" role="navigation" aria-label="Filter by year">
+    <span class="label">Year</span>
     <a href="{{ url_for('main.hall_of_fame') }}" class="{% if not year_filter %}is-active{% endif %}">All</a>
     {% for y in years %}
       <a href="{{ url_for('main.hall_of_fame', year=y) }}" class="{% if year_filter == y %}is-active{% endif %}">{{ y }}</a>
     {% endfor %}
   </div>
 
-  {% if current_user.role in ['admin','moderator'] %}
-  <div class="toolbar" style="margin: 16px 0 12px;">
-    <a class="btn btn-primary" href="{{ url_for('repo_standalone.repo_new', segment='hall-of-fame') }}">Nominate highlight</a>
-  </div>
-  {% endif %}
-
   {% if rows and rows|length > 0 %}
-    <div class="card-grid" style="margin-top: 8px;">
+    <div class="card-grid hof-card-grid">
       {% for item in rows %}
-        <article class="hof-card">
-          <div class="meta" style="margin-bottom:8px;" aria-hidden="true">⭐</div>
+        <article class="hof-card surface-soft">
+          <div class="hof-card__mark" aria-hidden="true">{{ mine_icon('badge', 18) }}</div>
           <p class="quote">"{% if item.summary %}{{ item.summary|e }}{% else %}{{ item.title|e }}{% endif %}"</p>
-          <div class="row">📅 {{ item.updated_at }}</div>
-          <div class="row">📄 {{ item.title }}</div>
-          <div class="row">👤 {{ item.author_name }}</div>
-          <div style="margin-top:12px;"><a href="{{ url_for('content.content_view', cid=item.id) }}">Open record</a></div>
+          <div class="row meta">{{ item.updated_at }}</div>
+          <div class="row">{{ item.title }}</div>
+          <div class="row meta">{{ item.author_name }}</div>
+          <div class="hof-card__cta"><a href="{{ url_for('content.content_view', cid=item.id) }}">Open record</a></div>
         </article>
       {% endfor %}
     </div>
   {% else %}
-    <div class="card meta" style="margin-top: 12px;">No highlights for this filter yet.</div>
+    {{ empty_state(
+      'No highlights for this filter yet',
+      'Nominated and approved Hall of Fame records will appear here.',
+      url_for('repo_standalone.repo_new', segment='hall-of-fame') if current_user.role in ['admin','moderator'] else none,
+      'Nominate highlight' if current_user.role in ['admin','moderator'] else none
+    ) }}
   {% endif %}
 {% endblock %}

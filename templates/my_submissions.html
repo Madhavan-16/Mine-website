@@ -1,54 +1,57 @@
 {% extends "base.html" %}
 {% from "includes/status_badge.html" import status_badge %}
+{% from "includes/empty_state.html" import empty_state %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}My submissions{% endblock %}
 {% block page_header %}{% endblock %}
 {% block content %}
 <div class="portal-page">
-  <header class="portal-hero">
-    <div class="portal-hero__copy">
-      <nav class="portal-breadcrumb" aria-label="Breadcrumb">
-        <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
-        <span class="portal-breadcrumb__sep" aria-hidden="true">›</span>
-        <span aria-current="page">My submissions</span>
-      </nav>
-      <span class="portal-eyebrow">Author workspace</span>
-      <h1 class="portal-hero__title">My submissions</h1>
-      <p class="portal-lede">Track drafts, pending reviews, and published knowledge items you have created.</p>
-    </div>
-    <div class="portal-hero__aside">
-      <div class="portal-stat" role="status">
-        <span class="portal-stat__value">{{ rows|length }}</span>
-        <span class="portal-stat__label">Total</span>
-      </div>
-      <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ New submission</a>
-    </div>
-  </header>
+  {% call mine_page_head(
+      title='My submissions',
+      lede='Track drafts, pending reviews, and published knowledge items you have created.',
+      meta=[
+        rows|length ~ ' total',
+        'Author workspace'
+      ],
+      breadcrumbs=[
+        {'label': 'Dashboard', 'href': url_for('main.dashboard')},
+        {'label': 'My submissions', 'href': none}
+      ],
+      class='portal-page-head'
+    ) %}
+    <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ New submission</a>
+  {% endcall %}
 
   {% if rows and rows|length > 0 %}
-    <ul class="portal-result-list">
-      {% for item in rows %}
-        <li>
-          <a class="portal-result" href="{{ url_for('content.content_view', cid=item.id) }}">
-            <div class="portal-result__top">
-              <h2 class="portal-result__title">{{ item.title }}</h2>
-              <span class="portal-module-chip">{{ module_label(item.module) }}</span>
-            </div>
-            <p class="portal-result__meta">
-              {{ status_badge(item.status) }}
-              <span aria-hidden="true"> · </span>
-              Updated {{ item.updated_at }}
-            </p>
-          </a>
-        </li>
-      {% endfor %}
-    </ul>
+    <div class="mine-table-wrap">
+      <table class="mine-table">
+        <thead>
+          <tr>
+            <th scope="col">Title</th>
+            <th scope="col">Module</th>
+            <th scope="col">Status</th>
+            <th scope="col">Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in rows %}
+            <tr>
+              <td><a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a></td>
+              <td><span class="portal-module-chip">{{ module_label(item.module) }}</span></td>
+              <td>{{ status_badge(item.status) }}</td>
+              <td class="meta">{{ item.updated_at }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   {% else %}
-    <p class="portal-empty">
-      You have not submitted any knowledge content yet.
-      <span class="portal-empty__action">
-        <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">Create your first submission</a>
-      </span>
-    </p>
+    {{ empty_state(
+      'No submissions yet',
+      'You have not submitted any knowledge content yet. Drafts and published items will appear here.',
+      url_for('content.content_create'),
+      'Create your first submission'
+    ) }}
   {% endif %}
 </div>
 {% endblock %}

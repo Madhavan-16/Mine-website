@@ -1,56 +1,122 @@
 {% extends "base.html" %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}Software &amp; tools — master list{% endblock %}
 {% block page_header %}
-  <div class="page-head">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="{{ url_for('main.dashboard') }}">Home</a>
-      <span class="breadcrumb-sep" aria-hidden="true">›</span>
-      <span>Software &amp; tools</span>
-    </nav>
-    <h1 class="page-title">Software &amp; tools — master list</h1>
-    <p class="page-lede">Single place to track IDEs, platforms, mining systems, and collaboration tools used on the Freeport account. Edit this list with your program office as the source of truth.</p>
-  </div>
+  {% call mine_page_head(
+      title='Software & tools',
+      lede='Approved IDEs, platforms, mining systems, and collaboration tools used on the Freeport account. Treat this register as the program-office source of truth.',
+      meta=['8 tools', '5 categories', 'Updated Aug 2026'],
+      breadcrumbs=[
+        {'label': 'Home', 'href': url_for('main.dashboard')},
+        {'label': 'Software & tools', 'href': none}
+      ]
+    ) %}
+    <a class="btn btn-secondary" href="{{ url_for('main.onboarding') }}">Onboarding kit</a>
+  {% endcall %}
 {% endblock %}
 {% block content %}
   {% include "includes/back_program_map.html" %}
 
-  <div class="card" style="max-width: 960px;">
-    <table class="table">
-      <thead>
-        <tr>
-          <th scope="col">Category</th>
-          <th scope="col">Tool / platform</th>
-          <th scope="col">Notes</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Development &amp; IDE</td>
-          <td>—</td>
-          <td class="meta">e.g. VS Code, Azure DevOps, Git</td>
-        </tr>
-        <tr>
-          <td>Collaboration</td>
-          <td>—</td>
-          <td class="meta">e.g. MiNe, Teams, Jira</td>
-        </tr>
-        <tr>
-          <td>Mining / OT systems</td>
-          <td>—</td>
-          <td class="meta">Account-specific applications</td>
-        </tr>
-        <tr>
-          <td>Data &amp; reporting</td>
-          <td>—</td>
-          <td class="meta">Dashboards, analytics, exports</td>
-        </tr>
-        <tr>
-          <td>Other</td>
-          <td>—</td>
-          <td class="meta">Add rows as the master list matures</td>
-        </tr>
-      </tbody>
-    </table>
-    <p class="meta" style="margin-top: 12px;">Replace the placeholders above with the approved master list. New tools can be documented here and linked from onboarding and training as needed.</p>
-  </div>
+  <section class="mine-table-shell" data-table-shell="software">
+    <div class="mine-table-toolbar" aria-label="Software and tools controls">
+      <div class="mine-table-toolbar__controls">
+        <label class="mine-table-toolbar__search">
+          <span class="visually-hidden">Search software and tools</span>
+          <input type="search" placeholder="Search category, tool, or notes" data-table-search="software" />
+        </label>
+        <label class="mine-table-toolbar__filter">
+          <span class="visually-hidden">Filter by category</span>
+          <select data-table-filter="software">
+            <option value="">All categories</option>
+            <option value="development">Development &amp; IDE</option>
+            <option value="collaboration">Collaboration</option>
+            <option value="mining">Mining / OT systems</option>
+            <option value="data">Data &amp; reporting</option>
+            <option value="other">Other</option>
+          </select>
+        </label>
+      </div>
+      <div class="mine-table-toolbar__meta">
+        <span data-table-count="software">8 results</span>
+        <span data-table-selection="software">0 selected</span>
+        <span>Updated Aug 2026</span>
+      </div>
+    </div>
+
+    <div class="mine-table-wrap">
+      <table class="mine-table" data-table-id="software">
+        <thead>
+          <tr>
+            <th scope="col" data-sortable data-sort-key="category">Category</th>
+            <th scope="col" data-sortable data-sort-key="tool">Tool / platform</th>
+            <th scope="col">Notes</th>
+            <th scope="col">Access</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr tabindex="0" data-status="development" data-category="development & ide" data-tool="vs code">
+            <td>Development &amp; IDE</td>
+            <td>VS Code</td>
+            <td>Primary IDE for account engineering work</td>
+            <td><a href="https://code.visualstudio.com/download" target="_blank" rel="noopener noreferrer">Download</a></td>
+          </tr>
+          <tr tabindex="0" data-status="development" data-category="development & ide" data-tool="azure devops">
+            <td>Development &amp; IDE</td>
+            <td>Azure DevOps</td>
+            <td>Repos, boards, pipelines, and release tracking</td>
+            <td><a href="https://dev.azure.com" target="_blank" rel="noopener noreferrer">Open</a></td>
+          </tr>
+          <tr tabindex="0" data-status="development" data-category="development & ide" data-tool="git">
+            <td>Development &amp; IDE</td>
+            <td>Git</td>
+            <td>Source control standard for account repositories</td>
+            <td><a href="https://git-scm.com/downloads" target="_blank" rel="noopener noreferrer">Download</a></td>
+          </tr>
+          <tr tabindex="0" data-status="collaboration" data-category="collaboration" data-tool="mine">
+            <td>Collaboration</td>
+            <td>MiNe</td>
+            <td>Knowledge portal for Freeport–Hexaware account work</td>
+            <td><a href="{{ url_for('main.dashboard') }}">Open</a></td>
+          </tr>
+          <tr tabindex="0" data-status="collaboration" data-category="collaboration" data-tool="ms teams">
+            <td>Collaboration</td>
+            <td>MS Teams</td>
+            <td>Day-to-day chat, meetings, and training folders</td>
+            <td>
+              <a href="https://www.microsoft.com/microsoft-teams/download-app" target="_blank" rel="noopener noreferrer">Download</a>
+              <span class="meta"> · </span>
+              <a href="https://teams.microsoft.com" target="_blank" rel="noopener noreferrer">Open</a>
+            </td>
+          </tr>
+          <tr tabindex="0" data-status="collaboration" data-category="collaboration" data-tool="jira">
+            <td>Collaboration</td>
+            <td>Jira</td>
+            <td>Delivery tracking and sprint execution</td>
+            <td>
+              <a href="https://www.atlassian.com/software/jira/download" target="_blank" rel="noopener noreferrer">Download</a>
+              <span class="meta"> · </span>
+              <a href="{{ url_for('main.onboarding') }}">Request access</a>
+            </td>
+          </tr>
+          <tr tabindex="0" data-status="mining" data-category="mining / ot systems" data-tool="account ot systems">
+            <td>Mining / OT systems</td>
+            <td>Account OT systems</td>
+            <td>Site / plant applications assigned by program leads</td>
+            <td><a href="{{ url_for('main.onboarding') }}">Request access</a></td>
+          </tr>
+          <tr tabindex="0" data-status="data" data-category="data & reporting" data-tool="power bi">
+            <td>Data &amp; reporting</td>
+            <td>Power BI</td>
+            <td>Dashboards, analytics, and export-ready reporting</td>
+            <td><a href="https://powerbi.microsoft.com" target="_blank" rel="noopener noreferrer">Open</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="mine-table__empty" data-table-empty="software">No tools match this search or filter.</p>
+    <p class="meta">Keep this list aligned with the Onboarding kit Master tools tab. Add tenant-specific URLs as program office confirms them.</p>
+  </section>
+{% endblock %}
+{% block scripts_extra %}
+  <script src="{{ url_for('static', filename='js/mine-table.js') }}?v=1" defer></script>
 {% endblock %}

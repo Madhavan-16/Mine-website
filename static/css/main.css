@@ -5,6 +5,7 @@
 @import url("footer.css");
 @import url("enterprise-navbar.css");
 @import url("ui-polish.css");
+@import url("mine-table.css");
 @import url("mine-icons.css");
 
 *,
@@ -30,6 +31,18 @@ body {
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
+  }
+}
+
+@supports (view-transition-name: none) {
+  @view-transition {
+    navigation: auto;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 180ms;
+    animation-timing-function: var(--ease-out);
   }
 }
 

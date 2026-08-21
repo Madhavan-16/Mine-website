@@ -1,13 +1,13 @@
 {% from "includes/empty_state.html" import empty_state %}
 {% if rows and rows|length > 0 %}
-  <div class="card-grid" style="margin-top: 12px;">
+  <div class="card-grid content-card-grid">
     {% for item in rows %}
       <article class="card surface-interactive">
-        <div class="toolbar" style="margin:0;">
-          <h2 style="margin:0; font-size:16px;"><a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a></h2>
+        <div class="toolbar content-card__toolbar">
+          <h2 class="content-card__title"><a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a></h2>
           <span class="badge">{{ item.module }}</span>
         </div>
-        <p class="meta" style="margin: 8px 0 0;">{{ item.summary or "—" }}</p>
+        <p class="meta content-card__summary">{{ item.summary or "—" }}</p>
       </article>
     {% endfor %}
   </div>

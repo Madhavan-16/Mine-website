@@ -21,6 +21,13 @@
       <p class="dashboard-lede">
         Command center for journeys, programmes, verified knowledge, and delivery signals across the MiNe catalogue.
       </p>
+      <div class="mine-page-head__meta dashboard-hero__meta" aria-label="Page context">
+        <span>{{ portal_stats.knowledge_items }} catalog items</span>
+        <span class="mine-page-head__meta-sep" aria-hidden="true">·</span>
+        <span>{{ portal_stats.projects }} projects</span>
+        <span class="mine-page-head__meta-sep" aria-hidden="true">·</span>
+        <span>{{ portal_stats.team_members }} associates</span>
+      </div>
       <div class="dashboard-hero-actions">
         <a class="btn btn-primary" href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
         {% if config.get('CHATBOT_ENABLED', True) %}
@@ -254,7 +261,7 @@
     <header class="dashboard-feed-head">
       <div>
         <h2 id="dash-feed-heading" class="dashboard-panel-title">Live knowledge pulse</h2>
-        <p class="dashboard-section-lead" style="margin: 8px 0 0;">
+        <p class="dashboard-section-lead dashboard-section-lead--tight">
           Stream of recent approved repository artefacts — refined without leaving MiNe using the spotlight below or full-text scan.
         </p>
       </div>

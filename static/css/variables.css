@@ -90,6 +90,15 @@
   --letter-tight: -0.02em;
   --letter-ui: 0.02em;
 
+  /* Rigid enterprise type roles (prefer these over ad-hoc sizes) */
+  --type-page-title: clamp(1.35rem, 1.15rem + 0.7vw, 1.65rem);
+  --type-lede: var(--text-md);
+  --type-section: var(--text-xl);
+  --type-body: var(--text-base);
+  --type-meta: var(--text-xs);
+  --type-table: var(--text-sm);
+  --type-kicker: 0.6875rem;
+
   /* Motion — keep transitions GPU-cheap (opacity, transform, box-shadow, border-color) */
   --ease-standard: cubic-bezier(0.26, 0.82, 0.31, 1);
   --ease-out: cubic-bezier(0.33, 1, 0.68, 1);

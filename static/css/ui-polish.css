@@ -209,12 +209,34 @@ a.btn:hover {
   gap: clamp(var(--space-4), 2vw, var(--space-6));
 }
 
-/* ——— Page chrome ——— */
-.page-head {
+/* ——— Page chrome (shared enterprise shell) ——— */
+.page-head,
+.mine-page-head {
   margin-bottom: clamp(var(--space-5), 2vw, var(--space-8));
 }
 
-.breadcrumb {
+.mine-page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+}
+
+.mine-page-head__copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.mine-page-head__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  flex-shrink: 0;
+}
+
+.breadcrumb,
+.krepo-breadcrumb {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -225,31 +247,96 @@ a.btn:hover {
   letter-spacing: 0.02em;
 }
 
-.breadcrumb-sep {
+.breadcrumb-sep,
+.krepo-breadcrumb__sep {
   margin: 0 0.45rem;
   opacity: 0.7;
 }
 
-.page-title {
-  margin-bottom: var(--space-3);
-  padding-bottom: var(--space-3);
-  font-size: clamp(1.4rem, 1.15rem + 0.85vw, 1.75rem);
+.page-title,
+.mine-page-head .page-title {
+  margin: 0 0 var(--space-2);
+  padding-bottom: 0;
+  font-size: var(--type-page-title);
+  font-weight: 700;
+  letter-spacing: var(--letter-tight);
+  color: var(--hex-grey-900);
+  text-transform: none;
 }
 
 .page-lede {
-  font-size: var(--text-md);
+  margin: 0;
+  font-size: var(--type-lede);
   color: var(--hex-grey-700);
   line-height: var(--leading-body);
   max-width: 62ch;
 }
 
+.mine-page-head__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.55rem;
+  margin-top: 0.75rem;
+  color: var(--hex-grey-500);
+  font-size: var(--type-meta);
+  font-weight: 600;
+}
+
+.mine-page-head__meta-sep {
+  opacity: 0.45;
+}
+
+.mine-section-kicker,
+.ob-section-kicker,
+.krepo-eyebrow,
+.dashboard-kicker {
+  margin: 0 0 0.25rem;
+  font-size: var(--type-kicker);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--hex-grey-500);
+}
+
+.mine-section-title,
+.ob-section-title,
 .section-title,
 #main h2.section-title,
-.krepo-section__title {
-  font-size: var(--text-xl);
-  font-weight: 600;
+.krepo-section__title,
+.dashboard-h2 {
+  margin: 0;
+  font-size: var(--type-section);
+  font-weight: 650;
   line-height: var(--leading-snug);
   letter-spacing: var(--letter-tight);
+  color: var(--hex-grey-900);
+}
+
+.mine-section-head,
+.ob-section-head,
+.dashboard-section-head,
+.krepo-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .mine-page-head {
+    flex-direction: column;
+  }
+
+  .mine-page-head__actions {
+    width: 100%;
+  }
+
+  .mine-page-head__actions .btn {
+    width: 100%;
+  }
 }
 
 .toolbar {
@@ -336,7 +423,16 @@ a.btn:hover {
 
 /* ——— Main content rhythm (portal) ——— */
 .layout-portal .main {
-  background: rgba(249, 251, 252, 0.96);
+  background: rgba(249, 251, 252, 0.98);
+}
+
+/* Portal motion: prefer interaction polish over enter spectacle */
+.layout-portal .card:hover {
+  transform: none;
+}
+
+.layout-portal a:not(.btn):not(.nav-link):not(.skip-link):hover {
+  opacity: 1;
 }
 
 .layout-portal .main > .page-head + *,
@@ -487,4 +583,97 @@ a.btn:hover {
   .btn {
     transition: none;
   }
+}
+
+/* Portal pages using shared mine-page-head */
+.portal-page-head.mine-page-head {
+  margin-bottom: clamp(18px, 2.5vw, 24px);
+}
+
+.portal-card--spaced {
+  margin-bottom: 16px;
+}
+
+.portal-card__lede {
+  margin: 0 0 12px;
+}
+
+.form-hint {
+  margin: 6px 0 12px;
+}
+
+.teams-training-intro__meta {
+  margin: 0;
+}
+
+.portal-training {
+  margin-top: 2.5rem;
+}
+
+.portal-training__head {
+  margin-bottom: 12px;
+}
+
+.hof-card-grid {
+  margin-top: 8px;
+}
+
+.hof-card__mark {
+  margin-bottom: 8px;
+  color: var(--hex-blue-dark);
+}
+
+.hof-card__cta {
+  margin-top: 12px;
+}
+
+.hof-year-bar.mine-table-toolbar {
+  margin: 0 0 16px;
+  align-items: center;
+}
+
+.hof-year-bar .label {
+  margin-right: 4px;
+  font-size: var(--type-meta);
+  font-weight: 600;
+  color: var(--hex-grey-600);
+}
+
+.dashboard-hero__meta {
+  margin: 0.75rem 0 1rem;
+}
+
+/* Keep legacy portal-table styling aligned with mine-table density */
+.portal-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--hex-grey-200);
+  border-radius: var(--radius-lg);
+  background: var(--hex-white);
+}
+
+.portal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--type-table);
+}
+
+.mine-empty {
+  margin-top: 8px;
+}
+
+.content-card-grid {
+  margin-top: 12px;
+}
+
+.content-card__toolbar {
+  margin: 0;
+}
+
+.content-card__title {
+  margin: 0;
+  font-size: 16px;
+}
+
+.content-card__summary {
+  margin: 8px 0 0;
 }

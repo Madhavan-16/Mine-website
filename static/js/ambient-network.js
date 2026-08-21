@@ -9,6 +9,7 @@
   var reduce =
     typeof window.matchMedia !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var portal = !!(document.body && document.body.classList.contains("layout-portal"));
 
   var ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -16,8 +17,8 @@
   var w = 0;
   var h = 0;
   var pts = [];
-  var linkDist = 128;
-  var nDots = reduce ? 36 : 52;
+  var linkDist = portal ? 96 : 128;
+  var nDots = reduce ? 36 : portal ? 22 : 52;
   var rafId = null;
 
   function seedDots() {
@@ -27,8 +28,8 @@
       pts.push({
         x: Math.random() * Math.max(w, 1),
         y: Math.random() * Math.max(h, 1),
-        vx: reduce ? 0 : (Math.random() - 0.5) * 0.15,
-        vy: reduce ? 0 : (Math.random() - 0.5) * 0.15,
+        vx: reduce || portal ? 0 : (Math.random() - 0.5) * 0.15,
+        vy: reduce || portal ? 0 : (Math.random() - 0.5) * 0.15,
         r: Math.random() * 1.1 + 0.42,
         g: 0.45 + Math.random() * 0.2,
       });
@@ -130,7 +131,7 @@
     seedDots();
     drawFrame();
 
-    if (!reduce) rafId = window.requestAnimationFrame(loop);
+    if (!reduce && !portal) rafId = window.requestAnimationFrame(loop);
   }
 
   window.addEventListener("resize", mount, { passive: true });

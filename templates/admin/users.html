@@ -1,31 +1,27 @@
 {% extends "base.html" %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}Users{% endblock %}
 {% block page_header %}{% endblock %}
 {% block content %}
 <div class="portal-page">
-  <header class="portal-hero">
-    <div class="portal-hero__copy">
-      <nav class="portal-breadcrumb" aria-label="Breadcrumb">
-        <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
-        <span class="portal-breadcrumb__sep" aria-hidden="true">›</span>
-        <span aria-current="page">User management</span>
-      </nav>
-      <span class="portal-eyebrow">Administration</span>
-      <h1 class="portal-hero__title">User management</h1>
-      <p class="portal-lede">Administrators only — create accounts (including other admins), assign roles, deactivate users, or permanently remove accounts. Moderators can approve content but cannot manage users.</p>
-    </div>
-    <div class="portal-hero__aside">
-      <div class="portal-stat" role="status">
-        <span class="portal-stat__value">{{ rows|length }}</span>
-        <span class="portal-stat__label">Users</span>
-      </div>
-    </div>
-  </header>
+  {{ mine_page_head(
+      title='User management',
+      lede='Administrators only — create accounts (including other admins), assign roles, deactivate users, or permanently remove accounts. Moderators can approve content but cannot manage users.',
+      meta=[
+        rows|length ~ ' users',
+        'Administration'
+      ],
+      breadcrumbs=[
+        {'label': 'Dashboard', 'href': url_for('main.dashboard')},
+        {'label': 'User management', 'href': none}
+      ],
+      class='portal-page-head'
+    ) }}
 
   {% set roster_count = roster_preview|length if roster_preview is defined else 0 %}
-  <div class="portal-card" style="margin-bottom: 16px;">
+  <div class="portal-card portal-card--spaced">
     <h2 class="portal-card__title">Team roster</h2>
-    <p class="meta" style="margin: 0 0 12px;">
+    <p class="meta portal-card__lede">
       <a href="{{ url_for('main.team_roster') }}">View team list</a>{% if roster_count %} ({{ roster_count }} members){% endif %}
     </p>
   </div>
@@ -44,16 +40,18 @@
       {{ create_form.password() }}
       <label for="role">Role</label>
       {{ create_form.role() }}
-      <p class="meta" style="margin: 6px 0 12px;">Roles: <strong>User</strong> submits knowledge for review · <strong>Moderator</strong> approves content · <strong>Admin</strong> manages users/roles and publishes edits.</p>
+      <p class="meta form-hint">Roles: <strong>User</strong> submits knowledge for review · <strong>Moderator</strong> approves content · <strong>Admin</strong> manages users/roles and publishes edits.</p>
       <div class="toolbar portal-form-actions">
         <button class="btn btn-primary" type="submit">Create user</button>
       </div>
     </form>
   </div>
 
-  <h2 class="portal-section-title">Directory</h2>
-  <div class="portal-table-wrap">
-    <table class="portal-table">
+  <div class="mine-section-head">
+    <h2 class="mine-section-title">Directory</h2>
+  </div>
+  <div class="mine-table-wrap">
+    <table class="mine-table">
       <thead>
         <tr>
           <th scope="col">User</th>

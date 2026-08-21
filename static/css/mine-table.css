@@ -1,0 +1,208 @@
+/**
+ * Shared product-table system for portal pages.
+ * Pattern: toolbar (search/filter/meta) + sticky header + dense rows + selection.
+ */
+
+.mine-table-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.mine-table-toolbar {
+  position: sticky;
+  top: calc(var(--portal-header-offset) + 8px);
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, white 94%, var(--hex-blue-light));
+  box-shadow: var(--shadow-xs);
+}
+
+.mine-table-toolbar__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  flex: 1 1 280px;
+}
+
+.mine-table-toolbar__search,
+.mine-table-toolbar__filter {
+  display: block;
+}
+
+.mine-table-toolbar__search {
+  flex: 1 1 220px;
+  min-width: 180px;
+}
+
+.mine-table-toolbar__filter select,
+.mine-table-toolbar__search input {
+  width: 100%;
+  min-height: var(--ui-control-h-sm);
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--hex-grey-200);
+  border-radius: var(--radius-md);
+  background: var(--hex-white);
+  color: var(--hex-grey-900);
+  font: inherit;
+  font-size: var(--type-table);
+}
+
+.mine-table-toolbar__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+  color: var(--hex-grey-500);
+  font-size: var(--type-meta);
+  font-weight: 600;
+}
+
+.mine-table-wrap {
+  overflow: auto;
+  max-height: min(62vh, 560px);
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--hex-white);
+  box-shadow: var(--elev-soft);
+}
+
+.mine-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--type-table);
+  line-height: 1.4;
+}
+
+.mine-table th,
+.mine-table td {
+  padding: 0.7rem 0.9rem;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--hex-grey-100);
+}
+
+.mine-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--hex-grey-50);
+  color: var(--hex-grey-500);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--hex-grey-100);
+}
+
+.mine-table thead th[data-sortable] {
+  cursor: pointer;
+  user-select: none;
+}
+
+.mine-table thead th[data-sortable]::after {
+  content: " ↕";
+  opacity: 0.35;
+  font-weight: 600;
+}
+
+.mine-table thead th[aria-sort="ascending"]::after {
+  content: " ↑";
+  opacity: 0.8;
+}
+
+.mine-table thead th[aria-sort="descending"]::after {
+  content: " ↓";
+  opacity: 0.8;
+}
+
+.mine-table tbody tr {
+  transition: background-color var(--transition-ui);
+  cursor: pointer;
+}
+
+.mine-table tbody tr:hover {
+  background: color-mix(in srgb, var(--hex-blue) 4%, white);
+}
+
+.mine-table tbody tr.is-selected {
+  background: color-mix(in srgb, var(--hex-blue) 8%, white);
+  box-shadow: inset 3px 0 0 var(--hex-blue);
+}
+
+.mine-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.mine-table a {
+  font-weight: 600;
+  text-underline-offset: 0.14em;
+}
+
+.mine-table a:hover {
+  text-decoration: underline;
+}
+
+.mine-table__empty {
+  display: none;
+  margin: 0;
+  padding: 1.25rem 1rem;
+  text-align: center;
+  color: var(--hex-grey-500);
+  font-size: var(--text-sm);
+}
+
+.mine-table-shell.is-empty .mine-table__empty {
+  display: block;
+}
+
+.mine-table-shell.is-empty .mine-table-wrap {
+  display: none;
+}
+
+.mine-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 1.55rem;
+  padding: 0.12rem 0.55rem;
+  border-radius: var(--radius-full);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.mine-status--yes,
+.mine-status--required {
+  background: color-mix(in srgb, var(--color-success) 12%, white);
+  color: #1e7a36;
+}
+
+.mine-status--opt,
+.mine-status--optional {
+  background: var(--hex-grey-50);
+  color: var(--hex-grey-500);
+}
+
+.mine-status--pending {
+  background: color-mix(in srgb, var(--color-warning) 16%, white);
+  color: #8a5a00;
+}
+
+@media (max-width: 900px) {
+  .mine-table-toolbar {
+    position: static;
+  }
+
+  .mine-table-wrap {
+    max-height: none;
+  }
+}

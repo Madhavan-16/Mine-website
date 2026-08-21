@@ -305,6 +305,10 @@
   max-width: 80ch;
 }
 
+.dashboard-section-lead--tight {
+  margin: 8px 0 0;
+}
+
 .dashboard-section-link {
   font-size: 13px;
   font-weight: 600;

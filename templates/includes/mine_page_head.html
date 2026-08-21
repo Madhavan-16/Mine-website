@@ -1,0 +1,49 @@
+{# Shared enterprise page header.
+   Usage:
+   {% from "includes/mine_page_head.html" import mine_page_head %}
+   {% call mine_page_head(
+        title='Onboarding kit',
+        lede='...',
+        meta=['Freeport account', '3 sections'],
+        breadcrumbs=[
+          {'label': 'Program map', 'href': url_for('reference.fmi_kyc')},
+          {'label': 'Onboarding kit', 'href': none}
+        ]
+      ) %}
+     <a class="btn btn-primary" href="...">Action</a>
+   {% endcall %}
+#}
+{% macro mine_page_head(title, lede=none, meta=none, breadcrumbs=none, class='') %}
+  <div class="page-head mine-page-head{% if class %} {{ class }}{% endif %}">
+    <div class="mine-page-head__copy">
+      {% if breadcrumbs %}
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        {% for crumb in breadcrumbs %}
+          {% if not loop.first %}<span class="breadcrumb-sep" aria-hidden="true">›</span>{% endif %}
+          {% if crumb.href %}
+            <a href="{{ crumb.href }}">{{ crumb.label }}</a>
+          {% else %}
+            <span{% if loop.last %} aria-current="page"{% endif %}>{{ crumb.label }}</span>
+          {% endif %}
+        {% endfor %}
+      </nav>
+      {% endif %}
+      <h1 class="page-title">{{ title }}</h1>
+      {% if lede %}<p class="page-lede">{{ lede }}</p>{% endif %}
+      {% if meta %}
+      <div class="mine-page-head__meta" aria-label="Page context">
+        {% for item in meta %}
+          {% if not loop.first %}<span class="mine-page-head__meta-sep" aria-hidden="true">·</span>{% endif %}
+          <span>{{ item }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% if caller is defined %}
+      {% set _actions = caller() %}
+      {% if _actions|trim %}
+      <div class="mine-page-head__actions">{{ _actions }}</div>
+      {% endif %}
+    {% endif %}
+  </div>
+{% endmacro %}

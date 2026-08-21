@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% from "includes/status_badge.html" import status_badge %}
+{% from "includes/empty_state.html" import empty_state %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}Content moderation &amp; governance{% endblock %}
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/moderation-governance.css') }}" />
@@ -12,28 +14,22 @@
 {% set rejected_n = status_counts.get('rejected', 0) %}
 
 <div class="gov portal-page">
-  <header class="portal-hero gov-hero">
-    <div class="portal-hero__copy">
-      <nav class="portal-breadcrumb" aria-label="Breadcrumb">
-        <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
-        <span class="portal-breadcrumb__sep" aria-hidden="true">›</span>
-        <span aria-current="page">Governance</span>
-      </nav>
-      <span class="portal-eyebrow">Content Moderation / Governance</span>
-      <h1 class="portal-hero__title">Review workflow</h1>
-      <p class="portal-lede">
-        Contributors submit knowledge for review. <strong>Moderators and administrators</strong> approve or return items here.
-        Only approved items appear in the public knowledge catalogue. User accounts and roles are managed by administrators under Settings → Users.
-      </p>
-    </div>
-    <div class="portal-hero__aside gov-hero__aside">
-      <div class="portal-stat" role="status">
-        <span class="portal-stat__value">{{ pending_n }}</span>
-        <span class="portal-stat__label">In queue</span>
-      </div>
-      <a class="btn btn-secondary" href="{{ url_for('content.content_list') }}">Full catalogue</a>
-    </div>
-  </header>
+  {% call mine_page_head(
+      title='Review workflow',
+      lede='Contributors submit knowledge for review. Moderators and administrators approve or return items here. Only approved items appear in the public knowledge catalogue.',
+      meta=[
+        pending_n ~ ' in queue',
+        approved_n ~ ' published',
+        'Governance'
+      ],
+      breadcrumbs=[
+        {'label': 'Dashboard', 'href': url_for('main.dashboard')},
+        {'label': 'Governance', 'href': none}
+      ],
+      class='portal-page-head'
+    ) %}
+    <a class="btn btn-secondary" href="{{ url_for('content.content_list') }}">Full catalogue</a>
+  {% endcall %}
 
   <section class="gov-pipeline" aria-labelledby="gov-pipeline-title">
     <div class="gov-pipeline__head">
@@ -188,10 +184,12 @@
           {% endfor %}
         </div>
       {% else %}
-        <div class="gov-empty">
-          <p class="gov-empty__title">Queue is clear</p>
-          <p class="gov-empty__text">There are no pending submissions. New items appear here when authors submit for review.</p>
-        </div>
+        {{ empty_state(
+          'Queue is clear',
+          'There are no pending submissions. New items appear here when authors submit for review.',
+          url_for('content.content_list'),
+          'Browse catalogue'
+        ) }}
       {% endif %}
     </section>
 

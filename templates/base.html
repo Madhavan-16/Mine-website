@@ -6,13 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}MiNe{% endblock %} · Mining Intelligence and Knowledge Enablement</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=portal-ui-19" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=portal-ui-22" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/content-cards.css') }}" />
     {% if current_user and (request.endpoint or '') not in ('main.landing', 'main.welcome') %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/portal-list.css') }}" />
-    {% endif %}
-    {% if (request.endpoint or '') not in ('main.landing', 'main.welcome') %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/aos/aos.css') }}" />
     {% endif %}
     {% block head_extra %}{% endblock %}
   </head>
@@ -38,7 +35,7 @@
     class="{% if _is_landing %}layout-landing{% elif current_user %}layout-portal{% elif request.blueprint == 'reference' %}layout-reference{% else %}layout-public{% endif %}{% if request.endpoint == 'reference.fmi_kyc' %} has-journey-motion{% endif %}"
     data-motion-profile="{{ motion_profile }}"
   >
-    {% if not _is_auth_page %}
+    {% if not _is_auth_page and not current_user %}
     <script>
       (function () {
         try {
@@ -49,7 +46,7 @@
           document.documentElement.classList.add("site-motion-prep");
           window.setTimeout(function () {
             document.documentElement.classList.remove("site-motion-prep");
-          }, 3500);
+          }, 900);
         } catch (e) {}
       })();
     </script>
@@ -57,7 +54,9 @@
     <div class="ambient-backdrop" aria-hidden="true">
       <div class="ambient-backdrop__gradient"></div>
       <div class="ambient-backdrop__grid"></div>
+      {% if not current_user or _is_landing %}
       <canvas class="ambient-backdrop__canvas" id="ambient-canvas" aria-hidden="true"></canvas>
+      {% endif %}
     </div>
 
     <a class="skip-link" href="#main">Skip to content</a>
@@ -376,14 +375,13 @@
 
     {% include "includes/chatbot.html" %}
 
-    {% if (request.endpoint or '') not in ('main.landing', 'main.welcome') and not _is_auth_page %}
-    <script src="{{ url_for('static', filename='js/motion-init.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='vendor/aos/aos.js') }}" defer></script>
+    {% if not current_user and not _is_landing and not _is_auth_page %}
     <script src="{{ url_for('static', filename='js/ambient-network.js') }}" defer></script>
-    {% endif %}
-    {% if request.endpoint not in ('main.landing', 'main.welcome') and request.endpoint != 'reference.fmi_kyc' and request.endpoint != 'main.open_pit_copper_domain' and not _is_auth_page %}
     <script src="{{ url_for('static', filename='js/site-motion.bundle.js') }}" defer></script>
+    {% elif _ep == 'main.dashboard' %}
+    {# Dashboard keeps page-local GSAP scripts; no global AOS/ambient stack. #}
     {% endif %}
+    {% block scripts_extra %}{% endblock %}
     <script src="{{ url_for('static', filename='js/navbar.js') }}?v=portal-offset-3" defer></script>
   </body>
 </html>

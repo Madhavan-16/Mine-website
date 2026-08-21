@@ -1,21 +1,29 @@
 {% extends "base.html" %}
 {% from "includes/mine_icon.html" import mine_icon %}
 {% from "includes/empty_state.html" import empty_state %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}Innovation Center{% endblock %}
 {% block page_header %}
-  <div class="page-head">
-    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('reference.fmi_kyc') }}">Program map</a><span class="breadcrumb-sep" aria-hidden="true">›</span><a href="{{ url_for('main.innovation') }}">Innovation center</a></nav>
-    <h1 class="page-title" style="text-transform:none;">Customer value adds / Innovation center</h1>
-  </div>
+  {% call mine_page_head(
+      title='Innovation center',
+      lede='Customer value adds, delivery improvements, and reusable ideas from the Freeport account.',
+      meta=[
+        (innovation_stats|length ~ ' metric cards') if innovation_stats else 'Program map',
+        ((rows|length ~ ' published') if rows else 'No published items'),
+        'Updated Aug 2026'
+      ],
+      breadcrumbs=[
+        {'label': 'Program map', 'href': url_for('reference.fmi_kyc')},
+        {'label': 'Innovation center', 'href': none}
+      ]
+    ) %}
+    {% if current_user.role in ['admin','moderator'] %}
+      <a class="btn btn-primary" href="{{ url_for('repo_standalone.repo_new', segment='innovation') }}">Submit innovation</a>
+    {% endif %}
+  {% endcall %}
 {% endblock %}
 {% block content %}
   {% include "includes/back_program_map.html" %}
-
-  {% if current_user.role in ['admin','moderator'] %}
-  <div class="toolbar" style="margin-bottom: 12px;">
-    <a class="btn btn-primary" href="{{ url_for('repo_standalone.repo_new', segment='innovation') }}">Submit innovation</a>
-  </div>
-  {% endif %}
 
   <div class="innov-stats">
     {% for s in innovation_stats %}
@@ -29,7 +37,9 @@
     {% endfor %}
   </div>
 
-  <div class="section-rule">Featured innovations</div>
+  <div class="mine-section-head">
+    <h2 class="mine-section-title">Featured innovations</h2>
+  </div>
   {% if rows and rows|length > 0 %}
     {% for item in rows %}
       <article class="innov-card surface-soft surface-interactive">

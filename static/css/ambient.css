@@ -47,6 +47,26 @@ html {
   animation: ambient-grid-drift 80s linear infinite;
 }
 
+body.layout-portal .ambient-backdrop__gradient {
+  opacity: 0.28;
+  background:
+    radial-gradient(ellipse 100% 70% at 50% -30%, rgba(16, 63, 90, 0.28) 0%, transparent 55%),
+    linear-gradient(180deg, #071018 0%, #05080e 100%);
+}
+
+body.layout-portal .ambient-backdrop__grid,
+body.layout-portal .ambient-backdrop__canvas {
+  display: none;
+}
+
+body.layout-portal {
+  background: #f4f7f9;
+}
+
+body.layout-portal .main {
+  background: #f7f9fb;
+}
+
 @keyframes ambient-grid-drift {
   from {
     background-position:

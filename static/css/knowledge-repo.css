@@ -63,11 +63,11 @@
 
 .krepo-hero__title {
   margin: 0 0 8px;
-  font-size: clamp(26px, 2.2vw + 1rem, 34px);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.12;
-  color: var(--hex-blue-dark);
+  font-size: clamp(1.35rem, 1.15rem + 0.7vw, 1.65rem);
+  font-weight: 700;
+  letter-spacing: var(--letter-tight);
+  line-height: 1.2;
+  color: var(--hex-grey-900);
 }
 
 .krepo-lede {

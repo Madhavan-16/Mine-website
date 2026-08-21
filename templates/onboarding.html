@@ -1,24 +1,28 @@
 {% extends "base.html" %}
 {% from "includes/mine_icon.html" import mine_icon %}
 {% from "includes/empty_state.html" import empty_state %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}Onboarding Kit{% endblock %}
 {% block head_extra %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/onboarding.css') }}?v=ob-7" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/onboarding.css') }}?v=ob-12" />
 {% endblock %}
 {% block page_header %}
-  <div class="page-head">
-    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('reference.fmi_kyc') }}">Program map</a><span class="breadcrumb-sep" aria-hidden="true">›</span><a href="{{ url_for('main.onboarding') }}">Onboarding kit</a></nav>
-    <h1 class="page-title" style="text-transform:none;">Onboarding kit — Welcome to Freeport account</h1>
-  </div>
+  {% call mine_page_head(
+      title='Onboarding kit',
+      lede='One place for first-week guidance, required software, and the evolving master tool register for the Freeport account.',
+      meta=['Freeport account', '3 sections', 'Updated Aug 2026'],
+      breadcrumbs=[
+        {'label': 'Program map', 'href': url_for('reference.fmi_kyc')},
+        {'label': 'Onboarding kit', 'href': none}
+      ]
+    ) %}
+    {% if current_user.role in ['admin','moderator'] %}
+      <a class="btn btn-primary" href="{{ url_for('repo_standalone.repo_new', segment='onboarding') }}">Add onboarding note</a>
+    {% endif %}
+  {% endcall %}
 {% endblock %}
 {% block content %}
   {% include "includes/back_program_map.html" %}
-
-  {% if current_user.role in ['admin','moderator'] %}
-  <div class="toolbar ob-toolbar">
-    <a class="btn btn-primary" href="{{ url_for('repo_standalone.repo_new', segment='onboarding') }}">Add onboarding note</a>
-  </div>
-  {% endif %}
 
   <div class="ob-kit">
     <div class="tabs-radios ob-tabs">
@@ -67,110 +71,199 @@
         </div>
 
         <div class="tab-panel tab-panel--tools">
-          <div class="tools-table-wrap">
-            <table class="tools-table">
-              <thead>
-                <tr><th scope="col">Tool</th><th scope="col">Purpose</th><th scope="col">Required</th><th scope="col">Link</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <span class="ob-tool-name">
-                      <span class="ob-tool-name__icon ob-tool-name__icon--brand" aria-hidden="true">
-                        <img src="{{ url_for('static', filename='img/app-brands/microsoft-teams-official.svg') }}" alt="" width="20" height="20" loading="lazy" decoding="async" />
+          <section class="ob-section-shell mine-table-shell" data-table-shell="tools">
+            <header class="ob-section-head">
+              <div>
+                <p class="ob-section-kicker">Required setup</p>
+                <h2 class="ob-section-title">Software &amp; tools</h2>
+              </div>
+            </header>
+            <div class="mine-table-toolbar" aria-label="Software and tools controls">
+              <div class="mine-table-toolbar__controls">
+                <label class="mine-table-toolbar__search">
+                  <span class="visually-hidden">Search software and tools</span>
+                  <input type="search" placeholder="Search tool or purpose" data-table-search="tools" />
+                </label>
+                <label class="mine-table-toolbar__filter">
+                  <span class="visually-hidden">Filter by required status</span>
+                  <select data-table-filter="tools">
+                    <option value="">All statuses</option>
+                    <option value="required">Required</option>
+                    <option value="optional">Optional</option>
+                  </select>
+                </label>
+              </div>
+              <div class="mine-table-toolbar__meta">
+                <span data-table-count="tools">4 results</span>
+                <span data-table-selection="tools">0 selected</span>
+                <span>Updated Aug 2026</span>
+              </div>
+            </div>
+            <div class="mine-table-wrap">
+              <table class="mine-table tools-table ob-tools-table" data-ob-stagger="table" data-table-id="tools">
+                <thead>
+                  <tr>
+                    <th scope="col" data-sortable data-sort-key="tool">Tool</th>
+                    <th scope="col" data-sortable data-sort-key="purpose">Purpose</th>
+                    <th scope="col" data-sortable data-sort-key="required">Required</th>
+                    <th scope="col">Links</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr tabindex="0" data-status="required" data-tool="ms teams" data-purpose="communication" data-required="yes">
+                    <td>
+                      <span class="ob-tool-name">
+                        <span class="ob-tool-name__icon ob-tool-name__icon--brand" aria-hidden="true">
+                          <img src="{{ url_for('static', filename='img/app-brands/microsoft-teams-official.svg') }}" alt="" width="20" height="20" loading="lazy" decoding="async" />
+                        </span>
+                        MS Teams
                       </span>
-                      MS Teams
-                    </span>
-                  </td>
-                  <td>Communication</td>
-                  <td><span class="ob-req ob-req--yes">{{ mine_icon('check', 14) }} Yes</span></td>
-                  <td><a href="https://www.microsoft.com/microsoft-teams/download-app" target="_blank" rel="noopener noreferrer" aria-label="Download Microsoft Teams">Open →</a></td>
-                </tr>
-                <tr>
-                  <td>
-                    <span class="ob-tool-name">
-                      <span class="ob-tool-name__icon ob-tool-name__icon--brand" aria-hidden="true">
-                        <img src="{{ url_for('static', filename='img/app-brands/servicenow-official.svg') }}" alt="" width="20" height="20" loading="lazy" decoding="async" />
+                    </td>
+                    <td>Communication</td>
+                    <td><span class="mine-status mine-status--required">{{ mine_icon('check', 14) }} Required</span></td>
+                    <td>
+                      <a href="https://www.microsoft.com/microsoft-teams/download-app" target="_blank" rel="noopener noreferrer">Download</a>
+                      <span class="meta"> · </span>
+                      <a href="https://teams.microsoft.com" target="_blank" rel="noopener noreferrer">Tenant</a>
+                    </td>
+                  </tr>
+                  <tr tabindex="0" data-status="required" data-tool="servicenow" data-purpose="itsm" data-required="yes">
+                    <td>
+                      <span class="ob-tool-name">
+                        <span class="ob-tool-name__icon ob-tool-name__icon--brand" aria-hidden="true">
+                          <img src="{{ url_for('static', filename='img/app-brands/servicenow-official.svg') }}" alt="" width="20" height="20" loading="lazy" decoding="async" />
+                        </span>
+                        ServiceNow
                       </span>
-                      ServiceNow
-                    </span>
-                  </td>
-                  <td>ITSM</td>
-                  <td><span class="ob-req ob-req--yes">{{ mine_icon('check', 14) }} Yes</span></td>
-                  <td><a href="https://www.servicenow.com/products/now-mobile.html" target="_blank" rel="noopener noreferrer" aria-label="Download ServiceNow Now Mobile">Open →</a></td>
-                </tr>
-                <tr>
-                  <td>
-                    <span class="ob-tool-name">
-                      <span class="ob-tool-name__icon ob-tool-name__icon--brand" aria-hidden="true">
-                        <img src="{{ url_for('static', filename='img/app-brands/jira-official.svg') }}" alt="" width="20" height="20" loading="lazy" decoding="async" />
+                    </td>
+                    <td>ITSM</td>
+                    <td><span class="mine-status mine-status--required">{{ mine_icon('check', 14) }} Required</span></td>
+                    <td>
+                      <a href="https://www.servicenow.com/products/now-mobile.html" target="_blank" rel="noopener noreferrer">Download</a>
+                      <span class="meta"> · </span>
+                      <a href="{{ url_for('main.software_tools') }}">Request access</a>
+                    </td>
+                  </tr>
+                  <tr tabindex="0" data-status="required" data-tool="jira" data-purpose="project management" data-required="yes">
+                    <td>
+                      <span class="ob-tool-name">
+                        <span class="ob-tool-name__icon ob-tool-name__icon--brand" aria-hidden="true">
+                          <img src="{{ url_for('static', filename='img/app-brands/jira-official.svg') }}" alt="" width="20" height="20" loading="lazy" decoding="async" />
+                        </span>
+                        Jira
                       </span>
-                      Jira
-                    </span>
-                  </td>
-                  <td>Project management</td>
-                  <td><span class="ob-req ob-req--yes">{{ mine_icon('check', 14) }} Yes</span></td>
-                  <td><a href="https://www.atlassian.com/software/jira/download" target="_blank" rel="noopener noreferrer" aria-label="Download Jira">Open →</a></td>
-                </tr>
-                <tr>
-                  <td>
-                    <span class="ob-tool-name">
-                      <span class="ob-tool-name__icon ob-tool-name__icon--brand" aria-hidden="true">
-                        <img src="{{ url_for('static', filename='img/app-brands/confluence-official.svg') }}" alt="" width="20" height="20" loading="lazy" decoding="async" />
+                    </td>
+                    <td>Project management</td>
+                    <td><span class="mine-status mine-status--required">{{ mine_icon('check', 14) }} Required</span></td>
+                    <td>
+                      <a href="https://www.atlassian.com/software/jira/download" target="_blank" rel="noopener noreferrer">Download</a>
+                      <span class="meta"> · </span>
+                      <a href="{{ url_for('main.software_tools') }}">Request access</a>
+                    </td>
+                  </tr>
+                  <tr tabindex="0" data-status="optional" data-tool="confluence" data-purpose="knowledge base" data-required="optional">
+                    <td>
+                      <span class="ob-tool-name">
+                        <span class="ob-tool-name__icon ob-tool-name__icon--brand" aria-hidden="true">
+                          <img src="{{ url_for('static', filename='img/app-brands/confluence-official.svg') }}" alt="" width="20" height="20" loading="lazy" decoding="async" />
+                        </span>
+                        Confluence
                       </span>
-                      Confluence
-                    </span>
-                  </td>
-                  <td>Knowledge base</td>
-                  <td><span class="ob-req ob-req--opt">Optional</span></td>
-                  <td><a href="https://www.atlassian.com/software/confluence/download" target="_blank" rel="noopener noreferrer" aria-label="Download Confluence">Open →</a></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p class="meta" style="margin-top:12px;">Links open the official download or product pages. Use your account tenant URLs after install. Published onboarding articles below may add more tools.</p>
+                    </td>
+                    <td>Knowledge base</td>
+                    <td><span class="mine-status mine-status--optional">Optional</span></td>
+                    <td>
+                      <a href="https://www.atlassian.com/software/confluence/download" target="_blank" rel="noopener noreferrer">Download</a>
+                      <span class="meta"> · </span>
+                      <a href="{{ url_for('main.software_tools') }}">Request access</a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="mine-table__empty" data-table-empty="tools">No tools match this search or filter.</p>
+            <p class="meta">Official download links are live. Use Request access for tenant provisioning via the master register.</p>
+          </section>
         </div>
 
         <div class="tab-panel tab-panel--master">
-          <div class="ob-master-card">
-            <table class="ob-master-table">
-              <thead>
-                <tr>
-                  <th scope="col">Category</th>
-                  <th scope="col">Tool / platform</th>
-                  <th scope="col">Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Development &amp; IDE</td>
-                  <td class="ob-master-table__placeholder">—</td>
-                  <td>e.g. VS Code, Azure DevOps, Git</td>
-                </tr>
-                <tr>
-                  <td>Collaboration</td>
-                  <td class="ob-master-table__placeholder">—</td>
-                  <td>e.g. MiNe, Teams, Jira</td>
-                </tr>
-                <tr>
-                  <td>Mining / OT systems</td>
-                  <td class="ob-master-table__placeholder">—</td>
-                  <td>Account-specific applications</td>
-                </tr>
-                <tr>
-                  <td>Data &amp; reporting</td>
-                  <td class="ob-master-table__placeholder">—</td>
-                  <td>Dashboards, analytics, exports</td>
-                </tr>
-                <tr>
-                  <td>Other</td>
-                  <td class="ob-master-table__placeholder">—</td>
-                  <td>Add rows as the master list matures</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p class="meta" style="margin-top:12px;">Replace the placeholders above with the approved master list. New tools can be documented here and linked from onboarding and training as needed.</p>
+          <section class="ob-section-shell mine-table-shell" data-table-shell="master">
+            <header class="ob-section-head">
+              <div>
+                <p class="ob-section-kicker">Program register</p>
+                <h2 class="ob-section-title">Master tools</h2>
+              </div>
+              <a class="btn btn-secondary" href="{{ url_for('main.software_tools') }}">Full master list</a>
+            </header>
+            <div class="mine-table-toolbar" aria-label="Master tools controls">
+              <div class="mine-table-toolbar__controls">
+                <label class="mine-table-toolbar__search">
+                  <span class="visually-hidden">Search master tools</span>
+                  <input type="search" placeholder="Search category or tool" data-table-search="master" />
+                </label>
+              </div>
+              <div class="mine-table-toolbar__meta">
+                <span data-table-count="master">8 results</span>
+                <span data-table-selection="master">0 selected</span>
+                <span>Updated Aug 2026</span>
+              </div>
+            </div>
+            <div class="mine-table-wrap">
+              <table class="mine-table ob-master-table" data-ob-stagger="table" data-table-id="master">
+                <thead>
+                  <tr>
+                    <th scope="col" data-sortable data-sort-key="category">Category</th>
+                    <th scope="col" data-sortable data-sort-key="tool">Tool / platform</th>
+                    <th scope="col">Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr tabindex="0" data-category="development & ide" data-tool="vs code">
+                    <td>Development &amp; IDE</td>
+                    <td>VS Code</td>
+                    <td>Primary IDE for account engineering work</td>
+                  </tr>
+                  <tr tabindex="0" data-category="development & ide" data-tool="azure devops">
+                    <td>Development &amp; IDE</td>
+                    <td>Azure DevOps</td>
+                    <td>Repos, boards, pipelines, and release tracking</td>
+                  </tr>
+                  <tr tabindex="0" data-category="development & ide" data-tool="git">
+                    <td>Development &amp; IDE</td>
+                    <td>Git</td>
+                    <td>Source control standard for account repositories</td>
+                  </tr>
+                  <tr tabindex="0" data-category="collaboration" data-tool="mine">
+                    <td>Collaboration</td>
+                    <td>MiNe</td>
+                    <td>Knowledge portal for Freeport–Hexaware account work</td>
+                  </tr>
+                  <tr tabindex="0" data-category="collaboration" data-tool="ms teams">
+                    <td>Collaboration</td>
+                    <td>MS Teams</td>
+                    <td>Day-to-day chat, meetings, and training folders</td>
+                  </tr>
+                  <tr tabindex="0" data-category="collaboration" data-tool="jira">
+                    <td>Collaboration</td>
+                    <td>Jira</td>
+                    <td>Delivery tracking and sprint execution</td>
+                  </tr>
+                  <tr tabindex="0" data-category="mining / ot systems" data-tool="account ot systems">
+                    <td>Mining / OT systems</td>
+                    <td>Account OT systems</td>
+                    <td>Site / plant applications assigned by program leads</td>
+                  </tr>
+                  <tr tabindex="0" data-category="data & reporting" data-tool="power bi">
+                    <td>Data &amp; reporting</td>
+                    <td>Power BI</td>
+                    <td>Dashboards, analytics, and export-ready reporting</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="mine-table__empty" data-table-empty="master">No tools match this search.</p>
+            <p class="meta">Aligned with the <a href="{{ url_for('main.software_tools') }}">Software &amp; tools</a> master list. Update both when the program office adds tools.</p>
+          </section>
         </div>
       </div>
     </div>
@@ -183,7 +276,7 @@
       {% if rows and rows|length > 0 %}
         {% set accent_cycle = ['cyan', 'green', 'violet'] %}
         {% set icon_cycle = ['graduation', 'badge', 'people'] %}
-        <ul class="ob-card-grid ob-card-grid--row" role="list">
+        <ul class="ob-card-grid ob-card-grid--row" role="list" data-ob-stagger="cards">
           {% for item in rows %}
             {% set accent = accent_cycle[loop.index0 % 3] %}
             {% set icon_name = icon_cycle[loop.index0 % 3] %}
@@ -214,4 +307,8 @@
       {% endif %}
     </section>
   </div>
+{% endblock %}
+{% block scripts_extra %}
+  <script src="{{ url_for('static', filename='js/mine-table.js') }}?v=1" defer></script>
+  <script src="{{ url_for('static', filename='js/onboarding-motion.js') }}?v=3" defer></script>
 {% endblock %}

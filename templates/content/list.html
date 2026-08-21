@@ -1,32 +1,30 @@
 {% extends "base.html" %}
 {% from "includes/status_badge.html" import status_badge %}
 {% from "includes/catalog_pagination.html" import catalog_pagination %}
+{% from "includes/empty_state.html" import empty_state %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}Content catalogue{% endblock %}
 {% block page_header %}{% endblock %}
 {% block content %}
 <div class="portal-page">
-  <header class="portal-hero">
-    <div class="portal-hero__copy">
-      <nav class="portal-breadcrumb" aria-label="Breadcrumb">
-        <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
-        <span class="portal-breadcrumb__sep" aria-hidden="true">›</span>
-        <span aria-current="page">Content catalogue</span>
-      </nav>
-      <span class="portal-eyebrow">Admin view</span>
-      <h1 class="portal-hero__title">Content catalogue</h1>
-      <p class="portal-lede">Indexed, searchable catalogue across all modules and statuses. Browse approved items in the <a href="{{ url_for('main.knowledge') }}">Knowledge repository</a>.</p>
-    </div>
-    <div class="portal-hero__aside">
-      <div class="portal-stat" role="status">
-        <span class="portal-stat__value">{{ catalog.total }}</span>
-        <span class="portal-stat__label">Total records</span>
-      </div>
-      <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create content</a>
-    </div>
-  </header>
+  {% call mine_page_head(
+      title='Content catalogue',
+      lede='Indexed, searchable catalogue across all modules and statuses. Browse approved items in the Knowledge repository.',
+      meta=[
+        catalog.total ~ ' total records',
+        'Admin view'
+      ],
+      breadcrumbs=[
+        {'label': 'Dashboard', 'href': url_for('main.dashboard')},
+        {'label': 'Content catalogue', 'href': none}
+      ],
+      class='portal-page-head'
+    ) %}
+    <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create content</a>
+  {% endcall %}
 
-  <form method="get" class="catalog-toolbar card" action="{{ url_for('content.content_list') }}">
-    <div class="catalog-toolbar__row">
+  <form method="get" class="catalog-toolbar mine-table-toolbar" action="{{ url_for('content.content_list') }}">
+    <div class="catalog-toolbar__row mine-table-toolbar__controls">
       <div class="field catalog-toolbar__search">
         <label for="cat-q">Search</label>
         <input id="cat-q" type="search" name="q" value="{{ q or '' }}" placeholder="Title, summary, body, tags…" autocomplete="off" />
@@ -70,7 +68,7 @@
       </div>
     </div>
     {% if catalog.total > 0 %}
-      <p class="catalog-toolbar__meta">
+      <p class="catalog-toolbar__meta mine-table-toolbar__meta">
         Showing <strong>{{ catalog.showing_from }}–{{ catalog.showing_to }}</strong> of <strong>{{ catalog.total }}</strong>
         {% if catalog.used_fts %} · full-text index{% endif %}
       </p>
@@ -78,8 +76,8 @@
   </form>
 
   {% if rows and rows|length > 0 %}
-    <div class="portal-table-wrap">
-      <table class="portal-table catalog-table">
+    <div class="mine-table-wrap">
+      <table class="mine-table catalog-table">
         <thead>
           <tr>
             <th scope="col">Title</th>
@@ -104,7 +102,12 @@
     </div>
     {{ catalog_pagination('content.content_list', catalog) }}
   {% else %}
-    <p class="portal-empty">No content records match your filters.</p>
+    {{ empty_state(
+      'No content records match your filters',
+      'Try clearing filters or create a new knowledge item.',
+      url_for('content.content_create'),
+      'Create content'
+    ) }}
   {% endif %}
 </div>
 {% endblock %}
