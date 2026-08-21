@@ -1,24 +1,34 @@
 {% extends "base.html" %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}Security{% endblock %}
+{% block page_header %}
+  {{ mine_page_head(
+      title='Security',
+      lede='Account security and SharePoint training sync for administrators.',
+      meta=['Administration', current_user.username],
+      breadcrumbs=[
+        {'label': 'Dashboard', 'href': url_for('main.dashboard')},
+        {'label': 'Security', 'href': none}
+      ]
+    ) }}
+{% endblock %}
 {% block content %}
-  <h1>Security</h1>
-
-  <div class="card" style="margin-top: 12px; max-width: 640px;">
+  <div class="card card--narrow u-mt-12">
     <p class="meta">Signed in as <strong>{{ current_user.username }}</strong> (admin).</p>
-    <div class="toolbar" style="margin-top: 14px; flex-wrap: wrap; gap: 8px;">
+    <div class="toolbar toolbar--gap u-mt-14">
       <a class="btn btn-primary" href="{{ url_for('admin.settings_password') }}">Change password</a>
       <a class="btn btn-secondary" href="{{ url_for('auth.account_security_questions') }}">
         {% if security_enrolled %}Update security questions{% else %}Set up security questions{% endif %}
       </a>
     </div>
     {% if not security_enrolled %}
-      <p class="meta" style="margin-top: 12px;">Set three security questions so you can use <strong>Forgot password</strong> on the sign-in page.</p>
+      <p class="meta u-mt-12">Set three security questions so you can use <strong>Forgot password</strong> on the sign-in page.</p>
     {% endif %}
   </div>
 
-  <div class="card" style="margin-top: 16px; max-width: 640px;">
-    <h2 style="font-size: 1.05rem; margin: 0 0 8px;">Teams / SharePoint training</h2>
-    <p class="meta" style="margin: 0 0 10px;">
+  <div class="card card--narrow u-mt-16">
+    <h2 class="settings-section-title">Teams / SharePoint training</h2>
+    <p class="meta settings-section-lede">
       Ask MiNe answers onboarding/training from the FMI Offshore SharePoint folder after sync
       (live Graph and/or files copied into the local mirror folder).
     </p>
@@ -29,12 +39,12 @@
         {% if sharepoint_graph %}<strong>ready</strong>{% else %}<strong>not ready</strong> (need MS_CLIENT_ID + tenant GUID){% endif %}
       </p>
       {% if sharepoint_folder %}
-        <p class="meta" style="word-break: break-all;">Folder link: {{ sharepoint_folder }}{% if sharepoint_folder|length >= 120 %}…{% endif %}</p>
+        <p class="meta u-break-all">Folder link: {{ sharepoint_folder }}{% if sharepoint_folder|length >= 120 %}…{% endif %}</p>
       {% endif %}
       {% if sharepoint_local %}
-        <p class="meta" style="word-break: break-all;">Local mirror: <code>{{ sharepoint_local }}</code></p>
+        <p class="meta u-break-all">Local mirror: <code>{{ sharepoint_local }}</code></p>
       {% endif %}
-      <form method="post" action="{{ url_for('admin.sync_sharepoint') }}" style="margin-top: 12px;">
+      <form method="post" action="{{ url_for('admin.sync_sharepoint') }}" class="u-mt-12">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="btn btn-primary" {% if not sharepoint_ready %}disabled{% endif %}>
           Sync training docs now

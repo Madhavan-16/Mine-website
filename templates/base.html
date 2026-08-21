@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}MiNe{% endblock %} · Mining Intelligence and Knowledge Enablement</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=portal-ui-22" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=portal-ui-23" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/content-cards.css') }}" />
     {% if current_user and (request.endpoint or '') not in ('main.landing', 'main.welcome') %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/portal-list.css') }}" />
@@ -170,7 +170,7 @@
           <div class="dropdown-panel dropdown-panel--menu" id="account-panel" data-dropdown-panel role="menu" aria-label="Account">
             <nav class="dropdown-menu">
               {% if is_guest %}
-              <p class="meta" style="margin:8px 12px;" role="note">Guest — view only</p>
+              <p class="meta guest-note" role="note">Guest — view only</p>
               {% else %}
               {% if current_user.role == 'admin' %}
               <a class="dropdown-menu__item" href="{{ url_for('admin.admin_profile') }}" role="menuitem">Profile</a>
@@ -348,7 +348,7 @@
       </details>
       {% endif %}
       {% else %}
-      <p class="meta" style="margin: 12px 16px 0;">Guest — view only</p>
+      <p class="meta guest-note--drawer">Guest — view only</p>
       {% endif %}
       <form method="post" action="{{ url_for('auth.logout') }}" class="nav-drawer-signout">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />

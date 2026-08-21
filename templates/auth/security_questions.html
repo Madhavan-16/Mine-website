@@ -12,18 +12,18 @@
       </header>
   {% else %}
   <h1>Security questions</h1>
-  <p class="meta" style="max-width: 640px;">
+  <p class="meta u-meta-card">
     Choose <strong>three different</strong> questions and answers. Answers are stored securely (hashed).
     On <strong>Forgot password</strong>, you’ll be asked <strong>one</strong> of them — a correct answer unlocks password reset.
   </p>
 
   {% if enrolled %}
-    <p class="meta" style="color: var(--hex-success, #0a7a3e);">You already have recovery questions set. Saving again will replace them.</p>
+    <p class="meta meta--success">You already have recovery questions set. Saving again will replace them.</p>
   {% else %}
-    <p class="meta" style="color: var(--hex-warning, #a15c00);">Not set up yet — complete this once so you can recover your password without email.</p>
+    <p class="meta meta--warning">Not set up yet — complete this once so you can recover your password without email.</p>
   {% endif %}
 
-  <div class="card" style="margin-top: 12px; max-width: 640px;">
+  <div class="card u-mt-12 card--narrow">
   {% endif %}
 
     <form method="post" class="form{% if forced %} auth-login__form{% endif %}" action="{{ url_for('auth.account_security_questions', setup=1 if forced else None) }}">
@@ -41,18 +41,18 @@
       <label for="answer_1">{{ form.answer_1.label.text }}</label>
       {{ form.answer_1(id="answer_1", autocomplete="off", placeholder="Your answer") }}
 
-      <label for="question_2" style="margin-top: 14px;">{{ form.question_2.label.text }}</label>
+      <label for="question_2" class="u-mt-14">{{ form.question_2.label.text }}</label>
       {{ form.question_2(id="question_2") }}
       <label for="answer_2">{{ form.answer_2.label.text }}</label>
       {{ form.answer_2(id="answer_2", autocomplete="off", placeholder="Your answer") }}
 
-      <label for="question_3" style="margin-top: 14px;">{{ form.question_3.label.text }}</label>
+      <label for="question_3" class="u-mt-14">{{ form.question_3.label.text }}</label>
       {{ form.question_3(id="question_3") }}
       <label for="answer_3">{{ form.answer_3.label.text }}</label>
       {{ form.answer_3(id="answer_3", autocomplete="off", placeholder="Your answer") }}
 
-      <div class="toolbar" style="margin-top: 18px; gap: 8px; flex-wrap: wrap;">
-        <button class="btn btn-primary{% if forced %} auth-login__submit{% endif %}" type="submit" style="{% if forced %}width:100%;{% endif %}">
+      <div class="toolbar toolbar--gap u-mt-18">
+        <button class="btn btn-primary{% if forced %} auth-login__submit btn--full{% endif %}" type="submit">
           {% if forced %}Save and continue{% else %}Save security questions{% endif %}
         </button>
         {% if not forced %}
@@ -66,9 +66,9 @@
     </form>
 
     {% if forced %}
-      <form method="post" action="{{ url_for('auth.logout') }}" style="margin-top: 14px; text-align: center;">
+      <form method="post" action="{{ url_for('auth.logout') }}" class="u-mt-14 u-text-center">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="btn btn-secondary" style="background: transparent; border: none; color: inherit; text-decoration: underline; box-shadow: none;">
+        <button type="submit" class="btn btn-secondary btn-link-quiet">
           Sign out instead
         </button>
       </form>

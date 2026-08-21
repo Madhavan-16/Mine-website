@@ -13,7 +13,7 @@
         <input type="hidden" name="next" value="{{ request.args.get('next') }}" />
       {% endif %}
       {% if form.errors %}
-        <ul class="form-errors" style="margin-bottom:12px;">
+        <ul class="form-errors form-errors--spaced">
           {% for field, errs in form.errors.items() %}
             {% for err in errs %}<li><strong>{{ field }}</strong>: {{ err }}</li>{% endfor %}
           {% endfor %}
@@ -45,7 +45,7 @@
       </button>
     </form>
 
-    <p class="auth-forgot" style="margin: 12px 0 0; text-align: center;">
+    <p class="auth-forgot auth-forgot">
       <a href="{{ url_for('auth.forgot_password') }}">Forgot password?</a>
     </p>
 

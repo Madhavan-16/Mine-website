@@ -9,8 +9,8 @@
     </nav>
     <div class="project-title-row">
       <div>
-        <h1 class="page-title" style="border:0; padding:0; margin:0; text-transform:none;">{{ row.title }}</h1>
-        <p class="meta" style="margin:6px 0 0;">Program: {{ row.program_name or "—" }}</p>
+        <h1 class="page-title page-title--plain">{{ row.title }}</h1>
+        <p class="meta project-detail-meta">Program: {{ row.program_name or "—" }}</p>
       </div>
       <span class="status-pill">
         <span class="status-dot {{ status_class }}" aria-hidden="true"></span>
@@ -20,7 +20,7 @@
   </div>
 {% endblock %}
 {% block content %}
-  <div class="toolbar" style="margin-bottom: 14px;">
+  <div class="toolbar u-mb-md">
     <a class="btn btn-primary" href="{{ url_for('content.content_view', cid=row.id) }}">Open full record</a>
   </div>
 
@@ -28,7 +28,7 @@
     <div class="panel-legend">Description</div>
     <div class="panel-body body-text">{% if row.summary %}{{ row.summary|e }}{% else %}—{% endif %}</div>
     {% if row.body %}
-      <div class="panel-body body-text" style="margin-top:12px;">{{ row.body|e }}</div>
+      <div class="panel-body body-text u-mt-12">{{ row.body|e }}</div>
     {% endif %}
   </section>
 

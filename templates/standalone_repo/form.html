@@ -9,11 +9,11 @@
       <span class="breadcrumb-sep" aria-hidden="true">›</span>
       <span>{% if mode == "create" %}Add{% else %}Edit{% endif %}</span>
     </nav>
-    <h1 class="page-title" style="text-transform:none;">{% if mode == "create" %}{{ repo_ui.create_h1 }}{% else %}{{ repo_ui.edit_h1 }}{% endif %}</h1>
+    <h1 class="page-title page-title--plain">{% if mode == "create" %}{{ repo_ui.create_h1 }}{% else %}{{ repo_ui.edit_h1 }}{% endif %}</h1>
   </div>
 {% endblock %}
 {% block content %}
-  <p class="meta" style="margin: 0 0 1rem; max-width: 72ch;">
+  <p class="meta u-meta-lede">
     Submissions use the same <strong>moderation workflow</strong> as other catalogue content: save a draft, or
     <strong>Submit for review</strong> so a moderator or admin can approve it. For KYC, KYA, newsletters, case studies, and other
     <strong>knowledge series</strong>, use
@@ -24,7 +24,7 @@
     {% if form.errors %}
       <div class="flash flash-danger" role="alert">
         <strong>Form errors:</strong>
-        <ul style="margin:8px 0 0; padding-left:1.2rem;">
+        <ul class="u-list-plain">
           {% for field_name, field_errors in form.errors.items() %}
             {% for err in field_errors %}<li><code>{{ field_name }}</code>: {{ err }}</li>{% endfor %}
           {% endfor %}
@@ -44,12 +44,12 @@
     <label for="content-attachment-field">Attachment (optional)</label>
     {{ form.attachment() }}
     <p class="help">Allowed types: PDF, DOCX, XLSX, PPT, PPTX, PNG, JPG — max 10 MB per request.</p>
-    <div class="toolbar" style="margin-top: 10px; flex-wrap: wrap; gap: 8px; align-items: center;">
+    <div class="toolbar toolbar--gap u-mt-md">
       <button type="button" class="btn btn-secondary" id="btn-autofill-from-file">Suggest title &amp; summary from file</button>
       <span class="meta" id="autofill-status" aria-live="polite"></span>
     </div>
 
-    <div class="toolbar content-form-actions" style="margin-top: 14px; justify-content: flex-end;">
+    <div class="toolbar content-form-actions toolbar--gap toolbar--end u-mt-14">
       <button class="btn btn-primary" name="action" value="submit" type="submit">Submit for review</button>
       <button class="btn btn-secondary" name="action" value="draft" type="submit">Save draft</button>
       <a class="btn btn-ghost" href="{{ url_for(repo_ui.list_endpoint) }}">Cancel</a>

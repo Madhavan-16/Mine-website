@@ -1,9 +1,19 @@
 {% extends "base.html" %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}Message · Outlook Mailbox{% endblock %}
+{% block page_header %}
+  {{ mine_page_head(
+      title='Message',
+      lede='Outlook message detail via Microsoft Graph.',
+      meta=['Mailbox'],
+      breadcrumbs=[
+        {'label': 'Mailbox', 'href': url_for('mailbox.inbox')},
+        {'label': 'Message', 'href': none}
+      ]
+    ) }}
+{% endblock %}
 {% block content %}
-  <h1>Message</h1>
-
-  <div class="toolbar" style="margin-top: 10px; gap: 8px; flex-wrap: wrap;">
+  <div class="toolbar toolbar--gap u-mt-md">
     <a class="btn btn-secondary" href="{{ url_for('mailbox.inbox') }}">Inbox</a>
     <a class="btn btn-secondary" href="{{ url_for('mailbox.sent') }}">Sent</a>
     <a class="btn btn-secondary" href="{{ url_for('mailbox.drafts') }}">Drafts</a>
@@ -11,7 +21,7 @@
     <a class="btn btn-primary" href="{{ url_for('mailbox.compose') }}">Compose</a>
   </div>
 
-  <div class="card" style="margin-top: 12px;">
+  <div class="card u-mt-12">
     <p><strong>Subject:</strong> {{ row.get("subject") or "(no subject)" }}</p>
     <p class="meta"><strong>From:</strong> {{ row.get("from", {}).get("emailAddress", {}).get("address") or "—" }}</p>
     <p class="meta"><strong>To:</strong>
@@ -39,9 +49,9 @@
     {% set body = row.get("body", {}) %}
     {% if body.get("contentType", "").lower() == "html" %}
       <div class="meta">Body is HTML. Plain preview:</div>
-      <pre style="white-space: pre-wrap; margin-top: 8px;">{{ row.get("bodyPreview") or "" }}</pre>
+      <pre class="u-pre-wrap">{{ row.get("bodyPreview") or "" }}</pre>
     {% else %}
-      <pre style="white-space: pre-wrap; margin-top: 8px;">{{ body.get("content") or row.get("bodyPreview") or "" }}</pre>
+      <pre class="u-pre-wrap">{{ body.get("content") or row.get("bodyPreview") or "" }}</pre>
     {% endif %}
   </div>
 {% endblock %}

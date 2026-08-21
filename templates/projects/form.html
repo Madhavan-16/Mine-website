@@ -7,11 +7,11 @@
       <span class="breadcrumb-sep" aria-hidden="true">›</span>
       <span>{% if mode == "create" %}Add{% else %}Edit{% endif %}</span>
     </nav>
-    <h1 class="page-title" style="text-transform:none;">{% if mode == "create" %}Add a program or project{% else %}Edit program or project{% endif %}</h1>
+    <h1 class="page-title page-title--plain">{% if mode == "create" %}Add a program or project{% else %}Edit program or project{% endif %}</h1>
   </div>
 {% endblock %}
 {% block content %}
-  <p class="meta" style="margin: 0 0 1rem; max-width: 72ch;">
+  <p class="meta u-meta-lede">
     Submissions go through the same <strong>moderation workflow</strong> as other content: save a draft, or
     <strong>Submit for review</strong> so a moderator or admin can approve it. Approved items appear in
     <a href="{{ url_for('projects.project_list') }}">Programs &amp; projects</a>.
@@ -21,7 +21,7 @@
     {% if form.errors %}
       <div class="flash flash-danger" role="alert">
         <strong>Form errors:</strong>
-        <ul style="margin:8px 0 0; padding-left:1.2rem;">
+        <ul class="u-list-plain">
           {% for field_name, field_errors in form.errors.items() %}
             {% for err in field_errors %}<li><code>{{ field_name }}</code>: {{ err }}</li>{% endfor %}
           {% endfor %}
@@ -30,7 +30,7 @@
     {% endif %}
 
     <h2 class="form-section-title">Project details</h2>
-    <p class="help" style="margin-top:0;">All fields below (except description and tags) are required to <strong>Submit for review</strong>. Use <strong>Save draft</strong> to save work in progress.</p>
+    <p class="help u-mt-0">All fields below (except description and tags) are required to <strong>Submit for review</strong>. Use <strong>Save draft</strong> to save work in progress.</p>
 
     <label for="program_name">Program name</label>
     {{ form.program_name(placeholder="e.g. Freeport — Digital") }}
@@ -54,16 +54,16 @@
     <label for="tags">Tags</label>
     {{ form.tags(placeholder="comma, separated, values") }}
 
-    <h2 class="form-section-title" style="margin-top: 1.25rem;">Attachment</h2>
+    <h2 class="form-section-title form-section-title--spaced">Attachment</h2>
     <label for="content-attachment-field">Attachment (optional)</label>
     {{ form.attachment() }}
     <p class="help">Allowed types: PDF, DOCX, XLSX, PPT, PPTX, PNG, JPG — max 10 MB per request.</p>
-    <div class="toolbar" style="margin-top: 10px; flex-wrap: wrap; gap: 8px; align-items: center;">
+    <div class="toolbar toolbar--gap u-mt-md">
       <button type="button" class="btn btn-secondary" id="btn-autofill-from-file">Suggest title &amp; summary from file</button>
       <span class="meta" id="autofill-status" aria-live="polite"></span>
     </div>
 
-    <div class="toolbar content-form-actions" style="margin-top: 14px; justify-content: flex-end;">
+    <div class="toolbar content-form-actions toolbar--gap toolbar--end u-mt-14">
       <button class="btn btn-primary" name="action" value="submit" type="submit">Submit for review</button>
       <button class="btn btn-secondary" name="action" value="draft" type="submit">Save draft</button>
       <a class="btn btn-ghost" href="{{ url_for('projects.project_list') }}">Cancel</a>

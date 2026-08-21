@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "projects/_section_panel.html" import project_section_icon, render_project_section, project_card_emblem %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}Programs & Projects{% endblock %}
 {% block head_extra %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/portal-list.css') }}" />
@@ -8,32 +9,26 @@
 {% block page_header %}{% endblock %}
 {% block content %}
   <div class="portal-page projects-portal-page" data-projects-portal data-active-view="cards" data-portfolio-viz='{{ portfolio_viz | tojson }}'>
-  <header class="portal-hero">
-    <div class="portal-hero__copy">
-      <nav class="portal-breadcrumb" aria-label="Breadcrumb">
-        <span>Programs</span>
-        <span class="portal-breadcrumb__sep" aria-hidden="true">›</span>
-        <span aria-current="page">Programs &amp; projects</span>
-      </nav>
-      <span class="portal-eyebrow">Delivery portfolio</span>
-      <h1 class="portal-hero__title">Programs &amp; projects</h1>
-      <p class="portal-lede">Explore the Freeport delivery portfolio — open any engagement for scope and technology detail, or switch to the delivery runway to see how engagements overlap in time.</p>
-      {% if config.get('CHATBOT_ENABLED', True) %}
-      <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">
-        <button type="button" class="btn btn-secondary" data-explain-mine-page>Explain this page</button>
-      </div>
-      {% endif %}
-    </div>
-    <div class="portal-hero__aside">
-      <div class="portal-stat" role="status">
-        <span class="portal-stat__value">{{ rows|length }}</span>
-        <span class="portal-stat__label">{% if active == '1' %}Active projects{% elif active == '0' %}Ended projects{% else %}Projects{% endif %}</span>
-      </div>
-      {% if current_user.role in ['admin','moderator'] %}
+  {% call mine_page_head(
+      title='Programs & projects',
+      lede='Explore the Freeport delivery portfolio — open any engagement for scope and technology detail, or switch to the delivery runway to see how engagements overlap in time.',
+      meta=[
+        (rows|length ~ (' active projects' if active == '1' else ' ended projects' if active == '0' else ' projects')),
+        'Delivery portfolio'
+      ],
+      breadcrumbs=[
+        {'label': 'Programs', 'href': none},
+        {'label': 'Programs & projects', 'href': none}
+      ],
+      class='portal-page-head'
+    ) %}
+    {% if config.get('CHATBOT_ENABLED', True) %}
+      <button type="button" class="btn btn-secondary" data-explain-mine-page>Explain this page</button>
+    {% endif %}
+    {% if current_user.role in ['admin','moderator'] %}
       <a class="btn btn-primary" href="{{ url_for('projects.project_create') }}">Add project</a>
-      {% endif %}
-    </div>
-  </header>
+    {% endif %}
+  {% endcall %}
 
   {% include "includes/back_program_map.html" %}
 
@@ -97,7 +92,7 @@
         {% endfor %}
       </select>
     </div>
-    <div class="field" style="flex:1; min-width:180px;">
+    <div class="field u-flex-1-min">
       <label for="q">Search</label>
       <input id="q" type="search" name="q" placeholder="Search…" value="{{ q or '' }}" />
     </div>
@@ -112,7 +107,7 @@
         <option value="alpha" {% if sort=='alpha' %}selected{% endif %}>Alphabetical</option>
       </select>
     </div>
-    <div class="field" style="align-self:flex-end;">
+    <div class="field u-flex-end">
       <button class="btn btn-secondary" type="submit">Apply</button>
     </div>
   </form>
@@ -262,7 +257,7 @@
   <div class="projects-portal-empty">
     <p>{% if active == '1' %}No active projects match these filters.{% elif active == '0' %}No ended projects match these filters.{% else %}No projects match these filters.{% endif %}</p>
     {% if active != 'all' and all_count %}
-    <p class="meta" style="margin-top: 8px;"><a href="{{ url_for('projects.project_list', active='all', program=program or none, status=status or none, region=region or none, q=q or none, sort=sort or none) }}">View all {{ all_count }} engagements</a></p>
+    <p class="meta u-mt-sm"><a href="{{ url_for('projects.project_list', active='all', program=program or none, status=status or none, region=region or none, q=q or none, sort=sort or none) }}">View all {{ all_count }} engagements</a></p>
     {% endif %}
   </div>
   {% endif %}

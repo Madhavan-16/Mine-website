@@ -25,7 +25,7 @@
     {% if form.errors %}
       <div class="flash flash-danger" role="alert">
         <strong>Form errors:</strong>
-        <ul style="margin:8px 0 0; padding-left:1.2rem;">
+        <ul class="u-list-plain">
           {% for field_name, field_errors in form.errors.items() %}
             {% for err in field_errors %}<li><code>{{ field_name }}</code>: {{ err }}</li>{% endfor %}
           {% endfor %}
@@ -58,8 +58,8 @@
 
     {% if mode == 'edit' and existing_files is defined and existing_files and existing_files|length > 0 %}
       <div class="content-form-current-files">
-        <p class="meta" style="margin: 0 0 8px;"><strong>Current attachment{% if existing_files|length > 1 %}s{% endif %}</strong> — choosing a new file below replaces {% if existing_files|length > 1 %}them{% else %}it{% endif %}.</p>
-        <ul class="mod-attach-list" style="margin: 0 0 12px; padding-left: 1.2rem;">
+        <p class="meta u-meta-spaced"><strong>Current attachment{% if existing_files|length > 1 %}s{% endif %}</strong> — choosing a new file below replaces {% if existing_files|length > 1 %}them{% else %}it{% endif %}.</p>
+        <ul class="mod-attach-list u-list-plain">
           {% for f in existing_files %}
             <li>
               <span class="mod-attach-name">{{ f.file_name|e }}</span>
@@ -76,12 +76,12 @@
     {% endif %}
     {{ form.attachment() }}
     <p class="help">Allowed types: PDF, DOCX, XLSX, PPT, PPTX, PNG, JPG — max 10 MB per request.{% if mode == 'edit' %} Leave empty to keep the current file unchanged.{% endif %}</p>
-    <div class="toolbar" style="margin-top: 10px; flex-wrap: wrap; gap: 8px; align-items: center;">
+    <div class="toolbar toolbar--gap u-mt-md">
       <button type="button" class="btn btn-secondary" id="btn-autofill-from-file">Suggest from file</button>
       <span class="meta" id="autofill-status" aria-live="polite"></span>
     </div>
 
-    <div class="toolbar content-form-actions" style="margin-top: 14px; justify-content: flex-end;">
+    <div class="toolbar content-form-actions toolbar--gap toolbar--end u-mt-14">
       {% if mode == 'edit' and row is defined and row and (row.status or '')|lower == 'approved' %}
         <button class="btn btn-primary" name="action" value="draft" type="submit">Save changes</button>
       {% else %}

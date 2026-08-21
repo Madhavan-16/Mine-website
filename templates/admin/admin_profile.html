@@ -1,17 +1,29 @@
 {% extends "base.html" %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}Administrator profile{% endblock %}
+{% block page_header %}
+  {{ mine_page_head(
+      title='Administrator profile',
+      lede='Signed in as ' ~ user.display_name ~ '.',
+      meta=['Administration', user.role],
+      breadcrumbs=[
+        {'label': 'Dashboard', 'href': url_for('main.dashboard')},
+        {'label': 'Admin profile', 'href': none}
+      ]
+    ) }}
+{% endblock %}
 {% block content %}
-  <div class="card" style="max-width: 720px;">
-    <h1>Administrator profile</h1>
-    <p class="meta">Signed in as {{ user.display_name }}.</p>
-    <table class="table" style="margin-top: 12px;">
-      <tbody>
-        <tr><th scope="row">Username</th><td>{{ user.username }}</td></tr>
-        <tr><th scope="row">Email</th><td>{{ user.email }}</td></tr>
-        <tr><th scope="row">Role</th><td><span class="badge">{{ user.role }}</span></td></tr>
-      </tbody>
-    </table>
-    <div class="toolbar" style="margin-top: 18px; flex-wrap: wrap; gap: 8px;">
+  <div class="card card--profile">
+    <div class="mine-table-wrap">
+      <table class="mine-table mine-table--kv">
+        <tbody>
+          <tr><th scope="row">Username</th><td>{{ user.username }}</td></tr>
+          <tr><th scope="row">Email</th><td>{{ user.email }}</td></tr>
+          <tr><th scope="row">Role</th><td><span class="badge">{{ user.role }}</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="toolbar toolbar--gap u-mt-18">
       <a class="btn btn-primary" href="{{ url_for('admin.moderation') }}">Moderation</a>
       <a class="btn btn-secondary" href="{{ url_for('admin.users') }}">Users</a>
       <a class="btn btn-secondary" href="{{ url_for('admin.settings') }}">Settings</a>

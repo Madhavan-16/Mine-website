@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
+{% from "includes/empty_state.html" import empty_state %}
 {% block title %}Team roster{% endblock %}
 {% block head_extra %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/portal-list.css') }}" />
@@ -7,34 +9,16 @@
 {% block page_header %}{% endblock %}
 {% block content %}
 <div class="portal-page team-roster-page" data-team-roster>
-  <header class="portal-hero">
-    <div class="portal-hero__copy">
-      {% if current_user %}
-      <nav class="portal-breadcrumb" aria-label="Breadcrumb">
-        <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
-        <span class="portal-breadcrumb__sep" aria-hidden="true">›</span>
-        <span aria-current="page">Team roster</span>
-      </nav>
-      {% else %}
-      <nav class="portal-breadcrumb" aria-label="Breadcrumb">
-        <a href="{{ url_for('main.landing') }}">Home</a>
-        <span class="portal-breadcrumb__sep" aria-hidden="true">›</span>
-        <span aria-current="page">Team roster</span>
-      </nav>
-      {% endif %}
-      <span class="portal-eyebrow">Freeport account</span>
-      <h1 class="portal-hero__title">The delivery squad</h1>
-      <p class="portal-lede">
-        {{ roster|length }} Hexaware associates on the Freeport account — grouped by craft, searchable by name or TSR role.
-      </p>
-    </div>
-    <div class="portal-hero__aside">
-      <div class="portal-stat" role="status">
-        <span class="portal-stat__value">{{ roster|length }}</span>
-        <span class="portal-stat__label">Associates</span>
-      </div>
-    </div>
-  </header>
+  {{ mine_page_head(
+      title='The delivery squad',
+      lede=roster|length ~ ' Hexaware associates on the Freeport account — grouped by craft, searchable by name or TSR role.',
+      meta=['Freeport account', roster|length ~ ' associates'],
+      breadcrumbs=[
+        {'label': 'Dashboard' if current_user else 'Home', 'href': url_for('main.dashboard') if current_user else url_for('main.landing')},
+        {'label': 'Team roster', 'href': none}
+      ],
+      class='portal-page-head'
+    ) }}
 
   {% if roster %}
   <div class="team-roster-toolbar">
@@ -97,14 +81,10 @@
 
   <script src="{{ url_for('static', filename='js/team-roster.js') }}" defer></script>
   {% else %}
-  <div class="portal-empty">
-    <p>Team roster is not available yet.</p>
-    {% if current_user and current_user.role == 'admin' %}
-    <p class="meta">Add or update the roster workbook in the project <code>data/</code> folder.</p>
-    {% else %}
-    <p class="meta">Contact your MiNe administrator to publish the team list.</p>
-    {% endif %}
-  </div>
+  {{ empty_state(
+    'Team roster is not available yet',
+    'Contact your MiNe administrator to publish the team list.' if not (current_user and current_user.role == 'admin') else 'Add or update the roster workbook in the project data/ folder.'
+  ) }}
   {% endif %}
 </div>
 {% endblock %}

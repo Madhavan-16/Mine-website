@@ -1,24 +1,30 @@
 {% extends "base.html" %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}Outlook Mailbox{% endblock %}
+{% block page_header %}
+  {{ mine_page_head(
+      title='Outlook mailbox',
+      lede='Connect your Microsoft account to browse Inbox/Sent/Drafts/Trash and send mail from your own Outlook mailbox. Passwords are never stored in MiNe; OAuth tokens are encrypted at rest.',
+      meta=['Mailbox', 'Connection'],
+      breadcrumbs=[
+        {'label': 'Dashboard', 'href': url_for('main.dashboard')},
+        {'label': 'Mailbox', 'href': none}
+      ]
+    ) }}
+{% endblock %}
 {% block content %}
-  <h1>Outlook Mailbox</h1>
-  <p class="meta" style="max-width: 72ch;">
-    Connect your Microsoft account to browse Inbox/Sent/Drafts/Trash and send mail from your own Outlook mailbox.
-    Passwords are never stored in MiNe; OAuth tokens are encrypted at rest.
-  </p>
-
-  <div class="card" style="margin-top: 14px; max-width: 760px;">
+  <div class="card card--mail u-mt-14">
     {% if token %}
       <p><strong>Connected account:</strong> {{ token.account_display_name or token.account_email or "Microsoft account" }}</p>
       {% if token.account_email %}
         <p class="meta">Mailbox: <code>{{ token.account_email }}</code></p>
       {% endif %}
-      <div class="toolbar" style="margin-top: 12px; gap: 8px; flex-wrap: wrap;">
+      <div class="toolbar toolbar--gap u-mt-12">
         <a class="btn btn-primary" href="{{ url_for('mailbox.inbox') }}">Open Inbox</a>
         <a class="btn btn-secondary" href="{{ url_for('mailbox.compose') }}">Compose</a>
-        <form method="post" action="{{ url_for('mailbox.disconnect') }}" style="display:inline;">
+        <form method="post" action="{{ url_for('mailbox.disconnect') }}" class="u-inline">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-          <button class="btn btn-secondary" type="submit" style="border-color: var(--color-danger); color: var(--color-danger);">Disconnect</button>
+          <button class="btn btn-secondary btn--danger-outline" type="submit">Disconnect</button>
         </form>
       </div>
     {% else %}

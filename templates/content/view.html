@@ -51,7 +51,7 @@
         <a href="{{ return_to or url_for('main.knowledge', module=row.module) }}" class="content-view-back__link">← Back to {{ knowledge_module_labels[row.module] }}</a>
       </p>
     {% endif %}
-    <h1 class="page-title" style="text-transform:none;">{{ row.title }}</h1>
+    <h1 class="page-title page-title--plain">{{ row.title }}</h1>
   </div>
   {% endif %}
 {% endblock %}
@@ -63,7 +63,7 @@
     {% set item_status = (row.status or '')|lower %}
     {% set can_moderate = current_user and current_user.role in ['admin', 'moderator'] and item_status == 'pending' %}
     {% if can_moderate %}
-      <section class="kview-modbar" aria-label="Moderation actions" style="margin-bottom:16px;">
+      <section class="kview-modbar u-mb-16" aria-label="Moderation actions">
         <div class="kview-modbar__copy">
           <span class="kview-modbar__eyebrow">Governance review</span>
           <p class="kview-modbar__text">This item is pending. Approve to publish, or return it with feedback for the author.</p>
@@ -89,7 +89,7 @@
           {% endif %}
           {% if current_user.id == row.author_id or current_user.role == 'admin' %}
             <span aria-hidden="true"> · </span>
-            <form method="post" action="{{ url_for('content.content_delete', cid=row.id) }}" style="display:inline;" onsubmit="return confirm('Delete this content permanently?');">
+            <form method="post" action="{{ url_for('content.content_delete', cid=row.id) }}" class="u-inline" onsubmit="return confirm('Delete this content permanently?');">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
               <button type="submit" class="btn-link-danger">Delete</button>
             </form>
@@ -114,7 +114,7 @@
 
     <div class="card content-view-summary-card">
       {% if row.module == 'case_study' %}
-        <h2 style="margin-top:0;">Business challenge</h2>
+        <h2 class="u-mt-0">Business challenge</h2>
         <div class="body-rich content-summary-text">
           {% if summary_text|default('') and summary_text.strip() %}
             {{ summary_text|e }}
@@ -125,7 +125,7 @@
           {% endif %}
         </div>
       {% else %}
-        <h2 style="margin-top:0;">Summary</h2>
+        <h2 class="u-mt-0">Summary</h2>
         <div class="body-rich content-summary-text">
           {% if summary_text|default('') and summary_text.strip() %}
             {{ summary_text|e }}
@@ -140,12 +140,12 @@
 
     {% if row.module != 'case_study' and row.module not in ['kyc', 'domain_term'] %}
     <div class="card">
-      <h2 style="margin-top:0;">Body</h2>
+      <h2 class="u-mt-0">Body</h2>
       <div class="body-rich">{% if body_text|default('') and body_text.strip() %}{{ body_text|e }}{% elif row.body and row.body.strip() %}{{ row.body|e }}{% else %}<span class="meta">—</span>{% endif %}</div>
     </div>
     {% elif row.module == 'case_study' %}
     <div class="card">
-      <h2 style="margin-top:0;">Solution</h2>
+      <h2 class="u-mt-0">Solution</h2>
       <div class="body-rich">{% if body_text|default('') and body_text.strip() %}{{ body_text|e }}{% elif row.body and row.body.strip() %}{{ row.body|e }}{% else %}<span class="meta">No solution provided.</span>{% endif %}</div>
     </div>
     {% endif %}
@@ -159,7 +159,7 @@
           {% for r in related_rows %}
             <article class="related-card">
               <a href="{{ url_for('content.content_view', cid=r.id) }}">{{ r.title }}</a>
-              <p class="meta" style="margin:6px 0 0;">{{ r.module }}</p>
+              <p class="meta project-detail-meta">{{ r.module }}</p>
             </article>
           {% endfor %}
         </div>

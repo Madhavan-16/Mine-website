@@ -1,11 +1,21 @@
 {% extends "base.html" %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}Send email{% endblock %}
+{% block page_header %}
+  {{ mine_page_head(
+      title='Send email',
+      lede='With real SMTP, messages go through your server’s settings. Admins enter their own Outlook mailbox credentials below and may send to any valid email address. Only administrators can use this screen.',
+      meta=['Administration', 'SMTP'],
+      breadcrumbs=[
+        {'label': 'Dashboard', 'href': url_for('main.dashboard')},
+        {'label': 'Send email', 'href': none}
+      ]
+    ) }}
+{% endblock %}
 {% block content %}
-  <h1>Send email</h1>
-  <p class="meta" style="max-width: 72ch;">
-    With real SMTP, messages go through your server’s settings. Admins enter their own Outlook mailbox credentials below and may send to <strong>any valid email address</strong>
-    (same idea as Gmail or Outlook). To lock recipients to MiNe users plus <code>MAIL_EXTRA_ALLOWLIST</code> only,
-    set <code>MAIL_OPEN_RECIPIENTS=0</code>. Only administrators can use this screen.
+  <p class="meta u-meta-narrow">
+    To lock recipients to MiNe users plus <code>MAIL_EXTRA_ALLOWLIST</code> only,
+    set <code>MAIL_OPEN_RECIPIENTS=0</code>.
   </p>
 
   {% if mail_ctx is defined and mail_ctx.mail_dummy and mail_ready %}
@@ -32,9 +42,9 @@
     </div>
     {% endif %}
     {% if mail_ctx is defined %}
-    <div class="card" style="margin-top: 12px; max-width: 640px;">
-      <p class="meta" style="margin: 0 0 8px;"><strong>Loaded SMTP settings</strong> (no secrets shown)</p>
-      <ul class="meta" style="margin: 0; padding-left: 1.2rem; line-height: 1.5;">
+    <div class="card card--narrow u-mt-12">
+      <p class="meta u-meta-spaced"><strong>Loaded SMTP settings</strong> (no secrets shown)</p>
+      <ul class="meta u-list-flush">
         <li>Host <code>{{ mail_ctx.smtp_server or "—" }}</code>, port <code>{{ mail_ctx.smtp_port }}</code></li>
         <li>Transport: {% if mail_ctx.smtp_ssl %}implicit TLS (SSL){% else %}plain SMTP{% if mail_ctx.smtp_starttls %} + STARTTLS{% endif %}{% endif %}</li>
         <li>SMTP username configured: {% if mail_ctx.smtp_auth %}yes{% else %}no{% endif %}</li>
@@ -43,9 +53,9 @@
       </ul>
     </div>
     {% endif %}
-    <div class="card" style="margin-top: 12px; max-width: 640px; border-left: 4px solid var(--hex-teal);">
-      <p class="meta" style="margin: 0 0 8px;"><strong>If the message does not arrive</strong></p>
-      <ul class="meta" style="margin: 0; padding-left: 1.2rem; line-height: 1.5;">
+    <div class="card card--callout u-mt-12">
+      <p class="meta u-meta-spaced"><strong>If the message does not arrive</strong></p>
+      <ul class="meta u-list-flush">
         <li>Check <strong>Junk / Spam</strong> — new senders are often filtered.</li>
         <li>Green “Message sent” only means the <strong>SMTP server accepted</strong> the message; delivery still depends on your org’s mail rules (SPF/DKIM, relay limits).</li>
         <li>Unless <code>MAIL_OPEN_RECIPIENTS=0</code>, you can use any valid <strong>To</strong> address; with <code>0</code>, only <a href="{{ url_for('admin.users') }}">active users</a> plus <code>MAIL_EXTRA_ALLOWLIST</code>.</li>
@@ -54,38 +64,38 @@
     </div>
   {% endif %}
 
-  <div class="card" style="margin-top: 16px; max-width: 640px;">
+  <div class="card card--narrow u-mt-16">
     <form method="post" class="form">
       {{ form.hidden_tag() }}
       <label for="{{ form.smtp_username.id }}">{{ form.smtp_username.label.text }}</label>
       {{ form.smtp_username(placeholder="name@hexaware.com") }}
-      {% for e in form.smtp_username.errors %}<p class="meta" style="color: var(--color-danger);">{{ e }}</p>{% endfor %}
+      {% for e in form.smtp_username.errors %}<p class="meta meta--danger">{{ e }}</p>{% endfor %}
 
       <label for="{{ form.smtp_password.id }}">{{ form.smtp_password.label.text }}</label>
       {{ form.smtp_password(placeholder="Enter mailbox password or app password") }}
-      {% for e in form.smtp_password.errors %}<p class="meta" style="color: var(--color-danger);">{{ e }}</p>{% endfor %}
+      {% for e in form.smtp_password.errors %}<p class="meta meta--danger">{{ e }}</p>{% endfor %}
 
       <label for="{{ form.to_addresses.id }}">{{ form.to_addresses.label.text }}</label>
       {{ form.to_addresses(rows=3, placeholder="user1@company.com, user2@company.com") }}
       {% if form.to_addresses.description %}
         <p class="help">{{ form.to_addresses.description }}</p>
       {% endif %}
-      {% for e in form.to_addresses.errors %}<p class="meta" style="color: var(--color-danger);">{{ e }}</p>{% endfor %}
+      {% for e in form.to_addresses.errors %}<p class="meta meta--danger">{{ e }}</p>{% endfor %}
 
       <label for="{{ form.subject.id }}">{{ form.subject.label.text }}</label>
       {{ form.subject() }}
-      {% for e in form.subject.errors %}<p class="meta" style="color: var(--color-danger);">{{ e }}</p>{% endfor %}
+      {% for e in form.subject.errors %}<p class="meta meta--danger">{{ e }}</p>{% endfor %}
 
       <label for="{{ form.body.id }}">{{ form.body.label.text }}</label>
       {{ form.body(rows=12) }}
-      {% for e in form.body.errors %}<p class="meta" style="color: var(--color-danger);">{{ e }}</p>{% endfor %}
+      {% for e in form.body.errors %}<p class="meta meta--danger">{{ e }}</p>{% endfor %}
 
-      <div class="toolbar" style="margin-top: 14px;">
+      <div class="toolbar toolbar--gap u-mt-14">
         <button type="submit" class="btn btn-primary">Send message</button>
         <a class="btn btn-secondary" href="{{ url_for('admin.settings') }}">Back to security</a>
       </div>
       {% if not mail_ready %}
-        <p class="meta" style="margin-top: 10px; color: var(--color-danger);">
+        <p class="meta meta--danger u-mt-md">
           SMTP is not fully configured yet — you can still press Send; the server will explain what is missing.
         </p>
       {% endif %}
