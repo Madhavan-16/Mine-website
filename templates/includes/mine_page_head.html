@@ -13,7 +13,7 @@
      <a class="btn btn-primary" href="...">Action</a>
    {% endcall %}
 #}
-{% macro mine_page_head(title, lede=none, meta=none, breadcrumbs=none, class='') %}
+{% macro mine_page_head(title, lede=none, meta=none, breadcrumbs=none, class='', kicker=none) %}
   <div class="page-head mine-page-head{% if class %} {{ class }}{% endif %}">
     <div class="mine-page-head__copy">
       {% if breadcrumbs %}
@@ -28,6 +28,7 @@
         {% endfor %}
       </nav>
       {% endif %}
+      {% if kicker %}<p class="mine-section-kicker">{{ kicker }}</p>{% endif %}
       <h1 class="page-title">{{ title }}</h1>
       {% if lede %}<p class="page-lede">{{ lede }}</p>{% endif %}
       {% if meta %}

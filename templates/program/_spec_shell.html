@@ -10,3 +10,11 @@
     </article>
   </div>
 {% endblock %}
+{% block scripts_extra %}
+  {% if request.endpoint == 'reference.fmi_kyc' %}
+  <script src="{{ url_for('static', filename='vendor/gsap/gsap.min.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='vendor/gsap/ScrollTrigger.min.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/gsap-journey-kyc.js') }}?v=1" defer></script>
+  {% endif %}
+  {% block spec_scripts %}{% endblock %}
+{% endblock %}

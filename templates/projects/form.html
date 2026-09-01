@@ -1,19 +1,20 @@
 {% extends "base.html" %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}{% if mode == "create" %}Add program or project{% else %}Edit program or project{% endif %}{% endblock %}
 {% block page_header %}
-  <div class="page-head">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="{{ url_for('projects.project_list') }}">Programs &amp; projects</a>
-      <span class="breadcrumb-sep" aria-hidden="true">›</span>
-      <span>{% if mode == "create" %}Add{% else %}Edit{% endif %}</span>
-    </nav>
-    <h1 class="page-title page-title--plain">{% if mode == "create" %}Add a program or project{% else %}Edit program or project{% endif %}</h1>
-  </div>
+  {{ mine_page_head(
+      title=('Add a program or project' if mode == 'create' else 'Edit program or project'),
+      lede='Submissions go through the same moderation workflow as other content. Approved items appear in Programs & projects.',
+      kicker='Delivery portfolio',
+      breadcrumbs=[
+        {'label': 'Programs & projects', 'href': url_for('projects.project_list')},
+        {'label': 'Add' if mode == 'create' else 'Edit', 'href': none}
+      ]
+    ) }}
 {% endblock %}
 {% block content %}
   <p class="meta u-meta-lede">
-    Submissions go through the same <strong>moderation workflow</strong> as other content: save a draft, or
-    <strong>Submit for review</strong> so a moderator or admin can approve it. Approved items appear in
+    Save a draft, or <strong>Submit for review</strong> so a moderator or admin can approve it. Approved items appear in
     <a href="{{ url_for('projects.project_list') }}">Programs &amp; projects</a>.
   </p>
   <form method="post" class="form" enctype="multipart/form-data">

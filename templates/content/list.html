@@ -3,6 +3,7 @@
 {% from "includes/catalog_pagination.html" import catalog_pagination %}
 {% from "includes/empty_state.html" import empty_state %}
 {% from "includes/mine_page_head.html" import mine_page_head %}
+{% from "includes/skeleton.html" import mine_skeleton %}
 {% block title %}Content catalogue{% endblock %}
 {% block page_header %}{% endblock %}
 {% block content %}
@@ -23,7 +24,7 @@
     <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create content</a>
   {% endcall %}
 
-  <form method="get" class="catalog-toolbar mine-table-toolbar" action="{{ url_for('content.content_list') }}">
+  <form method="get" class="catalog-toolbar mine-table-toolbar" action="{{ url_for('content.content_list') }}" data-portal-stagger>
     <div class="catalog-toolbar__row mine-table-toolbar__controls">
       <div class="field catalog-toolbar__search">
         <label for="cat-q">Search</label>
@@ -76,6 +77,9 @@
   </form>
 
   {% if rows and rows|length > 0 %}
+    <div class="mine-skeleton-host" data-portal-stagger>
+      {{ mine_skeleton(rows=5, class='mine-skeleton--table') }}
+      <div data-skeleton-content>
     <div class="mine-table-wrap">
       <table class="mine-table catalog-table">
         <thead>
@@ -101,6 +105,8 @@
       </table>
     </div>
     {{ catalog_pagination('content.content_list', catalog) }}
+      </div>
+    </div>
   {% else %}
     {{ empty_state(
       'No content records match your filters',

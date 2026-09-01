@@ -137,6 +137,41 @@
       );
     }
 
+    /* Hero widget beat — fade + count tick */
+    var widgets = document.querySelectorAll(".dashboard-hero-widgets .dashboard-stat-widget");
+    if (widgets.length) {
+      g.fromTo(
+        widgets,
+        { opacity: 0, y: 16 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.55,
+          ease: "power2.out",
+          stagger: 0.08,
+          delay: 0.12,
+        }
+      );
+
+      widgets.forEach(function (widget) {
+        var valueEl = widget.querySelector(".dashboard-stat-value");
+        if (!valueEl) return;
+        var raw = (valueEl.textContent || "").replace(/,/g, "").trim();
+        var target = parseFloat(raw);
+        if (!isFinite(target) || target < 0) return;
+        var obj = { n: 0 };
+        g.to(obj, {
+          n: target,
+          duration: 0.9,
+          delay: 0.2,
+          ease: "power2.out",
+          onUpdate: function () {
+            valueEl.textContent = String(Math.round(obj.n));
+          },
+        });
+      });
+    }
+
     ST.refresh(true);
   }
 

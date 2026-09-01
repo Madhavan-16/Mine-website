@@ -2682,3 +2682,129 @@ body.landing-motif-modal-open {
     justify-content: center;
   }
 }
+
+/* ——— FCX-inspired hero entrance (landing only; one-shot choreography) ——— */
+@media (prefers-reduced-motion: no-preference) {
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-badge,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-brand,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-expand,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-tagline,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-actions,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-showcase__stage,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-motif-board {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0);
+  }
+
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-brand {
+    transform: translate3d(0, 28px, 0) scale(0.98);
+  }
+
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-badge,
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-brand,
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-expand,
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-tagline,
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-actions,
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-showcase__stage,
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-motif-board {
+    opacity: 1;
+    transform: none;
+    animation: landing-fcx-rise 0.72s var(--ease-out) both;
+  }
+
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-badge {
+    animation-delay: 40ms;
+  }
+
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-brand {
+    animation-delay: 120ms;
+    animation-duration: 0.85s;
+  }
+
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-expand {
+    animation-delay: 220ms;
+  }
+
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-tagline {
+    animation-delay: 300ms;
+  }
+
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-actions {
+    animation-delay: 380ms;
+  }
+
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-showcase__stage {
+    animation-delay: 220ms;
+    animation-duration: 0.9s;
+  }
+
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-motif-board {
+    animation-delay: 460ms;
+  }
+
+  .landing-hero--fresh .landing-hero-brand::after {
+    content: "";
+    display: block;
+    width: 3.5rem;
+    height: 3px;
+    margin-top: 0.65rem;
+    border-radius: var(--radius-full);
+    background: linear-gradient(90deg, var(--hex-copper), rgba(179, 119, 67, 0.15));
+    transform-origin: left center;
+  }
+
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-brand::after {
+    transform: scaleX(0);
+  }
+
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-brand::after {
+    animation: landing-fcx-rule 0.55s var(--ease-out) 0.35s both;
+  }
+}
+
+@keyframes landing-fcx-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes landing-fcx-rule {
+  from {
+    transform: scaleX(0);
+    opacity: 0.4;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+.landing-hero--fresh .landing-hero-effects::before {
+  background:
+    radial-gradient(ellipse 70% 60% at 12% 18%, rgba(255, 255, 255, 0.28), transparent 55%),
+    radial-gradient(ellipse 50% 45% at 88% 12%, rgba(179, 119, 67, 0.28), transparent 52%),
+    radial-gradient(ellipse 55% 50% at 70% 100%, rgba(0, 174, 240, 0.28), transparent 55%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero--fresh .landing-hero-brand::after {
+    transform: none !important;
+    animation: none !important;
+  }
+
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-badge,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-brand,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-expand,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-tagline,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-actions,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-showcase__stage,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-motif-board {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

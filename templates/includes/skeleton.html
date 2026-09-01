@@ -1,0 +1,15 @@
+{# Skeleton placeholder. Usage:
+   {% from "includes/skeleton.html" import mine_skeleton %}
+   {{ mine_skeleton(rows=4, class='mine-skeleton--table') }}
+#}
+{% macro mine_skeleton(rows=3, class='') %}
+<div class="mine-skeleton{% if class %} {{ class }}{% endif %}" aria-hidden="true">
+  {% for i in range(rows) %}
+  <div class="mine-skeleton__row">
+    <span class="mine-skeleton__block mine-skeleton__block--sm"></span>
+    <span class="mine-skeleton__block mine-skeleton__block--lg"></span>
+    <span class="mine-skeleton__block mine-skeleton__block--md"></span>
+  </div>
+  {% endfor %}
+</div>
+{% endmacro %}

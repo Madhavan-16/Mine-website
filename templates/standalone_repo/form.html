@@ -1,21 +1,21 @@
 {% extends "base.html" %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}{% if mode == "create" %}{{ repo_ui.create_h1 }}{% else %}{{ repo_ui.edit_h1 }}{% endif %}{% endblock %}
 {% block page_header %}
-  <div class="page-head">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="{{ url_for('reference.fmi_kyc') }}">Program map</a>
-      <span class="breadcrumb-sep" aria-hidden="true">›</span>
-      <a href="{{ url_for(repo_ui.list_endpoint) }}">{{ repo_ui.list_label }}</a>
-      <span class="breadcrumb-sep" aria-hidden="true">›</span>
-      <span>{% if mode == "create" %}Add{% else %}Edit{% endif %}</span>
-    </nav>
-    <h1 class="page-title page-title--plain">{% if mode == "create" %}{{ repo_ui.create_h1 }}{% else %}{{ repo_ui.edit_h1 }}{% endif %}</h1>
-  </div>
+  {{ mine_page_head(
+      title=(repo_ui.create_h1 if mode == 'create' else repo_ui.edit_h1),
+      lede='Submissions use the same moderation workflow as other catalogue content.',
+      kicker='Program map',
+      breadcrumbs=[
+        {'label': 'Program map', 'href': url_for('reference.fmi_kyc')},
+        {'label': repo_ui.list_label, 'href': url_for(repo_ui.list_endpoint)},
+        {'label': 'Add' if mode == 'create' else 'Edit', 'href': none}
+      ]
+    ) }}
 {% endblock %}
 {% block content %}
   <p class="meta u-meta-lede">
-    Submissions use the same <strong>moderation workflow</strong> as other catalogue content: save a draft, or
-    <strong>Submit for review</strong> so a moderator or admin can approve it. For KYC, KYA, newsletters, case studies, and other
+    Save a draft, or <strong>Submit for review</strong> so a moderator or admin can approve it. For KYC, KYA, newsletters, case studies, and other
     <strong>knowledge series</strong>, use
     <a href="{{ url_for('content.content_create') }}">Create knowledge content</a>.
   </p>

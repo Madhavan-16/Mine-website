@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}{{ row.title }}{% endblock %}
 {% set knowledge_module_labels = {
   'kyc': 'KYC series',
@@ -14,45 +15,51 @@
 {% endblock %}
 {% block page_header %}
   {% if not is_knowledge|default(false) %}
-  <div class="page-head">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      {% if row.module == 'projects' %}
-        <a href="{{ url_for('projects.project_list') }}">Programs</a>
-      {% elif row.module == 'onboarding' %}
-        <a href="{{ url_for('reference.fmi_kyc') }}">Program map</a>
-        <span class="breadcrumb-sep" aria-hidden="true">›</span>
-        <a href="{{ url_for('main.onboarding') }}">Onboarding kit</a>
-      {% elif row.module == 'innovation' %}
-        <a href="{{ url_for('reference.fmi_kyc') }}">Program map</a>
-        <span class="breadcrumb-sep" aria-hidden="true">›</span>
-        <a href="{{ url_for('main.innovation') }}">Innovation center</a>
-      {% elif row.module == 'training' %}
-        <a href="{{ url_for('reference.fmi_kyc') }}">Program map</a>
-        <span class="breadcrumb-sep" aria-hidden="true">›</span>
-        <a href="{{ url_for('main.training') }}">Training corner</a>
-      {% elif row.module == 'hall_of_fame' %}
-        <a href="{{ url_for('reference.fmi_kyc') }}">Program map</a>
-        <span class="breadcrumb-sep" aria-hidden="true">›</span>
-        <a href="{{ url_for('main.hall_of_fame') }}">Hall of Fame</a>
-      {% elif row.module in knowledge_module_labels %}
-        <a href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
-        <span class="breadcrumb-sep" aria-hidden="true">›</span>
-        <a href="{{ return_to or url_for('main.knowledge', module=row.module) }}">{{ knowledge_module_labels[row.module] }}</a>
-      {% else %}
-        <a href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
-        <span class="breadcrumb-sep" aria-hidden="true">›</span>
-        <span>{{ row.module }}</span>
-      {% endif %}
-      <span class="breadcrumb-sep" aria-hidden="true">›</span>
-      <span>{{ row.title }}</span>
-    </nav>
-    {% if row.module in knowledge_module_labels %}
-      <p class="content-view-back">
-        <a href="{{ return_to or url_for('main.knowledge', module=row.module) }}" class="content-view-back__link">← Back to {{ knowledge_module_labels[row.module] }}</a>
-      </p>
-    {% endif %}
-    <h1 class="page-title page-title--plain">{{ row.title }}</h1>
-  </div>
+  {% set crumbs = [] %}
+  {% if row.module == 'projects' %}
+    {% set crumbs = [{'label': 'Programs', 'href': url_for('projects.project_list')}, {'label': row.title, 'href': none}] %}
+  {% elif row.module == 'onboarding' %}
+    {% set crumbs = [
+      {'label': 'Program map', 'href': url_for('reference.fmi_kyc')},
+      {'label': 'Onboarding kit', 'href': url_for('main.onboarding')},
+      {'label': row.title, 'href': none}
+    ] %}
+  {% elif row.module == 'innovation' %}
+    {% set crumbs = [
+      {'label': 'Program map', 'href': url_for('reference.fmi_kyc')},
+      {'label': 'Innovation center', 'href': url_for('main.innovation')},
+      {'label': row.title, 'href': none}
+    ] %}
+  {% elif row.module == 'training' %}
+    {% set crumbs = [
+      {'label': 'Program map', 'href': url_for('reference.fmi_kyc')},
+      {'label': 'Training corner', 'href': url_for('main.training')},
+      {'label': row.title, 'href': none}
+    ] %}
+  {% elif row.module == 'hall_of_fame' %}
+    {% set crumbs = [
+      {'label': 'Program map', 'href': url_for('reference.fmi_kyc')},
+      {'label': 'Hall of Fame', 'href': url_for('main.hall_of_fame')},
+      {'label': row.title, 'href': none}
+    ] %}
+  {% elif row.module in knowledge_module_labels %}
+    {% set crumbs = [
+      {'label': 'Knowledge repository', 'href': url_for('main.knowledge')},
+      {'label': knowledge_module_labels[row.module], 'href': return_to or url_for('main.knowledge', module=row.module)},
+      {'label': row.title, 'href': none}
+    ] %}
+  {% else %}
+    {% set crumbs = [
+      {'label': 'Knowledge repository', 'href': url_for('main.knowledge')},
+      {'label': row.module, 'href': none},
+      {'label': row.title, 'href': none}
+    ] %}
+  {% endif %}
+  {{ mine_page_head(
+      title=row.title,
+      kicker=knowledge_module_labels.get(row.module) if row.module in knowledge_module_labels else row.module,
+      breadcrumbs=crumbs
+    ) }}
   {% endif %}
 {% endblock %}
 {% block content %}

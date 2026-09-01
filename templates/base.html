@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}MiNe{% endblock %} · Mining Intelligence and Knowledge Enablement</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=portal-ui-23" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=portal-ui-25" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/content-cards.css') }}" />
     {% if current_user and (request.endpoint or '') not in ('main.landing', 'main.welcome') %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/portal-list.css') }}" />
@@ -88,7 +88,7 @@
           <img
             class="brand-lockup__fmi-logo"
             src="{{ url_for('static', filename='img/fmi-logo.svg') }}?v=1"
-            alt=""
+            alt="Freeport-McMoRan"
             width="72"
             height="52"
             decoding="async"
@@ -378,8 +378,10 @@
     {% if not current_user and not _is_landing and not _is_auth_page %}
     <script src="{{ url_for('static', filename='js/ambient-network.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/site-motion.bundle.js') }}" defer></script>
-    {% elif _ep == 'main.dashboard' %}
-    {# Dashboard keeps page-local GSAP scripts; no global AOS/ambient stack. #}
+    {% elif current_user and not _is_landing and not _is_auth_page %}
+    {# Quiet portal micro-motion only — no ambient canvas revive. #}
+    <script src="{{ url_for('static', filename='js/portal-motion.js') }}?v=1" defer></script>
+    <script src="{{ url_for('static', filename='js/panel-crossfade.js') }}?v=1" defer></script>
     {% endif %}
     {% block scripts_extra %}{% endblock %}
     <script src="{{ url_for('static', filename='js/navbar.js') }}?v=portal-offset-3" defer></script>

@@ -7,6 +7,8 @@
 @import url("ui-polish.css");
 @import url("mine-table.css");
 @import url("mine-icons.css");
+@import url("portal-motion.css");
+@import url("mine-skeleton.css");
 
 *,
 *::before,
@@ -41,8 +43,53 @@ body {
 
   ::view-transition-old(root),
   ::view-transition-new(root) {
-    animation-duration: 180ms;
+    animation-duration: 220ms;
     animation-timing-function: var(--ease-out);
+  }
+
+  /* Softer portal page morph — keep chrome stable, animate main */
+  body.layout-portal #main {
+    view-transition-name: mine-main;
+  }
+
+  body.layout-portal .brand-block,
+  body.layout-portal .topbar,
+  body.layout-portal .sidebar,
+  body.layout-portal .portal-nav-bar {
+    view-transition-name: none;
+  }
+
+  ::view-transition-old(mine-main) {
+    animation: mine-vt-out 200ms var(--ease-standard) both;
+  }
+
+  ::view-transition-new(mine-main) {
+    animation: mine-vt-in 240ms var(--ease-out) both;
+  }
+}
+
+@keyframes mine-vt-out {
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes mine-vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @supports (view-transition-name: none) {
+    ::view-transition-old(root),
+    ::view-transition-new(root),
+    ::view-transition-old(mine-main),
+    ::view-transition-new(mine-main) {
+      animation: none !important;
+    }
   }
 }
 
@@ -287,6 +334,8 @@ h3 {
 }
 
 .brand-lockup__hexaware {
+  display: inline-flex;
+  align-items: center;
   font-family: "Inter", "Segoe UI", system-ui, sans-serif;
   font-weight: 800;
   font-style: italic;
@@ -296,6 +345,14 @@ h3 {
   color: #5240ef;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.brand-lockup__hexaware-logo {
+  display: block;
+  height: 18px;
+  width: auto;
+  max-height: 20px;
+  object-fit: contain;
 }
 
 .brand-lockup__divider {
@@ -350,6 +407,13 @@ h3 {
 .layout-public .brand-lockup__hexaware {
   font-size: 18px;
   color: #5240ef;
+}
+
+.layout-portal .brand-lockup__hexaware-logo,
+.layout-reference .brand-lockup__hexaware-logo,
+.layout-public .brand-lockup__hexaware-logo {
+  height: 19px;
+  max-height: 22px;
 }
 
 .layout-portal .brand-lockup__divider,
@@ -667,6 +731,11 @@ h3 {
 
 .layout-landing .brand-lockup__hexaware {
   font-size: 19px;
+}
+
+.layout-landing .brand-lockup__hexaware-logo {
+  height: 20px;
+  max-height: 24px;
 }
 
 .layout-landing .brand-lockup__fmi {

@@ -1,20 +1,23 @@
 {% extends "base.html" %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}Freeport–Hexaware Journey{% endblock %}
 {% block page_header %}
-  <div class="page-head">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="{{ url_for('main.dashboard') if current_user else url_for('main.landing') }}">Home</a>
-      <span class="breadcrumb-sep" aria-hidden="true">›</span>
-      <span>Freeport–Hexaware Journey</span>
-    </nav>
-    <h1 class="page-title">Freeport – Hexaware Journey</h1>
-  </div>
+  {{ mine_page_head(
+      title='Freeport – Hexaware Journey',
+      lede='From sulfur origins to copper-scale digital partnership — the story and technology path behind MiNe.',
+      kicker='Partnership story',
+      meta=['Freeport–Hexaware', 'Timeline'],
+      breadcrumbs=[
+        {'label': 'Home', 'href': url_for('main.dashboard') if current_user else url_for('main.landing')},
+        {'label': 'Journey', 'href': none}
+      ]
+    ) }}
 {% endblock %}
 {% block content %}
   <div class="journey-page">
   {% include "includes/back_program_map.html" %}
 
-  <section class="card journey-digital" aria-labelledby="freeport-story-h2">
+  <section class="card journey-digital" aria-labelledby="freeport-story-h2" data-portal-stagger>
     <h2 id="freeport-story-h2">3.1 The Freeport story — from sulfur to copper superpower</h2>
     <p class="journey-digital__lede">
       Freeport-McMoRan is one of the world’s largest copper producers with global mining operations. The timeline below traces
@@ -38,7 +41,7 @@
     </figure>
   </section>
 
-  <section class="card journey-digital journey-section-spaced" aria-labelledby="partnership-milestones-heading">
+  <section class="card journey-digital journey-section-spaced" aria-labelledby="partnership-milestones-heading" data-portal-stagger>
     <h2 id="partnership-milestones-heading">Freeport–Hexaware partnership milestones</h2>
     <figure class="journey-digital__figure" role="group" aria-label="Freeport–Hexaware partnership milestones, eighteen-year digital evolution timeline">
       <img
@@ -53,7 +56,7 @@
     </figure>
   </section>
 
-  <section class="card journey-digital journey-section-spaced" aria-labelledby="journey-digital-h2">
+  <section class="card journey-digital journey-section-spaced" aria-labelledby="journey-digital-h2" data-portal-stagger>
     <h2 id="journey-digital-h2">From data silos to predictive operations</h2>
     <p class="journey-digital__lede">
       Technology path from legacy reporting and lakes to Snowflake on Azure, massive fleet IoT scaling, and analytics that show up in throughput, cost, and safety metrics.
@@ -77,7 +80,7 @@
     </figure>
   </section>
 
-  <div class="card journey-digital journey-section-spaced">
+  <div class="card journey-digital journey-section-spaced" data-portal-stagger>
     <h2 class="visually-hidden">Strategic context for delivery teams</h2>
     <figure class="journey-digital__figure">
       <img
@@ -104,5 +107,8 @@
     </div>
   </div>
   </div>
+  <script src="{{ url_for('static', filename='vendor/gsap/gsap.min.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='vendor/gsap/ScrollTrigger.min.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/gsap-journey-kyc.js') }}?v=1" defer></script>
   <script src="{{ url_for('static', filename='js/infographic-zoom.js') }}?v=4" defer></script>
 {% endblock %}

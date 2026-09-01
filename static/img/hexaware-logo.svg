@@ -1,0 +1,16 @@
+/**
+ * Hexaware wordmark  purple italic lockup aligned with navbar brand color.
+ * Pair with FMI mark in brand-lockup; replace with official SVG when brand kit provides one.
+ */
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 148 28" role="img" aria-label="Hexaware">
+  <text
+    x="0"
+    y="21"
+    fill="#5240ef"
+    font-family="Inter, Segoe UI, Arial, sans-serif"
+    font-size="18"
+    font-weight="800"
+    font-style="italic"
+    letter-spacing="0.9"
+  >HEXAWARE</text>
+</svg>

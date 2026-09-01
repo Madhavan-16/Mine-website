@@ -2,9 +2,10 @@
 {% from "includes/catalog_pagination.html" import catalog_pagination %}
 {% from "includes/mine_icon.html" import mine_icon %}
 {% from "includes/empty_state.html" import empty_state %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}Knowledge Repository{% endblock %}
 {% block head_extra %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/knowledge-repo.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/knowledge-repo.css') }}?v=krepo-chrome-3" />
 {% if landing %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/enterprise-search-xp.css') }}" />
 {% endif %}
@@ -20,91 +21,66 @@
   'rfp_snippet': 'edit',
   'blog': 'document'
 } %}
+{% set krepo_title = 'Knowledge repository' if landing else (active_module_label if module else ('Search results' if q else ('By ' ~ author if author else 'Knowledge catalogue'))) %}
+{% set krepo_lede = 'Browse approved Freeport account knowledge by series, then open the items you need.' if landing else 'Filtered catalogue results with search, module, and author controls.' %}
 
 <div class="krepo{% if not landing %} krepo--list{% endif %}">
-  <header class="krepo-hero">
-    <div class="krepo-hero__copy">
-      <nav class="krepo-breadcrumb" aria-label="Breadcrumb">
-        <a href="{{ url_for('main.knowledge') if is_guest else url_for('main.dashboard') }}">Home</a>
-        <span class="krepo-breadcrumb__sep" aria-hidden="true">›</span>
-        {% if landing %}
-          <span aria-current="page">Knowledge repository</span>
-        {% else %}
-          <a href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
-          <span class="krepo-breadcrumb__sep" aria-hidden="true">›</span>
-          <span aria-current="page">
-            {% if module %}{{ active_module_label }}{% elif q %}Search{% elif author %}Author{% else %}Catalogue{% endif %}
-          </span>
-        {% endif %}
-      </nav>
-      <span class="krepo-eyebrow">{% if landing %}Approved catalogue{% else %}Filtered catalogue{% endif %}</span>
-      <h1 class="krepo-hero__title">
-        {% if landing %}
-          Knowledge repository
-        {% elif module %}
-          {{ active_module_label }}
-        {% elif q %}
-          Search results
-        {% elif author %}
-          By {{ author }}
-        {% else %}
-          Knowledge catalogue
-        {% endif %}
-      </h1>
-      <p class="page-lede krepo-lede">
-        {% if landing %}
-          Browse approved Freeport account knowledge by series, then open the items you need.
-        {% else %}
-          Filtered catalogue results with search, module, and author controls.
-        {% endif %}
-      </p>
-      <div class="mine-page-head__meta" aria-label="Catalogue context">
-        <span>{{ catalog.total }} items</span>
-        <span class="mine-page-head__meta-sep" aria-hidden="true">·</span>
-        <span>{% if landing %}Overview{% elif module %}{{ active_module_label }}{% else %}Filtered{% endif %}</span>
-      </div>
-    </div>
-    <div class="krepo-hero__aside">
-      <div class="krepo-stat" role="status">
-        <span class="krepo-stat__value">{{ catalog.total }}</span>
-        <span class="krepo-stat__label">{% if landing %}Total items{% else %}Matching{% endif %}</span>
-      </div>
-      {% if current_user and not is_guest %}
-        <a class="btn btn-primary" href="{{ url_for('content.content_create', module=module) if module else url_for('content.content_create') }}">+ Create content</a>
-      {% endif %}
-      {% if not landing %}
-        <a class="btn btn-secondary" href="{{ url_for('main.knowledge') }}">← Overview</a>
-      {% endif %}
-    </div>
-  </header>
+  {% call mine_page_head(
+      title=krepo_title,
+      lede=krepo_lede,
+      kicker='Approved catalogue' if landing else 'Filtered catalogue',
+      meta=[
+        catalog.total ~ ' items',
+        'Overview' if landing else (active_module_label if module else 'Filtered')
+      ],
+      breadcrumbs=[
+        {'label': 'Home', 'href': url_for('main.knowledge') if is_guest else url_for('main.dashboard')},
+        {'label': 'Knowledge repository', 'href': none if landing else url_for('main.knowledge')},
+      ] + ([] if landing else [{'label': (active_module_label if module else ('Search' if q else ('Author' if author else 'Catalogue'))), 'href': none}]),
+      class='portal-page-head'
+    ) %}
+    {% if current_user and not is_guest %}
+      <a class="btn btn-primary" href="{{ url_for('content.content_create', module=module) if module else url_for('content.content_create') }}">+ Create content</a>
+    {% endif %}
+    {% if not landing %}
+      <a class="btn btn-secondary" href="{{ url_for('main.knowledge') }}">← Overview</a>
+    {% endif %}
+  {% endcall %}
 
   {% if landing %}
-  <section class="krepo-section" aria-labelledby="krepo-categories-title">
+  <section class="krepo-section" aria-labelledby="krepo-categories-title" data-portal-stagger>
     <div class="krepo-section__head">
-      <h2 id="krepo-categories-title" class="krepo-section__title">Browse by series</h2>
+      <div>
+        <p class="mine-section-kicker">Catalogue</p>
+        <h2 id="krepo-categories-title" class="krepo-section__title">Browse by series</h2>
+      </div>
       <p class="krepo-section__hint">Jump into a curated module</p>
     </div>
-    <ul class="krepo-cat-grid" role="list">
-      {% for key, label in modules_meta %}
-        <li>
-          <a class="krepo-cat surface-interactive" href="{{ url_for('main.knowledge', module=key) }}" data-module="{{ key }}">
-            <span class="krepo-cat__icon mine-icon-tile" aria-hidden="true">{{ mine_icon(module_icons.get(key, 'folder'), 20) }}</span>
-            <span class="krepo-cat__body">
-              <span class="krepo-cat__name">{{ label }}</span>
-              <span class="krepo-cat__count">{{ module_counts.get(key, 0) }} items</span>
-            </span>
-          </a>
-        </li>
-      {% endfor %}
-    </ul>
+    <div class="mine-skeleton-host">
+      {% from "includes/skeleton.html" import mine_skeleton %}
+      {{ mine_skeleton(rows=4, class='mine-skeleton--cards') }}
+      <ul class="krepo-cat-grid" role="list" data-skeleton-content>
+        {% for key, label in modules_meta %}
+          <li>
+            <a class="krepo-cat surface-interactive" href="{{ url_for('main.knowledge', module=key) }}" data-module="{{ key }}">
+              <span class="krepo-cat__icon mine-icon-tile" aria-hidden="true">{{ mine_icon(module_icons.get(key, 'folder'), 20) }}</span>
+              <span class="krepo-cat__body">
+                <span class="krepo-cat__name">{{ label }}</span>
+                <span class="krepo-cat__count">{{ module_counts.get(key, 0) }} items</span>
+              </span>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
   </section>
 
-  <section class="krepo-section krepo-intelligence" aria-label="MiNe intelligence search">
+  <section class="krepo-section krepo-intelligence" aria-label="MiNe intelligence search" data-portal-stagger>
     {% include "includes/enterprise_search_xp.html" %}
   </section>
   <script src="{{ url_for('static', filename='js/enterprise-search-xp.js') }}" defer></script>
   {% else %}
-  <nav class="krepo-series-strip" aria-label="Knowledge series">
+  <nav class="krepo-series-strip" aria-label="Knowledge series" data-portal-stagger>
     <span class="krepo-series-strip__label">Series</span>
     <ul class="krepo-series-strip__list" role="list">
       <li>
@@ -122,6 +98,7 @@
   <section class="krepo-catalog" aria-labelledby="krepo-catalog-title">
     <div class="krepo-section__head krepo-catalog__head">
       <div>
+        <p class="mine-section-kicker">Catalogue</p>
         <h2 id="krepo-catalog-title" class="krepo-section__title">{% if landing %}Full catalogue{% else %}Results{% endif %}</h2>
         <p class="krepo-section__hint">Indexed search · sortable · paginated</p>
       </div>

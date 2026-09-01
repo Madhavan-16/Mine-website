@@ -1,23 +1,22 @@
 {% extends "base.html" %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}{{ row.title }}{% endblock %}
 {% block page_header %}
-  <div class="page-head">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="{{ url_for('projects.project_list') }}">Programs</a>
-      <span class="breadcrumb-sep" aria-hidden="true">›</span>
-      <span>{{ row.title }}</span>
-    </nav>
-    <div class="project-title-row">
-      <div>
-        <h1 class="page-title page-title--plain">{{ row.title }}</h1>
-        <p class="meta project-detail-meta">Program: {{ row.program_name or "—" }}</p>
-      </div>
-      <span class="status-pill">
-        <span class="status-dot {{ status_class }}" aria-hidden="true"></span>
-        {{ row.delivery_status or "Status not set" }}
-      </span>
-    </div>
-  </div>
+  {% call mine_page_head(
+      title=row.title,
+      lede='Program: ' ~ (row.program_name or '—'),
+      kicker='Engagement',
+      meta=[row.delivery_status or 'Status not set'],
+      breadcrumbs=[
+        {'label': 'Programs', 'href': url_for('projects.project_list')},
+        {'label': row.title, 'href': none}
+      ]
+    ) %}
+    <span class="status-pill">
+      <span class="status-dot {{ status_class }}" aria-hidden="true"></span>
+      {{ row.delivery_status or "Status not set" }}
+    </span>
+  {% endcall %}
 {% endblock %}
 {% block content %}
   <div class="toolbar u-mb-md">

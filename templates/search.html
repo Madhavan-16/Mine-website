@@ -1,29 +1,30 @@
 {% extends "base.html" %}
 {% from "includes/empty_state.html" import empty_state %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
+{% from "includes/skeleton.html" import mine_skeleton %}
 
 {% block title %}Search{% endblock %}
 
 {% block head_extra %}
-
-<link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}" />
-
+<link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}?v=search-chrome-3" />
 {% endblock %}
 
+{% block page_header %}{% endblock %}
 {% block content %}
-
 <div class="search-page">
+  {{ mine_page_head(
+      title='Search MiNe',
+      lede='Find knowledge, sections, and tags across the governed Freeport catalogue.',
+      kicker='Universal catalogue search',
+      meta=['Universal catalogue search', (rows|length ~ ' results') if q else 'Ready'],
+      breadcrumbs=[
+        {'label': 'Dashboard', 'href': url_for('main.dashboard')},
+        {'label': 'Search', 'href': none}
+      ],
+      class='portal-page-head'
+    ) }}
 
-  <header class="search-page__hero">
-
-    <span class="search-page__eyebrow">Universal catalogue search</span>
-
-    <h1 class="search-page__title">Search MiNe</h1>
-
-  </header>
-
-
-
-  <form method="get" class="search-page__form" action="{{ url_for('search.search') }}" role="search">
+  <form method="get" class="search-page__form" action="{{ url_for('search.search') }}" role="search" data-portal-stagger>
 
     <div class="search-page__bar">
 
@@ -106,7 +107,9 @@
 
   {% else %}
 
-    <section class="search-page__results" aria-label="Search results">
+    <section class="search-page__results mine-skeleton-host" aria-label="Search results" data-portal-stagger>
+      {{ mine_skeleton(rows=4, class='mine-skeleton--table') }}
+      <div data-skeleton-content>
 
       <p class="search-page__count">
 
@@ -227,6 +230,7 @@
 
       {% endif %}
 
+      </div>
     </section>
 
   {% endif %}
