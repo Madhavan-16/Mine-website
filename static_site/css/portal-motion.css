@@ -1,0 +1,98 @@
+/**
+ * Portal micro-motion — page enter, section stagger, table focus.
+ * Loaded only on layout-portal. No ambient revive.
+ */
+
+@media (prefers-reduced-motion: no-preference) {
+  html.portal-motion-prep body.layout-portal #main {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  html.portal-motion-prep body.layout-portal #main .mine-page-head,
+  html.portal-motion-prep body.layout-portal #main .page-head {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  html.portal-motion-prep body.layout-portal [data-portal-stagger] {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  html.portal-motion-ready body.layout-portal #main {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--duration-slow) var(--ease-standard),
+      transform var(--duration-slow) var(--ease-standard);
+  }
+
+  html.portal-motion-ready body.layout-portal #main .mine-page-head,
+  html.portal-motion-ready body.layout-portal #main .page-head {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--duration-slow) var(--ease-standard),
+      transform var(--duration-slow) var(--ease-standard);
+  }
+
+  html.portal-motion-ready body.layout-portal [data-portal-stagger].is-portal-staggered {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--duration-expand) var(--ease-out),
+      transform var(--duration-expand) var(--ease-out);
+    transition-delay: calc(var(--portal-stagger-i, 0) * 55ms + 80ms);
+  }
+
+  body.layout-portal .mine-table tbody tr {
+    transition:
+      background-color var(--transition-ui),
+      box-shadow var(--transition-ui),
+      outline-color var(--transition-ui);
+  }
+
+  body.layout-portal .mine-table tbody tr.is-focus-row,
+  body.layout-portal .mine-table tbody tr.is-selected {
+    background: color-mix(in srgb, var(--hex-blue-light) 72%, white);
+    box-shadow: inset 3px 0 0 var(--hex-copper);
+  }
+
+  body.layout-portal .mine-table tbody tr:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--hex-blue) 55%, transparent);
+    outline-offset: -2px;
+  }
+}
+
+/* Panel / tab crossfade */
+@media (prefers-reduced-motion: no-preference) {
+  .is-panel-crossfade {
+    animation: mine-panel-crossfade 220ms var(--ease-out);
+  }
+}
+
+@keyframes mine-panel-crossfade {
+  from {
+    opacity: 0.35;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.portal-motion-prep body.layout-portal #main,
+  html.portal-motion-prep body.layout-portal #main .mine-page-head,
+  html.portal-motion-prep body.layout-portal #main .page-head,
+  html.portal-motion-prep body.layout-portal [data-portal-stagger] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .is-panel-crossfade {
+    animation: none !important;
+  }
+}

@@ -1,4 +1,4 @@
-{# Knowledge-series content view — professional layout with sections + catalogue pagination #}
+{# Knowledge-series content view — sections + catalogue pagination (page chrome via mine_page_head) #}
 {% from "includes/status_badge.html" import status_badge %}
 {% set series_label = knowledge_module_labels[row.module] %}
 {% set is_case_study = row.module == 'case_study' %}
@@ -11,7 +11,7 @@
 {% set can_moderate = current_user and current_user.role in ['admin', 'moderator'] and item_status == 'pending' %}
 {% set gov_return = url_for('admin.moderation') %}
 
-<article class="kview" data-section="{{ section }}">
+<article class="kview" data-section="{{ section }}" data-portal-stagger>
   {% if can_moderate %}
   <section class="kview-modbar" aria-label="Moderation actions">
     <div class="kview-modbar__copy">
@@ -30,57 +30,12 @@
   </section>
   {% endif %}
 
-  <header class="kview-hero">
-    <div class="kview-hero__main">
-      <nav class="kview-breadcrumb" aria-label="Breadcrumb">
-        <a href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
-        <span class="kview-breadcrumb__sep" aria-hidden="true">›</span>
-        <a href="{{ series_href }}">{{ series_label }}</a>
-        <span class="kview-breadcrumb__sep" aria-hidden="true">›</span>
-        <span aria-current="page">{{ row.title }}</span>
-      </nav>
-      <div class="kview-hero__badges">
-        <span class="kview-badge" data-module="{{ row.module }}">{{ module_label(row.module) }}</span>
-        {% if item_status and item_status != 'approved' %}
-          {{ status_badge(item_status) }}
-        {% endif %}
-        {% if item_status == 'approved' and series_total > 0 and series_position > 0 %}
-          <span class="kview-badge kview-badge--muted">{{ series_position }} of {{ series_total }} in series</span>
-        {% endif %}
-      </div>
-      <h1 class="kview-hero__title">{{ row.title }}</h1>
-      <p class="kview-hero__meta">
-        <span>{{ row.author_name }}</span>
-        <span class="kview-hero__sep" aria-hidden="true">·</span>
-        <time datetime="{{ row.updated_at }}">Updated {{ row.updated_at }}</time>
-      </p>
-    </div>
-    <div class="kview-hero__aside">
-      <a class="btn btn-secondary kview-hero__back" href="{{ series_href }}">← {{ series_label }}</a>
-      {% set item_status_l = (row.status or '')|lower %}
-      {% set can_edit_knowledge = current_user and not is_guest and (
-           current_user.role == 'admin'
-           or (current_user.id == row.author_id and item_status_l in ['draft', 'rejected'])
-         ) %}
-      {% set can_delete_knowledge = current_user and not is_guest and (
-           current_user.role == 'admin'
-           or (current_user.id == row.author_id and item_status_l in ['draft', 'rejected'])
-         ) %}
-      {% if can_edit_knowledge or can_delete_knowledge %}
-        <div class="kview-hero__admin">
-          {% if can_edit_knowledge %}
-            <a class="btn btn-secondary" href="{{ url_for('content.content_edit', cid=row.id) }}">Edit knowledge content</a>
-          {% endif %}
-          {% if can_delete_knowledge %}
-            <form method="post" action="{{ url_for('content.content_delete', cid=row.id) }}" onsubmit="return confirm('Delete this content permanently?');">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-              <button type="submit" class="btn btn-secondary kview-btn-danger">Delete</button>
-            </form>
-          {% endif %}
-        </div>
-      {% endif %}
-    </div>
-  </header>
+  <div class="kview-context" aria-label="Item context">
+    <span class="kview-badge" data-module="{{ row.module }}">{{ module_label(row.module) }}</span>
+    {% if item_status and item_status != 'approved' %}
+      {{ status_badge(item_status) }}
+    {% endif %}
+  </div>
 
   <nav class="kview-tabs" aria-label="Content sections">
     <ul class="kview-tabs__list" role="list">

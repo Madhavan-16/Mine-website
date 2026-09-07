@@ -1067,9 +1067,9 @@
   border: 2px solid transparent;
 }
 
-.tabs-radios #ob-tab-dos:checked ~ .tab-labels label[for="ob-tab-dos"],
-.tabs-radios #ob-tab-tools:checked ~ .tab-labels label[for="ob-tab-tools"],
-.tabs-radios #ob-tab-who:checked ~ .tab-labels label[for="ob-tab-who"] {
+.tabs-radios:not(.ob-tabs) #ob-tab-dos:checked ~ .tab-labels label[for="ob-tab-dos"],
+.tabs-radios:not(.ob-tabs) #ob-tab-tools:checked ~ .tab-labels label[for="ob-tab-tools"],
+.tabs-radios:not(.ob-tabs) #ob-tab-master:checked ~ .tab-labels label[for="ob-tab-master"] {
   color: var(--hex-blue-dark);
   background: var(--hex-white);
   border-color: var(--hex-grey-200);
@@ -1083,7 +1083,7 @@
 
 .tabs-radios #ob-tab-dos:checked ~ .tab-panels .tab-panel--dos,
 .tabs-radios #ob-tab-tools:checked ~ .tab-panels .tab-panel--tools,
-.tabs-radios #ob-tab-who:checked ~ .tab-panels .tab-panel--who {
+.tabs-radios #ob-tab-master:checked ~ .tab-panels .tab-panel--master {
   display: block;
 }
 
@@ -1136,48 +1136,6 @@
   font-weight: 600;
 }
 
-.who-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.who-card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 14px;
-}
-
-.who-card {
-  border: 1px solid var(--hex-grey-200);
-  border-radius: var(--radius-lg);
-  padding: 16px 12px;
-  text-align: center;
-  background: var(--hex-grey-50);
-}
-
-.who-card .avatar {
-  width: 48px;
-  height: 48px;
-  margin: 0 auto 10px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--hex-blue), var(--hex-teal));
-  opacity: 0.9;
-}
-
-.who-card .name {
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.who-card .meta {
-  font-size: 12px;
-  color: var(--hex-grey-500);
-  margin-top: 6px;
-  line-height: 1.4;
-}
-
 /* ——— Innovation summary cards ——— */
 .innov-stats {
   display: grid;
@@ -1197,17 +1155,16 @@
 }
 
 .innov-stat-card .icon {
-  font-size: 24px;
-  line-height: 1;
+  flex-shrink: 0;
 }
 
 .innov-stat-card .label {
   font-weight: 600;
-  font-size: 15px;
+  font-size: var(--text-md);
 }
 
 .innov-stat-card .count {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--hex-grey-500);
 }
 
@@ -1221,13 +1178,30 @@
 
 .innov-card h3 {
   margin: 0 0 6px;
-  font-size: 17px;
+  font-size: var(--text-xl);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.innov-card__icon {
+  flex-shrink: 0;
 }
 
 .innov-card .sub {
-  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
   color: var(--hex-grey-500);
   margin-bottom: 8px;
+}
+
+.innov-card__tag-icon {
+  display: inline-flex;
+  color: var(--hex-copper);
+  opacity: 0.85;
 }
 
 .innov-card .impact {

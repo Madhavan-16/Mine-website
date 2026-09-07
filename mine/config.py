@@ -169,3 +169,6 @@ class Config:
     # Defaults: Groq llama-3.1-8b-instant · Gemini gemini-2.0-flash
     CHATBOT_LLM_MODEL = (os.environ.get("CHATBOT_LLM_MODEL") or "").strip()
     CHATBOT_LLM_TIMEOUT = float(os.environ.get("CHATBOT_LLM_TIMEOUT", "60") or 60)
+    # TLS for Groq/Gemini (corporate MITM): 1=verify, 0=skip; or set CHATBOT_SSL_CA_BUNDLE
+    CHATBOT_SSL_VERIFY = (os.environ.get("CHATBOT_SSL_VERIFY") or "1").strip()
+    CHATBOT_SSL_CA_BUNDLE = (os.environ.get("CHATBOT_SSL_CA_BUNDLE") or "").strip()

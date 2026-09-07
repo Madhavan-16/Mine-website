@@ -1,9 +1,22 @@
 {% extends "base.html" %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}Settings{% endblock %}
+{% block page_header %}
+  {{ mine_page_head(
+      title='Account settings',
+      lede='Manage password recovery and security for your MiNe account.',
+      kicker='Account',
+      meta=[current_user.username, current_user.role],
+      breadcrumbs=[
+        {'label': 'Dashboard', 'href': url_for('main.dashboard')},
+        {'label': 'Profile', 'href': url_for('auth.profile')},
+        {'label': 'Settings', 'href': none}
+      ],
+      class='portal-page-head'
+    ) }}
+{% endblock %}
 {% block content %}
-  <h1>Settings</h1>
-
-  <div class="card u-mt-12 card--form">
+  <div class="card u-mt-12 card--form" data-portal-stagger>
     <h2 class="u-mt-0">Security</h2>
     <p class="meta">Signed in as <strong>{{ current_user.username }}</strong> ({{ current_user.role }}).</p>
     <div class="toolbar toolbar--gap u-mt-14">

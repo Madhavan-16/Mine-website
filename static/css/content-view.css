@@ -6,7 +6,15 @@
   margin: 0 auto;
 }
 
-/* Hero */
+/* Slim context badges under shared page head (replaces kview-hero) */
+.kview-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+/* Legacy hero kept for older snapshots / partials */
 .kview-hero {
   display: flex;
   flex-wrap: wrap;

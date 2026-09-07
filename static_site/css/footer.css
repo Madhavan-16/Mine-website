@@ -1,0 +1,152 @@
+/* Site footer — dark, minimal, subtle separators */
+
+.site-footer {
+  background: linear-gradient(180deg, #151a1f 0%, #14181c 100%);  color: rgba(255, 255, 255, 0.72);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.site-footer__inner {
+  max-width: min(1320px, 100%);
+  margin: 0 auto;
+  padding: 2.25rem clamp(1rem, 4vw, 2rem) 1.5rem;
+}
+
+.site-footer__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+@media (max-width: 960px) {
+  .site-footer__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .site-footer__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.site-footer__heading {
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.site-footer__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-footer__list li {
+  margin: 0;
+  padding: 0;
+}
+
+.site-footer__list li + li {
+  margin-top: 0.45rem;
+}
+
+.site-footer__list--inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+}
+
+.site-footer__list--inline li + li {
+  margin-top: 0;
+}
+
+.site-footer a {
+  color: rgba(255, 255, 255, 0.78);
+  text-decoration: none;
+  transition: color var(--duration-ui, 200ms) var(--ease-ui, ease), opacity var(--duration-ui, 200ms) var(--ease-ui, ease);
+}
+
+.site-footer a:hover {
+  color: var(--hex-blue);
+  text-decoration: none;
+}
+
+.site-footer a:focus-visible {
+  outline: none;
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px rgba(0, 174, 240, 0.45);
+}
+
+.site-footer__note {
+  margin: 0.65rem 0 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.42);
+  max-width: 42ch;
+}
+
+.site-footer__status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.site-footer__status-indicator {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--color-success);
+  box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.22);
+}
+
+.site-footer__status-label {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.site-footer__rule {
+  height: 1px;
+  margin: 2rem 0 1.25rem;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.09) 15%,
+    rgba(255, 255, 255, 0.09) 85%,
+    transparent
+  );
+}
+
+.site-footer__bottom {
+  padding-top: 0.25rem;
+}
+
+.site-footer__copyright {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.site-footer__bullet {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  vertical-align: middle;
+}
+
+/* Align footer with full-width portal content */
+.layout-portal .site-footer {
+  margin-left: 0;
+}

@@ -139,7 +139,7 @@
 }
 
 .landing-hero .landing-hero-tagline {
-  margin: 0;
+  margin: 0 0 clamp(16px, 2vw, 22px);
   font-size: clamp(18px, 2.1vw, 23px);
   font-weight: 600;
   max-width: 42ch;
@@ -148,6 +148,29 @@
   text-shadow:
     0 2px 18px rgba(0, 0, 0, 0.18),
     0 0 28px rgba(255, 255, 255, 0.08);
+}
+
+.landing-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: clamp(14px, 2vw, 20px);
+}
+
+.landing-hero-actions .btn {
+  min-height: 42px;
+}
+
+.landing-hero-actions__btn {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--hex-white);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.landing-hero-actions__btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.65);
+  color: var(--hex-white);
 }
 
 .landing-hero-layout {
@@ -206,6 +229,7 @@ body.layout-landing section[data-landing-motion]:not(.landing-hero) {
 
 body.layout-landing #portal-stats,
 body.layout-landing #explore-mine,
+body.layout-landing #knowledge-problem,
 body.layout-landing #problem-title,
 body.layout-landing #value-title {
   scroll-margin-top: calc(var(--portal-header-offset, 72px) + 14px);
@@ -226,12 +250,47 @@ body.layout-landing #value-title {
 }
 
 .landing-section-knowledge {
-  margin-top: 1.5rem;
+  margin-top: 0;
+}
+
+.landing-knowledge-band {
+  --landing-bleed-x: max(var(--space-6), env(safe-area-inset-left));
+  margin: clamp(20px, 3vw, 32px) calc(-1 * var(--landing-bleed-x)) clamp(24px, 3.5vw, 40px);
+  width: calc(100% + 2 * var(--landing-bleed-x));
+  padding: clamp(32px, 5vw, 56px) var(--landing-bleed-x);
+  background:
+    radial-gradient(ellipse 90% 70% at 8% 0%, rgba(0, 174, 240, 0.1), transparent 58%),
+    radial-gradient(ellipse 60% 55% at 96% 100%, rgba(179, 119, 67, 0.08), transparent 52%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(241, 247, 250, 0.96) 100%);
+  border-top: 1px solid rgba(189, 191, 192, 0.35);
+  border-bottom: 1px solid rgba(189, 191, 192, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-knowledge-band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 174, 240, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 174, 240, 0.025) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.45), transparent 88%);
+  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.45), transparent 88%);
+  pointer-events: none;
+}
+
+.landing-knowledge-band__inner {
+  position: relative;
+  z-index: 1;
+  max-width: var(--content-max);
+  margin: 0 auto;
 }
 
 .landing-knowledge-table {
-  margin: clamp(14px, 2.2vw, 22px) auto 0;
-  max-width: min(980px, 100%);
+  margin: clamp(14px, 2.2vw, 22px) 0 0;
+  max-width: none;
   width: 100%;
 }
 
@@ -249,6 +308,17 @@ body.layout-landing #value-title {
   }
 }
 
+/* Fail-safe: never leave landing content invisible if motion JS fails or stalls */
+html:not(.landing-motion-prep) body.layout-landing section[data-landing-motion]:not(.landing-hero),
+html:not(.landing-motion-prep) body.layout-landing [data-landing-stagger] [data-landing-item],
+html:not(.landing-motion-prep) body.layout-landing .landing-role-grid .landing-role-card,
+html:not(.landing-motion-prep) body.layout-landing [data-knowledge-matrix] [data-knowledge-row],
+html:not(.landing-motion-prep) body.layout-landing .landing-hero-showcase__stage,
+html:not(.landing-motion-prep) body.layout-landing .landing-stats-band {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
 .landing-knowledge-problem {
   border-radius: calc(var(--radius-lg) + 4px);
   border: 1px solid rgba(189, 191, 192, 0.42);
@@ -259,18 +329,28 @@ body.layout-landing #value-title {
     0 1px 0 rgba(255, 255, 255, 0.98) inset,
     0 10px 32px rgba(16, 63, 90, 0.07),
     0 2px 10px rgba(2, 3, 5, 0.04);
-  padding: clamp(12px, 2vw, 18px);
+  padding: clamp(16px, 2.4vw, 24px);
 }
 
 .landing-knowledge-problem-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(10px, 1.8vw, 14px);
+  gap: clamp(12px, 2vw, 18px);
 }
 
-@media (min-width: 960px) {
+@media (min-width: 720px) {
   .landing-knowledge-problem-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .landing-knowledge-problem-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .landing-problem-card {
+    min-height: 148px;
   }
 }
 
@@ -535,10 +615,16 @@ body.layout-landing #value-title {
     transition: none;
   }
 
-  .landing-role-card:not([open]):hover .landing-role-card__peek {
+  .landing-role-card:not([open]):hover .landing-role-card__peek,
+  .landing-role-card:not([open]):focus-within .landing-role-card__peek {
     max-height: 0 !important;
     opacity: 0 !important;
     padding-top: 0 !important;
+    transform: none !important;
+  }
+
+  .landing-role-card__peek {
+    transition: none !important;
   }
 
   .landing-role-card,
@@ -771,10 +857,10 @@ body.layout-landing #value-title {
   overflow: hidden;
   transform: translateY(-6px);
   transition:
-    max-height 0.42s cubic-bezier(0.33, 1, 0.68, 1),
-    opacity 0.34s ease,
-    transform 0.36s ease,
-    padding-top 0.36s ease;
+    max-height var(--transition-expand),
+    opacity var(--duration-slow) var(--ease-out),
+    transform var(--duration-slow) var(--ease-out),
+    padding-top var(--duration-slow) var(--ease-out);
 }
 
 .landing-role-card__peek li {
@@ -983,6 +1069,25 @@ body.layout-landing #value-title {
   color: var(--hex-grey-600);
   margin-top: auto;
   padding-top: 4px;
+}
+
+.landing-quick-tile--signin {
+  border-style: dashed;
+}
+
+.landing-quick-tile--signin .landing-quick-desc {
+  color: var(--hex-teal-dark);
+  font-weight: 600;
+}
+
+.landing-quick-tile--empty {
+  opacity: 0.88;
+  background: var(--hex-grey-50);
+}
+
+.landing-quick-tile--empty .landing-quick-count {
+  color: var(--hex-grey-500);
+  font-weight: 500;
 }
 
 .landing-kpi-grid {
@@ -1294,11 +1399,15 @@ body.layout-landing #value-title {
 .landing-hero--fresh .landing-hero-layout {
   display: grid;
   grid-template-columns: minmax(0, 0.88fr) minmax(300px, 1.12fr);
+  grid-template-areas:
+    "main showcase"
+    "motifs showcase";
   align-items: stretch;
   gap: clamp(16px, 2.4vw, 32px);
 }
 
 .landing-hero--fresh .landing-hero-main {
+  grid-area: main;
   position: relative;
   animation: none;
   display: flex;
@@ -1312,6 +1421,15 @@ body.layout-landing #value-title {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   overflow: hidden;
+}
+
+.landing-hero--fresh .landing-hero-showcase {
+  grid-area: showcase;
+}
+
+.landing-hero-motif-board {
+  grid-area: motifs;
+  margin-top: clamp(18px, 2.8vw, 24px);
 }
 
 .landing-hero-main__surface {
@@ -1356,10 +1474,6 @@ body.layout-landing #value-title {
   mask-image: radial-gradient(ellipse 90% 80% at 30% 50%, #000 20%, transparent 72%);
   -webkit-mask-image: radial-gradient(ellipse 90% 80% at 30% 50%, #000 20%, transparent 72%);
   opacity: 0.55;
-}
-
-.landing-hero-motif-board {
-  margin-top: clamp(18px, 2.8vw, 24px);
 }
 
 .landing-hero-motif-board__head {
@@ -1860,11 +1974,13 @@ body.layout-landing #value-title {
 
 @media (max-width: 960px) {
   .landing-hero--fresh .landing-hero-layout {
+    display: grid;
     grid-template-columns: 1fr;
-  }
-
-  .landing-hero--fresh .landing-hero-main {
-    padding: 0;
+    grid-template-areas:
+      "main"
+      "showcase"
+      "motifs";
+    gap: clamp(14px, 2.5vw, 20px);
   }
 
   .landing-hero-main__surface {
@@ -1880,8 +1996,45 @@ body.layout-landing #value-title {
     margin-right: auto;
   }
 
-  .landing-hero-motif-board__head {
+  .landing-hero-actions {
     justify-content: center;
+  }
+
+  .landing-hero-showcase {
+    align-self: stretch;
+  }
+
+  .landing-hero-motif-board {
+    margin-top: 0;
+  }
+
+  .landing-hero-motif-board__head {
+    justify-content: flex-start;
+  }
+
+  .landing-hero-motif-bento {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .landing-hero-motif-bento__cell,
+  .landing-hero-motif-bento__cell--featured {
+    flex: 0 0 min(210px, 72vw);
+    scroll-snap-align: start;
+  }
+
+  .landing-hero-motif-bento__cell--featured {
+    grid-column: auto;
+  }
+
+  .landing-hero-motif-card__desc {
+    display: none;
   }
 
   .landing-hero-showcase__stage {
@@ -2044,26 +2197,30 @@ body.layout-landing #value-title {
     0 10px 24px rgba(0, 174, 240, 0.15);
 }
 
+.landing-kpi-card--link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.landing-kpi-card--link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 174, 240, 0.35);
+}
+
 .landing-explore-head,
 .landing-problem-head {
   margin-bottom: clamp(14px, 2vw, 20px);
 }
 
-.landing-quick-grid--bento {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+.landing-quick-grid--3x3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(12px, 1.8vw, 16px);
 }
 
-.landing-quick-grid--bento .landing-quick-tile--featured {
-  grid-column: span 3;
-  min-height: 132px;
-  padding: clamp(18px, 2vw, 22px) clamp(16px, 2vw, 22px);
-  background: linear-gradient(165deg, rgba(230, 247, 251, 0.65) 0%, var(--hex-white) 55%);
-  border-color: rgba(0, 174, 240, 0.22);
-}
-
-.landing-quick-grid--bento .landing-quick-tile:not(.landing-quick-tile--featured) {
-  grid-column: span 2;
+.landing-quick-grid--3x3 .landing-quick-tile {
+  min-height: 118px;
 }
 
 .landing-quick-desc {
@@ -2073,23 +2230,15 @@ body.layout-landing #value-title {
   margin-top: 2px;
 }
 
-.landing-quick-grid--bento .landing-quick-tile--featured .landing-quick-emoji {
-  font-size: 1.65rem;
-}
-
-.landing-quick-grid--bento .landing-quick-tile--featured .landing-quick-title {
-  font-size: clamp(15px, 1vw + 12px, 17px);
-}
-
 @media (max-width: 900px) {
-  .landing-quick-grid--bento {
+  .landing-quick-grid--3x3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
 
-  .landing-quick-grid--bento .landing-quick-tile--featured,
-  .landing-quick-grid--bento .landing-quick-tile:not(.landing-quick-tile--featured) {
-    grid-column: span 1;
-    min-height: 0;
+@media (max-width: 520px) {
+  .landing-quick-grid--3x3 {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -2477,5 +2626,185 @@ body.landing-motif-modal-open {
 
   .landing-motif-modal__dialog {
     transform: none;
+  }
+}
+
+/* Featured knowledge (/welcome) */
+.landing-featured-lede {
+  margin: 0 0 14px;
+  font-size: 15px;
+  color: var(--hex-grey-700);
+}
+
+.landing-featured-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.landing-featured-list {
+  margin-top: 4px;
+}
+
+.landing-featured-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.landing-featured-excerpt {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--hex-grey-700);
+}
+
+.landing-featured-excerpt--muted {
+  color: var(--hex-grey-600);
+  font-style: italic;
+}
+
+.landing-featured-link {
+  margin-top: auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--hex-blue-dark);
+}
+
+@media (max-width: 640px) {
+  .landing-hero-actions {
+    width: 100%;
+  }
+
+  .landing-hero-actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+/* ——— FCX-inspired hero entrance (landing only; one-shot choreography) ——— */
+@media (prefers-reduced-motion: no-preference) {
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-badge,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-brand,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-expand,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-tagline,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-actions,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-showcase__stage,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-motif-board {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0);
+  }
+
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-brand {
+    transform: translate3d(0, 28px, 0) scale(0.98);
+  }
+
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-badge,
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-brand,
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-expand,
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-tagline,
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-actions,
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-showcase__stage,
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-motif-board {
+    opacity: 1;
+    transform: none;
+    animation: landing-fcx-rise 0.72s var(--ease-out) both;
+  }
+
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-badge {
+    animation-delay: 40ms;
+  }
+
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-brand {
+    animation-delay: 120ms;
+    animation-duration: 0.85s;
+  }
+
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-expand {
+    animation-delay: 220ms;
+  }
+
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-tagline {
+    animation-delay: 300ms;
+  }
+
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-actions {
+    animation-delay: 380ms;
+  }
+
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-showcase__stage {
+    animation-delay: 220ms;
+    animation-duration: 0.9s;
+  }
+
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-motif-board {
+    animation-delay: 460ms;
+  }
+
+  .landing-hero--fresh .landing-hero-brand::after {
+    content: "";
+    display: block;
+    width: 3.5rem;
+    height: 3px;
+    margin-top: 0.65rem;
+    border-radius: var(--radius-full);
+    background: linear-gradient(90deg, var(--hex-copper), rgba(179, 119, 67, 0.15));
+    transform-origin: left center;
+  }
+
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-brand::after {
+    transform: scaleX(0);
+  }
+
+  html:not(.landing-motion-prep) body.layout-landing .landing-hero--fresh .landing-hero-brand::after {
+    animation: landing-fcx-rule 0.55s var(--ease-out) 0.35s both;
+  }
+}
+
+@keyframes landing-fcx-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes landing-fcx-rule {
+  from {
+    transform: scaleX(0);
+    opacity: 0.4;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+.landing-hero--fresh .landing-hero-effects::before {
+  background:
+    radial-gradient(ellipse 70% 60% at 12% 18%, rgba(255, 255, 255, 0.28), transparent 55%),
+    radial-gradient(ellipse 50% 45% at 88% 12%, rgba(179, 119, 67, 0.28), transparent 52%),
+    radial-gradient(ellipse 55% 50% at 70% 100%, rgba(0, 174, 240, 0.28), transparent 55%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero--fresh .landing-hero-brand::after {
+    transform: none !important;
+    animation: none !important;
+  }
+
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-badge,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-brand,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-expand,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-tagline,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-actions,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-showcase__stage,
+  html.landing-motion-prep body.layout-landing .landing-hero--fresh .landing-hero-motif-board {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

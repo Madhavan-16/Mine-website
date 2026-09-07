@@ -1,29 +1,47 @@
 {% extends "base.html" %}
+{% from "includes/mine_page_head.html" import mine_page_head %}
 {% block title %}{% if forced %}Set up security questions{% else %}Security questions{% endif %}{% endblock %}
+{% block page_header %}
+  {% if not forced %}
+  {% call mine_page_head(
+      title='Security questions',
+      lede='Choose three different questions and answers. On Forgot password, you will be asked one of them.',
+      kicker='Account security',
+      meta=['Enrolled' if enrolled else 'Not set up'],
+      breadcrumbs=[
+        {'label': 'Dashboard', 'href': url_for('main.dashboard')},
+        {'label': 'Settings', 'href': url_for('auth.account_settings') if not is_admin else url_for('admin.settings')},
+        {'label': 'Security questions', 'href': none}
+      ],
+      class='portal-page-head'
+    ) %}
+    {% if is_admin %}
+      <a class="btn btn-secondary" href="{{ url_for('admin.settings') }}">← Admin settings</a>
+    {% else %}
+      <a class="btn btn-secondary" href="{{ url_for('auth.account_settings') }}">← Settings</a>
+    {% endif %}
+  {% endcall %}
+  {% endif %}
+{% endblock %}
 {% block content %}
   {% if forced %}
   <div class="security-setup-overlay" data-motion-skip>
     <div class="card auth-card security-setup-card">
       <header class="auth-login__header">
+        <p class="mine-section-kicker">Required once</p>
         <h1 class="auth-login__title">Set up security questions</h1>
         <p class="auth-login__subtitle">
-          Required once after sign-in. Choose <strong>three different</strong> questions and answers so you can reset your password later without email.
+          Choose <strong>three different</strong> questions and answers so you can reset your password later without email.
         </p>
       </header>
   {% else %}
-  <h1>Security questions</h1>
-  <p class="meta u-meta-card">
-    Choose <strong>three different</strong> questions and answers. Answers are stored securely (hashed).
-    On <strong>Forgot password</strong>, you’ll be asked <strong>one</strong> of them — a correct answer unlocks password reset.
-  </p>
-
   {% if enrolled %}
-    <p class="meta meta--success">You already have recovery questions set. Saving again will replace them.</p>
+    <p class="meta meta--success" data-portal-stagger>You already have recovery questions set. Saving again will replace them.</p>
   {% else %}
-    <p class="meta meta--warning">Not set up yet — complete this once so you can recover your password without email.</p>
+    <p class="meta meta--warning" data-portal-stagger>Not set up yet — complete this once so you can recover your password without email.</p>
   {% endif %}
 
-  <div class="card u-mt-12 card--narrow">
+  <div class="card u-mt-12 card--narrow" data-portal-stagger>
   {% endif %}
 
     <form method="post" class="form{% if forced %} auth-login__form{% endif %}" action="{{ url_for('auth.account_security_questions', setup=1 if forced else None) }}">
@@ -75,35 +93,4 @@
     {% endif %}
   </div>
   {% if forced %}</div>{% endif %}
-
-  {% if forced %}
-  <style>
-    .security-setup-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 9000;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 48px 16px 24px;
-      overflow: auto;
-      background: rgba(15, 23, 42, 0.55);
-      backdrop-filter: blur(4px);
-    }
-    .security-setup-card {
-      width: min(560px, 100%);
-      margin: 0 auto 40px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
-    }
-    body.layout-portal .security-setup-overlay ~ *,
-    body.layout-portal:has(.security-setup-overlay) .portal-nav-bar,
-    body.layout-portal:has(.security-setup-overlay) .sidebar {
-      pointer-events: none;
-    }
-    body.layout-portal:has(.security-setup-overlay) .security-setup-overlay,
-    body.layout-portal:has(.security-setup-overlay) .security-setup-overlay * {
-      pointer-events: auto;
-    }
-  </style>
-  {% endif %}
 {% endblock %}

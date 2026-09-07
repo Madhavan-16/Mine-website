@@ -109,8 +109,8 @@
     if (!btn) return;
     var isCaseStudy = moduleSelect && moduleSelect.value === CASE_STUDY;
     btn.textContent = isCaseStudy
-      ? "Suggest title, challenge & solution from file"
-      : "Suggest title & summary from file";
+      ? "Suggest with AI (title, challenge & solution)"
+      : "Suggest with AI (title & summary)";
   }
 
   function syncFieldGroups() {
@@ -163,7 +163,7 @@
       if (statusEl) statusEl.textContent = "Missing security token; refresh the page.";
       return;
     }
-    if (statusEl) statusEl.textContent = "Reading full file…";
+    if (statusEl) statusEl.textContent = "Reading file and suggesting with AI…";
     var fd = new FormData();
     fd.append("csrf_token", csrf.value);
     fd.append("file", fileInput.files[0], fileInput.files[0].name);
@@ -190,12 +190,28 @@
         }
         applySuggestions(res.j);
         var isCaseStudy = moduleSelect && moduleSelect.value === CASE_STUDY;
+        var viaAi = !!res.j.ai;
+        var aiErr = (res.j.ai_error || "").toString();
         if (statusEl) {
-          statusEl.textContent = isCaseStudy
-            ? "Title, business challenge, and solution filled from file. Review before submitting."
-            : (NO_BODY_MODULES.indexOf(moduleSelect && moduleSelect.value) !== -1
-              ? "Title and summary filled from file. Review before submitting."
-              : "Title and short summary filled from file. Add the body yourself if needed.");
+          if (viaAi) {
+            statusEl.textContent = isCaseStudy
+              ? "AI filled title, business challenge, and solution. Review before submitting."
+              : "AI filled title and summary. Review before submitting.";
+          } else if (aiErr) {
+            var shortErr = aiErr;
+            if (aiErr.indexOf("firewall") >= 0 || aiErr.indexOf("blocked") >= 0 || aiErr.indexOf("Internet Security") >= 0) {
+              shortErr = "AI blocked by network firewall — used smart file extract. Allow api.groq.com or try off-corp network.";
+            } else if (aiErr.indexOf("CERTIFICATE") >= 0 || aiErr.indexOf("SSL") >= 0) {
+              shortErr = "AI blocked by SSL — used smart file extract. Set CHATBOT_SSL_VERIFY=0 in .env and restart.";
+            } else {
+              shortErr = "AI unavailable — used smart file extract. " + aiErr.slice(0, 140);
+            }
+            statusEl.textContent = shortErr;
+          } else if (isCaseStudy) {
+            statusEl.textContent = "Title, business challenge, and solution filled from file. Review before submitting.";
+          } else {
+            statusEl.textContent = "Title and summary filled from file. Review before submitting.";
+          }
         }
       })
       .catch(function (e) {

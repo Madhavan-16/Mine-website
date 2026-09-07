@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import socket
 import time
 from typing import Any
@@ -207,6 +208,27 @@ def _http_error_message(resp: requests.Response) -> str:
 
 
 def _verify_path() -> bool | str:
+    """TLS verify setting for LLM HTTPS calls.
+
+    Honors (in order):
+    - CHATBOT_SSL_VERIFY=0/false/no → disable verify (corporate MITM / local only)
+    - CHATBOT_SSL_CA_BUNDLE / REQUESTS_CA_BUNDLE / SSL_CERT_FILE / CURL_CA_BUNDLE
+    - certifi CA bundle
+    """
+    flag = (_setting("CHATBOT_SSL_VERIFY") or os.environ.get("CHATBOT_SSL_VERIFY") or "1").strip().lower()
+    if flag in ("0", "false", "no", "off"):
+        return False
+
+    for name in (
+        "CHATBOT_SSL_CA_BUNDLE",
+        "REQUESTS_CA_BUNDLE",
+        "SSL_CERT_FILE",
+        "CURL_CA_BUNDLE",
+    ):
+        path = (_setting(name) or os.environ.get(name) or "").strip().strip('"').strip("'")
+        if path and os.path.isfile(path):
+            return path
+
     try:
         import certifi
 
@@ -248,6 +270,13 @@ def _force_ipv4_once() -> None:
 def _post_json(url: str, *, headers: dict, payload: dict, timeout: float) -> requests.Response:
     _force_ipv4_once()
     verify = _verify_path()
+    if verify is False:
+        try:
+            import urllib3
+
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        except Exception:
+            pass
     last_exc: Exception | None = None
     sess = _session()
     for attempt in range(3):
@@ -528,3 +557,173 @@ def generate_assistant_reply(
     except Exception as exc:
         logger.warning("Chatbot LLM (%s) failed: %s", provider, exc)
         return {"ok": False, "error": str(exc), "provider": provider}
+
+
+_CONTENT_SUGGEST_SYSTEM = (
+    "You are MiNe content-assist for the Hexaware–Freeport knowledge portal.\n"
+    "Given extracted text from an uploaded file, categorize it into form fields.\n"
+    "Rules:\n"
+    "- Use ONLY facts present in the source text. Do not invent clients, metrics, or project names.\n"
+    "- Ignore footers, copyright, www.hexaware.com, Confidential, Faster/Better/Cheaper sidebars, page numbers.\n"
+    "- Return STRICT JSON only (no markdown fences, no commentary).\n"
+    "- Keep wording clear and professional for a knowledge catalogue.\n"
+)
+
+_CONTENT_SUGGEST_MAX_CHARS = 14_000
+
+
+def _parse_json_object(text: str) -> dict[str, Any] | None:
+    raw = (text or "").strip()
+    if not raw:
+        return None
+    if raw.startswith("```"):
+        raw = re.sub(r"^```(?:json)?\s*", "", raw, flags=re.I)
+        raw = re.sub(r"\s*```$", "", raw)
+        raw = raw.strip()
+    try:
+        data = json.loads(raw)
+        return data if isinstance(data, dict) else None
+    except json.JSONDecodeError:
+        pass
+    start = raw.find("{")
+    end = raw.rfind("}")
+    if start >= 0 and end > start:
+        try:
+            data = json.loads(raw[start : end + 1])
+            return data if isinstance(data, dict) else None
+        except json.JSONDecodeError:
+            return None
+    return None
+
+
+def suggest_content_fields_from_text(
+    source_text: str,
+    *,
+    module: str | None = None,
+    filename: str | None = None,
+) -> dict[str, Any]:
+    """Use Groq/Gemini to categorize upload text into catalogue form fields.
+
+    Returns ``{ok, provider?, title?, summary?, business_challenge?, solution?, error?}``.
+    Tries the resolved provider first, then the other if both keys are configured.
+    """
+    text = (source_text or "").strip()
+    if not text:
+        return {"ok": False, "error": "No extractable text for AI suggest"}
+
+    if len(text) > _CONTENT_SUGGEST_MAX_CHARS:
+        text = text[:_CONTENT_SUGGEST_MAX_CHARS] + "\n…[truncated for AI]"
+
+    mod = (module or "").strip() or "knowledge"
+    is_case = mod == "case_study"
+
+    if is_case:
+        schema = (
+            "{\n"
+            '  "title": "short case-study title",\n'
+            '  "summary": "optional 2-3 sentence overview",\n'
+            '  "business_challenge": "bullet or paragraph challenge only",\n'
+            '  "solution": "bullet or paragraph solution / approach only"\n'
+            "}"
+        )
+        task = (
+            "This is a CASE STUDY upload. Split content into title, business_challenge, and solution. "
+            "Do not put solution text into business_challenge. "
+            "Do not put the whole document into one field."
+        )
+    else:
+        schema = (
+            "{\n"
+            '  "title": "concise catalogue title",\n'
+            '  "summary": "3-5 sentence catalogue summary (not the full document)",\n'
+            '  "business_challenge": "",\n'
+            '  "solution": ""\n'
+            "}"
+        )
+        task = (
+            f"This is a knowledge-series upload (module={mod}). "
+            "Produce a clean title and a short professional summary for the MiNe catalogue. "
+            "Summary must be a gist, not a dump of the whole file."
+        )
+
+    user_prompt = (
+        f"{task}\n\n"
+        f"Filename: {(filename or 'upload').strip()}\n"
+        f"Module: {mod}\n\n"
+        f"Return JSON matching:\n{schema}\n\n"
+        f"Source text:\n{text}"
+    )
+    messages = [{"role": "user", "content": user_prompt}]
+
+    primary = _resolve_provider()
+    if not primary:
+        return {"ok": False, "error": "No LLM provider configured"}
+
+    providers: list[str] = [primary]
+    groq_key = _setting("GROQ_API_KEY")
+    gemini_key = _setting("GEMINI_API_KEY")
+    if primary == "groq" and gemini_key and "gemini" not in providers:
+        providers.append("gemini")
+    if primary == "gemini" and groq_key and "groq" not in providers:
+        providers.append("groq")
+
+    last_error = ""
+    for provider in providers:
+        try:
+            if provider == "groq":
+                raw = _call_groq(_CONTENT_SUGGEST_SYSTEM, messages, max_tokens=900)
+            else:
+                raw = _call_gemini(_CONTENT_SUGGEST_SYSTEM, messages, max_tokens=900)
+            data = _parse_json_object(raw)
+            if not data:
+                last_error = f"{provider}: AI returned non-JSON content"
+                continue
+
+            def _s(key: str, limit: int) -> str:
+                val = data.get(key)
+                if val is None:
+                    return ""
+                return str(val).strip()[:limit]
+
+            title = _s("title", 500)
+            summary = _s("summary", 2000)
+            challenge = _s("business_challenge", 6000) if is_case else ""
+            solution = _s("solution", 6000) if is_case else ""
+
+            if not title and not summary and not challenge and not solution:
+                last_error = f"{provider}: AI returned empty fields"
+                continue
+
+            return {
+                "ok": True,
+                "provider": provider,
+                "title": title,
+                "summary": summary,
+                "business_challenge": challenge,
+                "solution": solution,
+                "body": "",
+            }
+        except Exception as exc:
+            last_error = _friendly_llm_error(provider, exc)
+            logger.warning("Content suggest LLM (%s) failed: %s", provider, exc)
+            continue
+
+    return {"ok": False, "error": last_error or "AI suggest failed", "provider": primary}
+
+
+def _friendly_llm_error(provider: str, exc: Exception) -> str:
+    msg = str(exc or "")
+    low = msg.lower()
+    if "internet security" in low or ("http 503" in low and "html" in low):
+        return (
+            f"{provider}: blocked by network/firewall (allow api.groq.com / "
+            "generativelanguage.googleapis.com, or use a non-corp network)"
+        )
+    if "certificate_verify_failed" in low or "ssl" in low:
+        return (
+            f"{provider}: SSL verify failed — set CHATBOT_SSL_VERIFY=0 or "
+            "CHATBOT_SSL_CA_BUNDLE in .env and restart"
+        )
+    if len(msg) > 220:
+        msg = msg[:219] + "…"
+    return f"{provider}: {msg}" if msg else f"{provider}: request failed"

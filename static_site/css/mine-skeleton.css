@@ -1,0 +1,107 @@
+/* Skeleton loading — same density as empty_state / tables */
+.mine-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 8px 0 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--hex-grey-100);
+  border-radius: var(--radius-lg);
+  background: var(--hex-white);
+}
+
+.mine-skeleton__row {
+  display: grid;
+  grid-template-columns: 72px 1fr 96px;
+  gap: 12px;
+  align-items: center;
+}
+
+.mine-skeleton__block {
+  display: block;
+  height: 12px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--hex-grey-100) 0%,
+    color-mix(in srgb, var(--hex-blue-light) 70%, white) 45%,
+    var(--hex-grey-100) 100%
+  );
+  background-size: 200% 100%;
+}
+
+.mine-skeleton__block--sm { width: 100%; }
+.mine-skeleton__block--md { width: 70%; justify-self: end; }
+.mine-skeleton__block--lg { width: 88%; }
+
+.mine-skeleton--cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.mine-skeleton--cards .mine-skeleton__row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--hex-grey-100);
+  border-radius: var(--radius-lg);
+  background: var(--hex-white);
+  min-height: 88px;
+}
+
+.mine-skeleton--cards .mine-skeleton__block--sm { width: 40%; height: 10px; }
+.mine-skeleton--cards .mine-skeleton__block--lg { width: 75%; }
+.mine-skeleton--cards .mine-skeleton__block--md { width: 35%; justify-self: start; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .mine-skeleton__block {
+    animation: mine-skeleton-shimmer 1.2s ease-in-out infinite;
+  }
+}
+
+@keyframes mine-skeleton-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* SSR enter: show skeleton until portal motion ready, then reveal content */
+.mine-skeleton-host {
+  position: relative;
+}
+
+html.portal-motion-prep .mine-skeleton-host > [data-skeleton-content] {
+  opacity: 0;
+}
+
+html.portal-motion-prep .mine-skeleton-host > .mine-skeleton {
+  display: flex;
+}
+
+html.portal-motion-ready .mine-skeleton-host > .mine-skeleton,
+html:not(.portal-motion-prep):not(.portal-motion-ready) .mine-skeleton-host > .mine-skeleton {
+  display: none;
+}
+
+html.portal-motion-ready .mine-skeleton-host > [data-skeleton-content] {
+  opacity: 1;
+  transition: opacity var(--duration-slow) var(--ease-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mine-skeleton-host > .mine-skeleton {
+    display: none !important;
+  }
+
+  .mine-skeleton-host > [data-skeleton-content] {
+    opacity: 1 !important;
+  }
+
+  .mine-skeleton__block {
+    animation: none !important;
+  }
+}

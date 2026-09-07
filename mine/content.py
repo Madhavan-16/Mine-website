@@ -920,8 +920,13 @@ def content_create():
 @bp.route("/content/suggest-fields", methods=["POST"])
 @login_required
 def content_suggest_fields():
-    """Read the posted attachment and return JSON title/summary/body suggestions."""
+    """Read the posted attachment and return JSON title/summary/body suggestions.
+
+    Uses heuristic extraction first, then enhances with Groq/Gemini when configured.
+    """
     from flask_wtf.csrf import validate_csrf
+
+    from mine.chatbot_llm import llm_configured, suggest_content_fields_from_text
 
     validate_csrf(request.form.get("csrf_token"))
     f = request.files.get("file")
@@ -937,19 +942,67 @@ def content_suggest_fields():
         return jsonify(ok=False, error="Empty file."), 400
     if len(raw) > max_len:
         return jsonify(ok=False, error="File is too large."), 413
+
+    module = (request.form.get("module") or "").strip()
     try:
-        module = (request.form.get("module") or "").strip()
         fields = suggest_from_upload(fname, raw, module=module)
     except Exception:
         current_app.logger.exception("suggest_from_upload failed for %s", fname)
         return jsonify(ok=False, error="Could not read this file for suggestions."), 422
+
+    source_text = (fields.pop("_source_text", None) or "").strip()
+    ai_used = False
+    ai_provider = ""
+    ai_error = ""
+
+    # Skip AI for image-only / empty extracts and when LLM keys are not set
+    use_ai = llm_configured() and len(source_text) >= 80 and ext not in ("png", "jpg", "jpeg")
+    if use_ai:
+        ai = suggest_content_fields_from_text(source_text, module=module, filename=fname)
+        if ai.get("ok"):
+            ai_used = True
+            ai_provider = str(ai.get("provider") or "")
+            is_case = module == "case_study"
+            if ai.get("title"):
+                fields["title"] = str(ai["title"])[:500]
+            if is_case:
+                if ai.get("business_challenge"):
+                    fields["business_challenge"] = str(ai["business_challenge"])[:6000]
+                if ai.get("solution"):
+                    fields["solution"] = str(ai["solution"])[:6000]
+                if ai.get("summary"):
+                    fields["summary"] = str(ai["summary"])[:2000]
+            else:
+                if ai.get("summary"):
+                    fields["summary"] = str(ai["summary"])[:2000]
+                fields["business_challenge"] = ""
+                fields["solution"] = ""
+            fields["body"] = ""
+        else:
+            ai_error = str(ai.get("error") or "AI suggest failed")
+            ai_provider = str(ai.get("provider") or "")
+            current_app.logger.info(
+                "content suggest AI skipped/failed for %s: %s",
+                fname,
+                ai_error,
+            )
+    elif not llm_configured():
+        ai_error = "LLM not configured (set GROQ_API_KEY or GEMINI_API_KEY)"
+    elif len(source_text) < 80:
+        ai_error = "Not enough extractable text for AI suggest"
+    elif ext in ("png", "jpg", "jpeg"):
+        ai_error = "Image files use filename-only suggest (no AI text extract)"
+
     return jsonify(
         ok=True,
-        title=fields["title"],
-        summary=fields["summary"],
-        body=fields["body"],
-        business_challenge=fields.get("business_challenge", ""),
-        solution=fields.get("solution", ""),
+        title=fields.get("title") or "",
+        summary=fields.get("summary") or "",
+        body=fields.get("body") or "",
+        business_challenge=fields.get("business_challenge") or "",
+        solution=fields.get("solution") or "",
+        ai=ai_used,
+        ai_provider=ai_provider,
+        ai_error=ai_error,
     )
 
 

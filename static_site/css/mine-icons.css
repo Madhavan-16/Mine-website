@@ -1,0 +1,51 @@
+/**
+ * MiNe line-icon system — 20–24px stroke icons with soft tile backgrounds.
+ */
+
+.mine-icon {
+  --mine-icon-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--mine-icon-size);
+  height: var(--mine-icon-size);
+  flex-shrink: 0;
+  color: var(--hex-blue-dark);
+}
+
+.mine-icon svg {
+  display: block;
+  width: var(--mine-icon-size);
+  height: var(--mine-icon-size);
+}
+
+.mine-icon-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-md);
+  background: var(--hex-blue-light);
+  color: var(--hex-blue-dark);
+  flex-shrink: 0;
+}
+
+.mine-icon-tile--copper {
+  background: var(--hex-copper-wash);
+  color: var(--hex-copper);
+}
+
+.mine-icon-tile--lg {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 10px;
+}
+
+.mine-icon-tile .mine-icon {
+  --mine-icon-size: 20px;
+}
+
+.mine-icon-tile--lg .mine-icon {
+  --mine-icon-size: 22px;
+}

@@ -3,8 +3,9 @@
 {% block content %}
   <div class="card auth-card auth-login" data-motion-skip>
     <header class="auth-login__header">
-      <h1 class="auth-login__title">Welcome Back! <span aria-hidden="true">👋</span></h1>
-      <p class="auth-login__subtitle">Sign in to continue to MiNe Portal</p>
+      <p class="mine-section-kicker">Account access</p>
+      <h1 class="auth-login__title">Welcome back</h1>
+      <p class="auth-login__subtitle">Sign in to continue to the MiNe portal</p>
     </header>
 
     <form method="post" class="form auth-login__form" id="login-form" action="{{ url_for('auth.login') }}">

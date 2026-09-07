@@ -44,6 +44,8 @@ def create_app():
         "CHATBOT_LLM_MODEL",
         "CHATBOT_LLM_TIMEOUT",
         "CHATBOT_ENABLED",
+        "CHATBOT_SSL_VERIFY",
+        "CHATBOT_SSL_CA_BUNDLE",
     ):
         if key in os.environ:
             raw = (os.environ.get(key) or "").strip()
@@ -51,6 +53,8 @@ def create_app():
                 app.config[key] = (raw or "auto").lower()
             elif key == "CHATBOT_ENABLED":
                 app.config[key] = raw.lower() not in ("0", "false", "no")
+            elif key == "CHATBOT_SSL_VERIFY":
+                app.config[key] = raw or "1"
             elif key == "CHATBOT_LLM_TIMEOUT":
                 try:
                     app.config[key] = float(raw or 45)

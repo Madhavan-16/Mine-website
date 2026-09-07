@@ -11,11 +11,13 @@
   'blog': 'Blogs & whitepapers'
 } %}
 {% block head_extra %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/content-view.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/content-view.css') }}?v=kview-chrome-2" />
 {% endblock %}
 {% block page_header %}
-  {% if not is_knowledge|default(false) %}
   {% set crumbs = [] %}
+  {% set series_label = knowledge_module_labels.get(row.module) %}
+  {% set series_href = url_for('main.knowledge', module=row.module) if row.module in knowledge_module_labels else url_for('main.knowledge') %}
+  {% set item_status_l = (row.status or '')|lower %}
   {% if row.module == 'projects' %}
     {% set crumbs = [{'label': 'Programs', 'href': url_for('projects.project_list')}, {'label': row.title, 'href': none}] %}
   {% elif row.module == 'onboarding' %}
@@ -45,7 +47,7 @@
   {% elif row.module in knowledge_module_labels %}
     {% set crumbs = [
       {'label': 'Knowledge repository', 'href': url_for('main.knowledge')},
-      {'label': knowledge_module_labels[row.module], 'href': return_to or url_for('main.knowledge', module=row.module)},
+      {'label': series_label, 'href': return_to or series_href},
       {'label': row.title, 'href': none}
     ] %}
   {% else %}
@@ -55,12 +57,37 @@
       {'label': row.title, 'href': none}
     ] %}
   {% endif %}
-  {{ mine_page_head(
-      title=row.title,
-      kicker=knowledge_module_labels.get(row.module) if row.module in knowledge_module_labels else row.module,
-      breadcrumbs=crumbs
-    ) }}
+  {% set ns = namespace(meta=[row.author_name, 'Updated ' ~ row.updated_at]) %}
+  {% if is_knowledge|default(false) and item_status_l == 'approved' and series_total|default(0) > 0 and series_position|default(0) > 0 %}
+    {% set _ = ns.meta.append(series_position ~ ' of ' ~ series_total ~ ' in series') %}
+  {% elif item_status_l and item_status_l != 'approved' %}
+    {% set _ = ns.meta.append(item_status_l|capitalize) %}
   {% endif %}
+  {% set can_edit_knowledge = is_knowledge|default(false) and current_user and not is_guest and (
+       current_user.role == 'admin'
+       or (current_user.id == row.author_id and item_status_l in ['draft', 'rejected'])
+     ) %}
+  {% set can_delete_knowledge = can_edit_knowledge %}
+  {% call mine_page_head(
+      title=row.title,
+      kicker=series_label if series_label else row.module,
+      meta=ns.meta,
+      breadcrumbs=crumbs,
+      class='portal-page-head'
+    ) %}
+    {% if is_knowledge|default(false) %}
+      <a class="btn btn-secondary" href="{{ series_href }}">← {{ series_label }}</a>
+      {% if can_edit_knowledge %}
+        <a class="btn btn-secondary" href="{{ url_for('content.content_edit', cid=row.id) }}">Edit</a>
+      {% endif %}
+      {% if can_delete_knowledge %}
+        <form method="post" action="{{ url_for('content.content_delete', cid=row.id) }}" onsubmit="return confirm('Delete this content permanently?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button type="submit" class="btn btn-secondary">Delete</button>
+        </form>
+      {% endif %}
+    {% endif %}
+  {% endcall %}
 {% endblock %}
 {% block content %}
   {% if is_knowledge|default(false) %}
