@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 {% from "includes/mine_page_head.html" import mine_page_head %}
-{% block title %}{% if forced %}Set up security questions{% else %}Security questions{% endif %}{% endblock %}
+{% block title %}{% if forced %}Set up security questions{% else %}Security Questions{% endif %}{% endblock %}
 {% block page_header %}
   {% if not forced %}
   {% call mine_page_head(
-      title='Security questions',
-      lede='Choose three different questions and answers. On Forgot password, you will be asked one of them.',
+      title='Security Questions',
+      lede='Choose three different questions and answers. On Forgot Password, you will be asked one of them.',
       kicker='Account security',
       meta=['Enrolled' if enrolled else 'Not set up'],
       breadcrumbs=[
         {'label': 'Dashboard', 'href': url_for('main.dashboard')},
         {'label': 'Settings', 'href': url_for('auth.account_settings') if not is_admin else url_for('admin.settings')},
-        {'label': 'Security questions', 'href': none}
+        {'label': 'Security Questions', 'href': none}
       ],
       class='portal-page-head'
     ) %}
@@ -87,7 +87,7 @@
       <form method="post" action="{{ url_for('auth.logout') }}" class="u-mt-14 u-text-center">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="btn btn-secondary btn-link-quiet">
-          Sign out instead
+          Sign Out Instead
         </button>
       </form>
     {% endif %}

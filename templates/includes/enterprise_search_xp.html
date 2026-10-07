@@ -16,7 +16,7 @@
     </p>
     <h2 id="search-xp-heading" class="enterprise-search-xp__title">MiNe intelligence search</h2>
     <p class="enterprise-search-xp__sub">
-      Scoped to approved catalogue content; filter by domain, layer in tags, and jump to artefacts in one flow.
+      Scoped to approved catalog content; filter by domain, layer in tags, and jump to artifacts in one flow.
     </p>
   </header>
 
@@ -64,7 +64,7 @@
 
       <div class="enterprise-search-xp__row enterprise-search-xp__row--categories">
         <span class="enterprise-search-xp__row-label">Scope</span>
-        <div class="enterprise-search-xp__pills" role="toolbar" aria-label="Catalogue scope">
+        <div class="enterprise-search-xp__pills" role="toolbar" aria-label="Catalog scope">
           {% for cat in search_xp_categories %}
             <button
               type="button"
@@ -90,7 +90,7 @@
       </div>
 
       <p id="search-xp-hint" class="enterprise-search-xp__hint">
-        Type a section name — even one word like <strong>training</strong> or <strong>projects</strong> — to see related pages in your results, or search catalogue content with scope and signals.
+        Type a section name — even one word like <strong>training</strong> or <strong>projects</strong> — to see related pages in your results, or search catalog content with scope and signals.
       </p>
     </form>
 
@@ -107,7 +107,7 @@
       {% if not hide_recent_catalog|default(false) %}
       <header class="enterprise-search-xp__catalog-head">
         <h3 id="search-xp-recent-added" class="enterprise-search-xp__col-title">Recently added</h3>
-        <p class="enterprise-search-xp__col-note">Latest approved artefacts from the catalogue.</p>
+        <p class="enterprise-search-xp__col-note">Latest approved artifacts from the catalog.</p>
       </header>
       {% if recent_rows and recent_rows|length > 0 %}
         <div class="krepo-artifact-grid">
@@ -117,7 +117,7 @@
               <h4 class="krepo-artifact__title">{{ item.title }}</h4>
               <p class="krepo-artifact__meta">{{ item.author_name }}</p>
               {% if item.summary and item.summary.strip() %}
-                <p class="krepo-artifact__excerpt">{{ item.summary|truncate(180, True)|e }}</p>
+                <p class="krepo-artifact__excerpt">{{ item.summary|readable_summary|truncate(180, True)|e }}</p>
               {% endif %}
             </a>
           {% endfor %}

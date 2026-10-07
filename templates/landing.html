@@ -42,11 +42,11 @@
             </p>
             <div class="landing-hero-actions">
               {% if current_user %}
-                <a class="btn btn-primary" href="{{ url_for('main.dashboard') }}">Go to dashboard</a>
-                <a class="btn btn-secondary landing-hero-actions__btn" href="#explore-mine">Explore sections</a>
+                <a class="btn btn-primary" href="{{ url_for('main.dashboard') }}">Go to Dashboard</a>
+                <a class="btn btn-secondary landing-hero-actions__btn" href="#explore-mine">Explore Sections</a>
               {% else %}
-                <a class="btn btn-primary" href="{{ url_for('auth.login') }}">Sign in to MiNe</a>
-                <a class="btn btn-secondary landing-hero-actions__btn" href="#explore-mine">See what's inside</a>
+                <a class="btn btn-primary" href="{{ url_for('auth.login') }}">Sign In to MiNe</a>
+                <a class="btn btn-secondary landing-hero-actions__btn" href="#explore-mine">See What’s Inside</a>
               {% endif %}
             </div>
           </div>
@@ -211,7 +211,7 @@
             <div class="landing-kpi-body">
               <span class="landing-kpi-live"><span class="landing-kpi-live-dot" aria-hidden="true"></span> Live</span>
               <span class="landing-kpi-value" data-kpi-target="{{ portal_stats.knowledge_items | int }}">0</span>
-              <span class="landing-kpi-label">Knowledge series items</span>
+              <span class="landing-kpi-label">Knowledge Series Items</span>
             </div>
           </div>
         </a>
@@ -225,7 +225,7 @@
             <div class="landing-kpi-body">
               <span class="landing-kpi-live"><span class="landing-kpi-live-dot" aria-hidden="true"></span> Live</span>
               <span class="landing-kpi-value" data-kpi-target="{{ portal_stats.projects | int }}">0</span>
-              <span class="landing-kpi-label">Active projects</span>
+              <span class="landing-kpi-label">Active Projects</span>
             </div>
           </div>
         </a>
@@ -239,7 +239,7 @@
             <div class="landing-kpi-body">
               <span class="landing-kpi-live"><span class="landing-kpi-live-dot" aria-hidden="true"></span> Live</span>
               <span class="landing-kpi-value" data-kpi-target="{{ portal_stats.innovations | int }}">0</span>
-              <span class="landing-kpi-label">Innovations delivered</span>
+              <span class="landing-kpi-label">Innovations Delivered</span>
             </div>
           </div>
         </a>
@@ -253,7 +253,7 @@
             <div class="landing-kpi-body">
               <span class="landing-kpi-live"><span class="landing-kpi-live-dot" aria-hidden="true"></span> Live</span>
               <span class="landing-kpi-value" data-kpi-target="{{ portal_stats.team_members | int }}">0</span>
-              <span class="landing-kpi-label">Team members</span>
+              <span class="landing-kpi-label">Team Members</span>
             </div>
           </div>
         </a>
@@ -296,7 +296,7 @@
             {% endif %}
           </summary>
           <div class="landing-role-card__panel">
-            <p class="landing-role-card__panel-label">Inside this card</p>
+            <p class="landing-role-card__panel-label">Inside This Card</p>
             <ul class="landing-role-card__features">
               {% for line in card.highlights %}
                 <li class="landing-role-card__feature">
@@ -329,7 +329,7 @@
         <a class="card landing-quick-tile{% if tile.requires_login %} landing-quick-tile--signin{% endif %}{% if tile.is_empty %} landing-quick-tile--empty{% endif %}" href="{{ tile.href }}" role="listitem" data-landing-item>
           <span class="landing-quick-emoji" aria-hidden="true">{{ tile.emoji }}</span>
           <span class="landing-quick-title">{{ tile.label }}</span>
-          <span class="landing-quick-desc">{% if tile.requires_login %}Sign in to open{% else %}Open section{% endif %}</span>
+          <span class="landing-quick-desc">{% if tile.requires_login %}Sign In to Open{% else %}Open Section{% endif %}</span>
           {% if tile.stat_text %}
             <span class="landing-quick-count">{{ tile.stat_text }}</span>
           {% endif %}
@@ -353,7 +353,7 @@
           <div class="landing-knowledge-problem-grid" data-landing-stagger>
           <article class="landing-problem-card" data-knowledge-row data-landing-item tabindex="0">
             <div class="landing-problem-card__icon" aria-hidden="true">📚</div>
-            <h3 class="landing-problem-card__title">Knowledge silos</h3>
+            <h3 class="landing-problem-card__title">Knowledge Silos</h3>
             <p class="landing-problem-card__desc">Information resides with individuals.</p>
           </article>
           <article class="landing-problem-card" data-knowledge-row data-landing-item tabindex="0">
@@ -378,7 +378,7 @@
           </article>
           <article class="landing-problem-card" data-knowledge-row data-landing-item tabindex="0">
             <div class="landing-problem-card__icon" aria-hidden="true">🔄</div>
-            <h3 class="landing-problem-card__title">Knowledge attrition</h3>
+            <h3 class="landing-problem-card__title">Knowledge Attrition</h3>
             <p class="landing-problem-card__desc">Expertise leaves when people rotate off the account.</p>
           </article>
         </div>
@@ -391,12 +391,12 @@
   <section id="featured-knowledge" class="landing-narrow landing-section-spaced landing-featured" data-landing-motion>
     <span class="landing-section-eyebrow">Curated for you</span>
     <h2 class="landing-section-title landing-section-title--featured">Featured knowledge</h2>
-    <p class="landing-featured-lede">Approved catalogue highlights from the knowledge repository.</p>
+    <p class="landing-featured-lede">Approved catalog highlights from the knowledge repository.</p>
     <div class="landing-featured-actions">
       {% if current_user %}
-        <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create content</a>
+        <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create Content</a>
       {% endif %}
-      <a class="btn btn-secondary" href="{{ url_for('main.knowledge') }}">Browse repository</a>
+      <a class="btn btn-secondary" href="{{ url_for('main.knowledge') }}">Browse Repository</a>
     </div>
     {% if featured and featured|length > 0 %}
       <ul class="portal-result-list landing-featured-list">
@@ -408,7 +408,7 @@
                 <span class="portal-module-chip">{{ module_label(item.module) }}</span>
               </div>
               {% if item.summary and item.summary.strip() %}
-                <p class="landing-featured-excerpt">{{ item.summary|replace('\n', ' ')|truncate(200, True)|e }}</p>
+                <p class="landing-featured-excerpt">{{ item.summary|readable_summary|replace('\n', ' ')|truncate(200, True)|e }}</p>
               {% else %}
                 <p class="landing-featured-excerpt landing-featured-excerpt--muted">No summary provided.</p>
               {% endif %}
@@ -421,7 +421,7 @@
       <p class="portal-empty">
         No approved knowledge articles yet.
         {% if current_user %}
-          <span class="portal-empty__action"><a class="btn btn-primary" href="{{ url_for('content.content_create') }}">Create the first article</a></span>
+          <span class="portal-empty__action"><a class="btn btn-primary" href="{{ url_for('content.content_create') }}">Create the First Article</a></span>
         {% endif %}
       </p>
     {% endif %}
@@ -442,11 +442,11 @@
       </div>
       <div class="landing-cta-band__actions">
         {% if current_user %}
-          <a class="btn btn-primary" href="{{ url_for('main.dashboard') }}">Go to dashboard</a>
-          <a class="btn btn-secondary" href="#explore-mine">Explore sections</a>
+          <a class="btn btn-primary" href="{{ url_for('main.dashboard') }}">Go to Dashboard</a>
+          <a class="btn btn-secondary" href="#explore-mine">Explore Sections</a>
         {% else %}
-          <a class="btn btn-primary" href="{{ url_for('auth.login') }}">Sign in to MiNe</a>
-          <a class="btn btn-secondary" href="#explore-mine">See what’s inside</a>
+          <a class="btn btn-primary" href="{{ url_for('auth.login') }}">Sign In to MiNe</a>
+          <a class="btn btn-secondary" href="#explore-mine">See What’s Inside</a>
         {% endif %}
       </div>
     </div>

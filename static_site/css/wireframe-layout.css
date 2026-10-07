@@ -314,13 +314,134 @@
 /* Journey: digital transformation infographic (light graphic on card) */
 .journey-digital__lede {
   margin: 8px 0 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--hex-grey-800);
+  max-width: 72ch;
+}
+
+.journey-takeaways {
+  margin: 14px 0 0;
+  padding: 0 0 0 1.15rem;
+  max-width: 72ch;
+  color: var(--hex-grey-800);
   font-size: 14px;
   line-height: 1.55;
-  color: var(--hex-grey-800);
+}
+
+.journey-takeaways li + li {
+  margin-top: 0.45rem;
+}
+
+.journey-takeaways strong {
+  color: var(--hex-grey-900);
+  font-weight: 650;
+}
+
+.journey-digital__hint {
+  margin: 12px 0 0;
+  max-width: 72ch;
 }
 
 .journey-digital__figure {
   margin: 16px 0 0;
+}
+
+/* Journey chapters — readable text grid + spaced graphics */
+.journey-chapter {
+  padding: clamp(28px, 4vw, 40px) 0;
+  border-top: 1px solid var(--hex-copper-rule);
+}
+
+.journey-chapter:first-of-type {
+  border-top: none;
+  padding-top: clamp(8px, 1.5vw, 16px);
+}
+
+.journey-chapter__head {
+  max-width: 46rem;
+  margin: 0 0 clamp(20px, 3vw, 28px);
+}
+
+.journey-chapter__kicker {
+  margin: 0 0 8px;
+  font-size: var(--type-kicker);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--hex-copper);
+}
+
+.journey-chapter__title {
+  margin: 0 0 12px;
+  font-size: clamp(1.25rem, 1.1rem + 0.55vw, 1.5rem);
+  font-weight: 700;
+  letter-spacing: var(--letter-tight, -0.02em);
+  line-height: 1.25;
+  color: var(--hex-grey-900);
+}
+
+.journey-chapter__lede {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--hex-grey-700);
+}
+
+.journey-chapter__points {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
+  gap: 12px;
+  margin: 0 0 clamp(22px, 3vw, 32px);
+}
+
+.journey-chapter__points--two {
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+
+.journey-point {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--hex-grey-100);
+  border-left: 3px solid var(--hex-teal);
+  border-radius: 0 var(--radius-md, 8px) var(--radius-md, 8px) 0;
+  background: var(--hex-grey-50);
+}
+
+.journey-point__era {
+  margin: 0 0 6px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--hex-blue-dark);
+}
+
+.journey-point__text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--hex-grey-700);
+}
+
+.journey-chapter__figure {
+  margin: 0;
+  padding: 0;
+}
+
+.journey-chapter__caption {
+  margin: 0 0 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--hex-grey-500);
+}
+
+@media (max-width: 640px) {
+  .journey-chapter__points,
+  .journey-chapter__points--two {
+    grid-template-columns: 1fr;
+  }
 }
 
 .journey-digital__figure--sharp {

@@ -7,14 +7,14 @@
           <h2 class="content-card__title"><a href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a></h2>
           <span class="badge">{{ item.module }}</span>
         </div>
-        <p class="meta content-card__summary">{{ item.summary or "—" }}</p>
+        <p class="meta content-card__summary">{{ (item.summary|readable_summary) if item.summary else "—" }}</p>
       </article>
     {% endfor %}
   </div>
 {% else %}
   {{ empty_state(
     empty_title|default('Nothing published here yet'),
-    empty_message|default('Approved items will appear in this catalogue once they are published.'),
+    empty_message|default('Approved items will appear in this catalog once they are published.'),
     empty_cta_href|default(none),
     empty_cta_label|default(none)
   ) }}

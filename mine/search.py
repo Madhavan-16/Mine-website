@@ -51,7 +51,7 @@ def search():
             )
             rows = catalog["rows"]
         except Exception as exc:
-            current_app.logger.warning("Catalogue search failed for %r: %s", q, exc)
+            current_app.logger.warning("Catalog search failed for %r: %s", q, exc)
             rows = []
 
     section_shortcuts = section_search_hits(q) if q else []

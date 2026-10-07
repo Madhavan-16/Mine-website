@@ -9,7 +9,6 @@
   data-user-key="{{ current_user.id }}:{{ current_user.username }}"
   data-bot-icon="{{ url_for('static', filename='img/mine-ai-bot.svg') }}?v=16"
   {% if is_guest %}data-guest="1"{% endif %}
-  {% if request.endpoint == 'main.dashboard' %}data-auto-open="1"{% endif %}
 >
   <button
     type="button"

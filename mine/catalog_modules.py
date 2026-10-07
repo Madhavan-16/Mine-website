@@ -1,13 +1,13 @@
-"""Canonical catalogue module taxonomy (avoid drift between dashboards, filters, and forms)."""
+"""Canonical catalog module taxonomy (avoid drift between dashboards, filters, and forms)."""
 
 KNOWLEDGE_SERIES_MODULES = [
-    ("kyc", "KYC series"),
-    ("kya", "KYA series"),
-    ("domain_term", "Term of the week"),
+    ("kyc", "KYC Series"),
+    ("kya", "KYA Series"),
+    ("domain_term", "Term of the Week"),
     ("newsletter", "Newsletter"),
-    ("case_study", "Case studies"),
-    ("rfp_snippet", "RFP snippets"),
-    ("blog", "Blogs & whitepapers"),
+    ("case_study", "Case Studies"),
+    ("rfp_snippet", "RFP Snippets"),
+    ("blog", "Blogs & Whitepapers"),
 ]
 
 KNOWLEDGE_SERIES_MODULE_KEYS = frozenset(m for m, _ in KNOWLEDGE_SERIES_MODULES)
@@ -35,33 +35,33 @@ STANDALONE_MODULE_TO_SEGMENT = {v: k for k, v in SEGMENT_TO_STANDALONE_MODULE.it
 STANDALONE_REPO_UI = {
     "training": {
         "list_endpoint": "main.training",
-        "list_label": "Training corner",
-        "create_h1": "Add a training item",
-        "edit_h1": "Edit training item",
+        "list_label": "Training Corner",
+        "create_h1": "Add a Training Item",
+        "edit_h1": "Edit Training Item",
         "create_flash": "Training item saved.",
         "edit_flash": "Training item updated.",
     },
     "onboarding": {
         "list_endpoint": "main.onboarding",
-        "list_label": "Onboarding kit",
-        "create_h1": "Add an onboarding note",
-        "edit_h1": "Edit onboarding note",
+        "list_label": "Onboarding Kit",
+        "create_h1": "Add an Onboarding Note",
+        "edit_h1": "Edit Onboarding Note",
         "create_flash": "Onboarding note saved.",
         "edit_flash": "Onboarding note updated.",
     },
     "innovation": {
         "list_endpoint": "main.innovation",
-        "list_label": "Innovation center",
-        "create_h1": "Submit an innovation story",
-        "edit_h1": "Edit innovation submission",
+        "list_label": "Innovation Center",
+        "create_h1": "Submit an Innovation Story",
+        "edit_h1": "Edit Innovation Submission",
         "create_flash": "Innovation story saved.",
         "edit_flash": "Innovation story updated.",
     },
     "hall_of_fame": {
         "list_endpoint": "main.hall_of_fame",
         "list_label": "Hall of Fame",
-        "create_h1": "Nominate a Hall of Fame highlight",
-        "edit_h1": "Edit Hall of Fame nomination",
+        "create_h1": "Nominate a Hall of Fame Highlight",
+        "edit_h1": "Edit Hall of Fame Nomination",
         "create_flash": "Hall of Fame entry saved.",
         "edit_flash": "Hall of Fame entry updated.",
     },
@@ -70,21 +70,21 @@ STANDALONE_REPO_UI = {
 MODULE_LABELS = dict(KNOWLEDGE_SERIES_MODULES)
 MODULE_LABELS.update(
     {
-        "projects": "Programs & projects",
-        "onboarding": "Onboarding kit",
-        "innovation": "Innovation center",
-        "training": "Training corner",
+        "projects": "Programs & Projects",
+        "onboarding": "Onboarding Kit",
+        "innovation": "Innovation Center",
+        "training": "Training Corner",
         "hall_of_fame": "Hall of Fame",
     }
 )
 
 SEARCH_FILTER_MODULES: tuple[tuple[str, str], ...] = (
-    ("", "All catalogue"),
+    ("", "All Catalog"),
     *KNOWLEDGE_SERIES_MODULES,
-    ("projects", "Programs & projects"),
-    ("onboarding", "Onboarding kit"),
-    ("innovation", "Innovation center"),
-    ("training", "Training corner"),
+    ("projects", "Programs & Projects"),
+    ("onboarding", "Onboarding Kit"),
+    ("innovation", "Innovation Center"),
+    ("training", "Training Corner"),
     ("hall_of_fame", "Hall of Fame"),
 )
 

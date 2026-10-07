@@ -3,10 +3,10 @@
 {% block title %}Freeport–Hexaware Journey{% endblock %}
 {% block page_header %}
   {{ mine_page_head(
-      title='Freeport – Hexaware Journey',
-      lede='From sulfur origins to copper-scale digital partnership — the story and technology path behind MiNe.',
-      kicker='Partnership story',
-      meta=['Freeport–Hexaware', 'Timeline'],
+      title='Freeport–Hexaware Journey',
+      lede='Copper leadership, an eighteen-year digital partnership, and the technology path delivery teams inherit today.',
+      kicker='Partnership Story',
+      meta=['Freeport–Hexaware', 'Timeline & Technology'],
       breadcrumbs=[
         {'label': 'Home', 'href': url_for('main.dashboard') if current_user else url_for('main.landing')},
         {'label': 'Journey', 'href': none}
@@ -17,18 +17,43 @@
   <div class="journey-page">
   {% include "includes/back_program_map.html" %}
 
-  <section class="card journey-digital" aria-labelledby="freeport-story-h2" data-portal-stagger>
-    <h2 id="freeport-story-h2">3.1 The Freeport story — from sulfur to copper superpower</h2>
-    <p class="journey-digital__lede">
-      Freeport-McMoRan is one of the world’s largest copper producers with global mining operations. The timeline below traces
-      more than a century of company evolution—from sulfur origins and Grasberg through Phelps Dodge, the Indonesian partnership,
-      and the copper–AI era.
-    </p>
+  <section class="journey-chapter" aria-labelledby="freeport-story-h2" data-portal-stagger>
+    <header class="journey-chapter__head">
+      <p class="journey-chapter__kicker">01 · Freeport Story</p>
+      <h2 id="freeport-story-h2" class="journey-chapter__title">From Sulfur to Copper Leadership</h2>
+      <p class="journey-chapter__lede">
+        Freeport-McMoRan is one of the world’s largest copper producers. This century-long arc runs from sulfur origins
+        through Grasberg, the Phelps Dodge acquisition, and today’s copper demand from electrification and AI.
+      </p>
+    </header>
+    <div class="journey-chapter__points" role="list">
+      <article class="journey-point" role="listitem">
+        <h3 class="journey-point__era">1912–1960s</h3>
+        <p class="journey-point__text">Sulfur roots and gradual diversification into related industries.</p>
+      </article>
+      <article class="journey-point" role="listitem">
+        <h3 class="journey-point__era">1988 onward</h3>
+        <p class="journey-point__text">Grasberg establishes Freeport as a major copper–gold producer.</p>
+      </article>
+      <article class="journey-point" role="listitem">
+        <h3 class="journey-point__era">2007</h3>
+        <p class="journey-point__text">Phelps Dodge acquisition expands Freeport’s copper footprint worldwide.</p>
+      </article>
+      <article class="journey-point" role="listitem">
+        <h3 class="journey-point__era">2018–present</h3>
+        <p class="journey-point__text">Indonesian partnership and a sharper focus on copper as a strategic metal.</p>
+      </article>
+      <article class="journey-point" role="listitem">
+        <h3 class="journey-point__era">2024–2026</h3>
+        <p class="journey-point__text">Copper–AI era — data centers, EVs, and renewables raise copper intensity.</p>
+      </article>
+    </div>
     <figure
-      class="journey-digital__figure"
+      class="journey-chapter__figure"
       role="group"
       aria-label="The Technological Evolution: A Data-Driven Timeline"
     >
+      <figcaption class="journey-chapter__caption">Visual timeline — click or tap to zoom where available</figcaption>
       <img
         src="{{ url_for('static', filename='img/freeport-story-timeline.png') }}"
         alt="Infographic titled The Technological Evolution: A Data-Driven Timeline. Horizontal timeline from 1912 through 2026: sulfur origins, diversification, Indonesia and Ertsberg, McMoRan merger, Grasberg, Phelps Dodge, oil and gas period, Indonesian partnership, and the copper-AI era."
@@ -41,12 +66,36 @@
     </figure>
   </section>
 
-  <section class="card journey-digital journey-section-spaced" aria-labelledby="partnership-milestones-heading" data-portal-stagger>
-    <h2 id="partnership-milestones-heading">Freeport–Hexaware partnership milestones</h2>
-    <figure class="journey-digital__figure" role="group" aria-label="Freeport–Hexaware partnership milestones, eighteen-year digital evolution timeline">
+  <section class="journey-chapter" aria-labelledby="partnership-milestones-heading" data-portal-stagger>
+    <header class="journey-chapter__head">
+      <p class="journey-chapter__kicker">02 · Partnership</p>
+      <h2 id="partnership-milestones-heading" class="journey-chapter__title">Freeport–Hexaware Milestones</h2>
+      <p class="journey-chapter__lede">
+        About eighteen years of digital evolution: first reporting and data-lake foundations, then cloud platforms,
+        real-time operations, and event-driven analytics for mine and plant decisions.
+      </p>
+    </header>
+    <div class="journey-chapter__points journey-chapter__points--two" role="list">
+      <article class="journey-point" role="listitem">
+        <h3 class="journey-point__era">Era 1 · 2006–2019</h3>
+        <p class="journey-point__text">
+          Foundation and cloud migration — BI and data lakes on SAP BW, Teradata, and Hadoop; Azure reporting;
+          then primary Snowflake migration.
+        </p>
+      </article>
+      <article class="journey-point" role="listitem">
+        <h3 class="journey-point__era">Era 2 · 2020–2024</h3>
+        <p class="journey-point__text">
+          Advanced intelligence — IoT leach analytics, fleet and autonomous haul metrics in Snowflake,
+          and event-driven workflows for automated data movement.
+        </p>
+      </article>
+    </div>
+    <figure class="journey-chapter__figure" role="group" aria-label="Freeport–Hexaware partnership milestones">
+      <figcaption class="journey-chapter__caption">Year-by-year partnership map</figcaption>
       <img
         src="{{ url_for('static', filename='img/journey/eighteen-year-digital-evolution-timeline.png') }}"
-        alt="Infographic: Freeport–Hexaware partnership milestones from 2006 to 2024. Era 1 (2006–2019) Building the Foundation and Cloud Migration: foundational BI and data lake with SAP BW, Teradata, and Hadoop; 2015 cloud transformation shift to Azure-integrated reporting; 2019 primary Snowflake migration from Teradata and Hadoop. Era 2 (2020–2024) Advanced Intelligence and Real-Time Operations: 2020 operational intelligence and leach analytics via IoT; 2023 digital intelligence and fleet management with autonomous haul truck and CAT metrics in Snowflake; 2024 event-driven architecture for automated data workflows."
+        alt="Infographic: Freeport–Hexaware partnership milestones from 2006 to 2024. Era 1 Building the Foundation and Cloud Migration; Era 2 Advanced Intelligence and Real-Time Operations."
         class="journey-digital__img"
         width="1024"
         height="484"
@@ -56,20 +105,42 @@
     </figure>
   </section>
 
-  <section class="card journey-digital journey-section-spaced" aria-labelledby="journey-digital-h2" data-portal-stagger>
-    <h2 id="journey-digital-h2">From data silos to predictive operations</h2>
-    <p class="journey-digital__lede">
-      Technology path from legacy reporting and lakes to Snowflake on Azure, massive fleet IoT scaling, and analytics that show up in throughput, cost, and safety metrics.
-      Click the infographic to zoom and inspect detail.
-    </p>
+  <section class="journey-chapter" aria-labelledby="journey-digital-h2" data-portal-stagger>
+    <header class="journey-chapter__head">
+      <p class="journey-chapter__kicker">03 · Technology</p>
+      <h2 id="journey-digital-h2" class="journey-chapter__title">From Data Silos to Predictive Operations</h2>
+      <p class="journey-chapter__lede">
+        Legacy reporting and Hadoop lakes gave way to Snowflake on Azure, high-volume fleet telemetry,
+        and predictive models that affect throughput, cost, and safety.
+      </p>
+    </header>
+    <div class="journey-chapter__points journey-chapter__points--two" role="list">
+      <article class="journey-point" role="listitem">
+        <h3 class="journey-point__era">Legacy Foundation</h3>
+        <p class="journey-point__text">SAP BW and Teradata for structured reporting; Hortonworks Hadoop for the data lake.</p>
+      </article>
+      <article class="journey-point" role="listitem">
+        <h3 class="journey-point__era">Unified Cloud</h3>
+        <p class="journey-point__text">Snowflake and Azure as the core platform for analytics and integration.</p>
+      </article>
+      <article class="journey-point" role="listitem">
+        <h3 class="journey-point__era">Fleet Scale</h3>
+        <p class="journey-point__text">Hundreds of vehicles, dense sensor coverage, and continuous readings into operations systems.</p>
+      </article>
+      <article class="journey-point" role="listitem">
+        <h3 class="journey-point__era">Predictive Impact</h3>
+        <p class="journey-point__text">Risk models and early jam detection support production, lower TCO, and safer operations.</p>
+      </article>
+    </div>
     <figure
-      class="journey-digital__figure journey-digital__figure--hires"
+      class="journey-chapter__figure journey-digital__figure--hires"
       role="group"
       aria-label="The Autonomous Mining Revolution: From Data Silos to Predictive Operations"
     >
+      <figcaption class="journey-chapter__caption">Full graphic — click to open enhanced zoom</figcaption>
       <img
         src="{{ url_for('main.journey_autonomous_mining_revolution_image') }}?v=8"
-        alt="Infographic titled The Autonomous Mining Revolution: From Data Silos to Predictive Operations. Left—The Legacy Foundation: SAP BW and Teradata for structured reporting, Hortonworks Hadoop for the data lake. Center—The Technology Journey: Snowflake and Azure unified cloud, 300 vehicles with 200 sensors each, 60,000 readings per second, and autonomous haul operations. Right—Predictive Risk Modelling with ML algorithms for high, medium, and low risk, plus operational impact: production boost, lower TCO, and predictive jam detection eight minutes before operator action."
+        alt="Infographic titled The Autonomous Mining Revolution: From Data Silos to Predictive Operations covering legacy foundation, unified cloud, fleet scale, and predictive impact."
         class="journey-digital__img zoomable-image"
         width="2752"
         height="1494"
@@ -80,12 +151,38 @@
     </figure>
   </section>
 
-  <div class="card journey-digital journey-section-spaced" data-portal-stagger>
-    <h2 class="visually-hidden">Strategic context for delivery teams</h2>
-    <figure class="journey-digital__figure">
+  <section class="journey-chapter" aria-labelledby="strategic-context-h2" data-portal-stagger>
+    <header class="journey-chapter__head">
+      <p class="journey-chapter__kicker">04 · Delivery Context</p>
+      <h2 id="strategic-context-h2" class="journey-chapter__title">Why This Matters for Delivery Teams</h2>
+      <p class="journey-chapter__lede">
+        Copper demand is rising with AI and the energy transition. Freeport’s share of U.S. refined copper is material,
+        and innovations such as Hidden Mine change how residual copper can be recovered.
+      </p>
+    </header>
+    <div class="journey-chapter__points journey-chapter__points--two" role="list">
+      <article class="journey-point" role="listitem">
+        <h3 class="journey-point__era">AI &amp; Data Centers</h3>
+        <p class="journey-point__text">New compute infrastructure increases copper intensity per megawatt of capacity.</p>
+      </article>
+      <article class="journey-point" role="listitem">
+        <h3 class="journey-point__era">U.S. Refined Copper</h3>
+        <p class="journey-point__text">Roughly 70% of U.S. refined copper production is linked to Freeport.</p>
+      </article>
+      <article class="journey-point" role="listitem">
+        <h3 class="journey-point__era">Hidden Mine</h3>
+        <p class="journey-point__text">Proprietary leaching concepts aim to unlock copper from waste rock at meaningful volumes.</p>
+      </article>
+      <article class="journey-point" role="listitem">
+        <h3 class="journey-point__era">Global Footprint</h3>
+        <p class="journey-point__text">A worldwide operating base keeps Freeport relevant in supply, policy, and customer talks.</p>
+      </article>
+    </div>
+    <figure class="journey-chapter__figure">
+      <figcaption class="journey-chapter__caption">Briefing graphic for stakeholder conversations</figcaption>
       <img
         src="{{ url_for('static', filename='img/strategic-context-delivery-teams.png') }}"
-        alt="Strategic Context for Delivery Teams. Five highlights: AI and data centers — AI and data centers significantly increase copper demand. US refined copper link — about 70 percent of US refined copper production is linked to Freeport. Hidden Mine innovation — the Hidden Mine concept enables extraction from waste rock. Geopolitical relevance — strong relevance from a global mining footprint. 2024–2026 The Copper–AI era — AI infrastructure, EVs, and renewables fuel demand; about 70 percent of US refined copper linked to Freeport; proprietary Hidden Mine technology unlocks roughly 200–800 million lbs copper per year from waste."
+        alt="Strategic Context for Delivery Teams: AI and data centers, U.S. refined copper link, Hidden Mine innovation, geopolitical relevance, and the Copper–AI era."
         class="journey-digital__img"
         width="1024"
         height="605"
@@ -93,12 +190,12 @@
         loading="lazy"
       />
     </figure>
-  </div>
+  </section>
 
   <div id="img-zoom-modal" class="img-zoom-modal" aria-hidden="true">
     <div class="img-zoom-dialog" role="dialog" aria-modal="true" aria-label="Full resolution image viewer">
       <div class="img-zoom-topbar">
-        <span>Enhanced Zoom (2×) — Scroll to inspect text</span>
+        <span>Enhanced Zoom (2×) — Scroll to Inspect Text</span>
         <button type="button" id="img-zoom-close" class="img-zoom-close">Close</button>
       </div>
       <div id="img-zoom-stage" class="img-zoom-stage">

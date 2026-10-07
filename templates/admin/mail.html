@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% from "includes/mine_page_head.html" import mine_page_head %}
-{% block title %}Send email{% endblock %}
+{% block title %}Send Email{% endblock %}
 {% block page_header %}
   {{ mine_page_head(
-      title='Send email',
+      title='Send Email',
       lede='With real SMTP, messages go through your server’s settings. Admins enter their own Outlook mailbox credentials below and may send to any valid email address. Only administrators can use this screen.',
       meta=['Administration', 'SMTP'],
       breadcrumbs=[
         {'label': 'Dashboard', 'href': url_for('main.dashboard')},
-        {'label': 'Send email', 'href': none}
+        {'label': 'Send Email', 'href': none}
       ]
     ) }}
 {% endblock %}

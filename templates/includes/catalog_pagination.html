@@ -1,6 +1,6 @@
 {% macro catalog_pagination(endpoint, catalog) %}
   {% if catalog.total_pages > 1 %}
-    <nav class="pagination catalog-pagination" aria-label="Catalogue pagination">
+    <nav class="pagination catalog-pagination" aria-label="Catalog pagination">
       {% if catalog.page > 1 %}
         <a href="{{ url_for(endpoint, page=catalog.page - 1, **catalog.query_params) }}">Previous</a>
       {% else %}

@@ -70,6 +70,10 @@ def create_app():
     db_init_app(app)
     csrf.init_app(app)
     app.jinja_env.globals["csrf_token"] = generate_csrf
+    from mine.text_cleanup import collapse_spaced_glyphs, readable_summary
+
+    app.jinja_env.filters["collapse_spaced_glyphs"] = collapse_spaced_glyphs
+    app.jinja_env.filters["readable_summary"] = readable_summary
 
     from mine import admin, auth, chatbot, content, main, projects, reference, repo_standalone, search
 

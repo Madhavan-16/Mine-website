@@ -4,10 +4,10 @@
 {% block page_header %}
   {{ mine_page_head(
       title=(repo_ui.create_h1 if mode == 'create' else repo_ui.edit_h1),
-      lede='Submissions use the same moderation workflow as other catalogue content.',
-      kicker='Program map',
+      lede='Submissions use the same moderation workflow as other catalog content.',
+      kicker='Program Map',
       breadcrumbs=[
-        {'label': 'Program map', 'href': url_for('reference.fmi_kyc')},
+        {'label': 'Program Map', 'href': url_for('reference.fmi_kyc')},
         {'label': repo_ui.list_label, 'href': url_for(repo_ui.list_endpoint)},
         {'label': 'Add' if mode == 'create' else 'Edit', 'href': none}
       ]
@@ -15,7 +15,7 @@
 {% endblock %}
 {% block content %}
   <p class="meta u-meta-lede">
-    Save a draft, or <strong>Submit for review</strong> so a moderator or admin can approve it. For KYC, KYA, newsletters, case studies, and other
+    Save a draft, or <strong>Submit for Review</strong> so a moderator or admin can approve it. For KYC, KYA, newsletters, case studies, and other
     <strong>knowledge series</strong>, use
     <a href="{{ url_for('content.content_create') }}">Create knowledge content</a>.
   </p>
@@ -50,8 +50,8 @@
     </div>
 
     <div class="toolbar content-form-actions toolbar--gap toolbar--end u-mt-14">
-      <button class="btn btn-primary" name="action" value="submit" type="submit">Submit for review</button>
-      <button class="btn btn-secondary" name="action" value="draft" type="submit">Save draft</button>
+      <button class="btn btn-primary" name="action" value="submit" type="submit">Submit for Review</button>
+      <button class="btn btn-secondary" name="action" value="draft" type="submit">Save Draft</button>
       <a class="btn btn-ghost" href="{{ url_for(repo_ui.list_endpoint) }}">Cancel</a>
     </div>
   </form>

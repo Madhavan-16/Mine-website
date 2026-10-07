@@ -231,7 +231,7 @@ def approve(cid: int):
 
         if is_knowledge_module(row["module"]) and knowledge_persist_enabled():
             if sync_knowledge_item_to_persist(current_app._get_current_object(), cid):
-                flash(f"“{row['title']}” approved and published to the knowledge catalogue.", "success")
+                flash(f"“{row['title']}” approved and published to the knowledge catalog.", "success")
             else:
                 flash(
                     f"“{row['title']}” approved on this site. Durable knowledge mirror sync did not confirm — "
@@ -239,7 +239,7 @@ def approve(cid: int):
                     "warning",
                 )
         else:
-            flash(f"“{row['title']}” approved and published to the catalogue.", "success")
+            flash(f"“{row['title']}” approved and published to the catalog.", "success")
     except Exception:
         current_app.logger.exception("Knowledge persist sync failed after approve #%s", cid)
         flash(
@@ -509,7 +509,7 @@ def users_delete():
         return redirect(url_for("admin.users"))
 
     flash(
-        f"User “{target['username']}” was permanently deleted. Their catalogue content is now attributed to you.",
+        f"User “{target['username']}” was permanently deleted. Their catalog content is now attributed to you.",
         "success",
     )
     return redirect(url_for("admin.users"))

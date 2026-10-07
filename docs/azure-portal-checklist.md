@@ -7,13 +7,13 @@ App: `mine-ffffhrdahfdhdcbx.centralindia-01.azurewebsites.net` · App Service na
 ## Data policy
 
 - **UI / images / text / layout / non-knowledge** → update from **local git push** only (`wwwroot`)
-- **Knowledge artefacts** → **website only** (create / approve / edit on Azure; durable mirror at `/home/data/mine/knowledge`)
+- **Knowledge artifacts** → **website only** (create / approve / edit on Azure; durable mirror at `/home/data/mine/knowledge`)
 
 ---
 
 ## Automatic (after you deploy the latest code)
 
-MiNe **ignores** legacy portal `DATABASE_PATH` / `UPLOAD_FOLDER` when they point at `/home/data/mine`. Live catalogue:
+MiNe **ignores** legacy portal `DATABASE_PATH` / `UPLOAD_FOLDER` when they point at `/home/data/mine`. Live catalog:
 
 | Item | Path on Azure |
 |------|----------------|

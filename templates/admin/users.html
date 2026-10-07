@@ -20,7 +20,7 @@
 
   {% set roster_count = roster_preview|length if roster_preview is defined else 0 %}
   <div class="portal-card portal-card--spaced">
-    <h2 class="portal-card__title">Team roster</h2>
+    <h2 class="portal-card__title">Team Roster</h2>
     <p class="meta portal-card__lede">
       <a href="{{ url_for('main.team_roster') }}">View team list</a>{% if roster_count %} ({{ roster_count }} members){% endif %}
     </p>
@@ -89,7 +89,7 @@
                       <button class="btn btn-danger" type="submit">Deactivate</button>
                     </form>
                   {% endif %}
-                  <form method="post" action="{{ url_for('admin.users_delete') }}" onsubmit="return confirm('Permanently delete this user? This cannot be undone. All catalogue content they authored will be reassigned to your account.');">
+                  <form method="post" action="{{ url_for('admin.users_delete') }}" onsubmit="return confirm('Permanently delete this user? This cannot be undone. All Catalog content they authored will be reassigned to your account.');">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                     <input type="hidden" name="user_id" value="{{ u.id }}" />
                     <button class="btn btn-secondary btn-danger-outline" type="submit">Delete</button>

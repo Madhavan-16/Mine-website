@@ -1,21 +1,21 @@
 {% extends "base.html" %}
-{% block title %}{% if mode == 'create' %}Create knowledge content{% else %}Edit knowledge content{% endif %}{% endblock %}
+{% block title %}{% if mode == 'create' %}Create Knowledge Content{% else %}Edit Knowledge Content{% endif %}{% endblock %}
 {% block content %}
   {% include "includes/back_program_map.html" %}
 
-  <h1>{% if mode == 'create' %}Create knowledge content{% else %}Edit knowledge content{% endif %}</h1>
+  <h1>{% if mode == 'create' %}Create Knowledge Content{% else %}Edit Knowledge Content{% endif %}</h1>
   {% if mode == 'edit' %}
   <p class="meta">Update the summary (or challenge/solution), then optionally <strong>replace the attachment</strong>. For approved items, only administrators can edit; saving keeps the publish status. Authors can revise drafts or returned items and submit again for review.</p>
   {% else %}
   <p class="meta">
     {% if current_user and current_user.role in ['admin','moderator'] %}
-    Add a knowledge-repository item (KYC, KYA, term of the week, newsletter, case studies, RFP snippets, blogs &amp; whitepapers).
+    Add a Knowledge Repository item (KYC, KYA, Term of the Week, Newsletter, Case Studies, RFP Snippets, Blogs &amp; Whitepapers).
     {% else %}
-    Add a knowledge-repository item (newsletter, case studies, RFP snippets, blogs &amp; whitepapers). KYC, KYA, and Term of the week are managed by administrators and moderators.
+    Add a Knowledge Repository item (Newsletter, Case Studies, RFP Snippets, Blogs &amp; Whitepapers). KYC, KYA, and Term of the Week are managed by administrators and moderators.
     {% endif %}
-    Choose <strong>Submit for review</strong> when ready — moderators and admins will be notified to approve it. Use <strong>Save draft</strong> to keep working privately.
+    Choose <strong>Submit for Review</strong> when ready — moderators and admins will be notified to approve it. Use <strong>Save Draft</strong> to keep working privately.
     {% if current_user and current_user.role in ['admin','moderator'] %}
-    For programs &amp; projects, use <a href="{{ url_for('projects.project_create') }}">Add program or project</a>.
+    For Programs &amp; Projects, use <a href="{{ url_for('projects.project_create') }}">Add Program or Project</a>.
     {% endif %}
   </p>
   {% endif %}
@@ -85,8 +85,8 @@
       {% if mode == 'edit' and row is defined and row and (row.status or '')|lower == 'approved' %}
         <button class="btn btn-primary" name="action" value="draft" type="submit">Save changes</button>
       {% else %}
-        <button class="btn btn-primary" name="action" value="submit" type="submit">Submit for review</button>
-        <button class="btn btn-secondary" name="action" value="draft" type="submit">Save draft</button>
+        <button class="btn btn-primary" name="action" value="submit" type="submit">Submit for Review</button>
+        <button class="btn btn-secondary" name="action" value="draft" type="submit">Save Draft</button>
       {% endif %}
       {% if mode == 'edit' and row is defined and row %}
         <a class="btn btn-ghost" href="{{ url_for('content.content_view', cid=row.id) }}">Cancel</a>

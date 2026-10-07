@@ -1,21 +1,21 @@
 {% extends "base.html" %}
 {% from "includes/mine_page_head.html" import mine_page_head %}
-{% block title %}{% if mode == "create" %}Add program or project{% else %}Edit program or project{% endif %}{% endblock %}
+{% block title %}{% if mode == "create" %}Add Program or Project{% else %}Edit Program or Project{% endif %}{% endblock %}
 {% block page_header %}
   {{ mine_page_head(
-      title=('Add a program or project' if mode == 'create' else 'Edit program or project'),
-      lede='Submissions go through the same moderation workflow as other content. Approved items appear in Programs & projects.',
+      title=('Add a program or project' if mode == 'create' else 'Edit Program or Project'),
+      lede='Submissions go through the same moderation workflow as other content. Approved items appear in Programs & Projects.',
       kicker='Delivery portfolio',
       breadcrumbs=[
-        {'label': 'Programs & projects', 'href': url_for('projects.project_list')},
+        {'label': 'Programs & Projects', 'href': url_for('projects.project_list')},
         {'label': 'Add' if mode == 'create' else 'Edit', 'href': none}
       ]
     ) }}
 {% endblock %}
 {% block content %}
   <p class="meta u-meta-lede">
-    Save a draft, or <strong>Submit for review</strong> so a moderator or admin can approve it. Approved items appear in
-    <a href="{{ url_for('projects.project_list') }}">Programs &amp; projects</a>.
+    Save a draft, or <strong>Submit for Review</strong> so a moderator or admin can approve it. Approved items appear in
+    <a href="{{ url_for('projects.project_list') }}">Programs &amp; Projects</a>.
   </p>
   <form method="post" class="form" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
@@ -31,7 +31,7 @@
     {% endif %}
 
     <h2 class="form-section-title">Project details</h2>
-    <p class="help u-mt-0">All fields below (except description and tags) are required to <strong>Submit for review</strong>. Use <strong>Save draft</strong> to save work in progress.</p>
+    <p class="help u-mt-0">All fields below (except description and tags) are required to <strong>Submit for Review</strong>. Use <strong>Save Draft</strong> to save work in progress.</p>
 
     <label for="program_name">Program name</label>
     {{ form.program_name(placeholder="e.g. Freeport — Digital") }}
@@ -65,8 +65,8 @@
     </div>
 
     <div class="toolbar content-form-actions toolbar--gap toolbar--end u-mt-14">
-      <button class="btn btn-primary" name="action" value="submit" type="submit">Submit for review</button>
-      <button class="btn btn-secondary" name="action" value="draft" type="submit">Save draft</button>
+      <button class="btn btn-primary" name="action" value="submit" type="submit">Submit for Review</button>
+      <button class="btn btn-secondary" name="action" value="draft" type="submit">Save Draft</button>
       <a class="btn btn-ghost" href="{{ url_for('projects.project_list') }}">Cancel</a>
     </div>
   </form>

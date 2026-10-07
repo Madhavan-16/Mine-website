@@ -187,7 +187,7 @@ def _count_approved_knowledge_repo(db) -> int:
 
 
 def _landing_tile_stat(count: int, *, kind: str = "articles") -> str | None:
-    """Human-readable stat line for Explore tiles; None hides the line when empty catalogue."""
+    """Human-readable stat line for Explore tiles; None hides the line when empty catalog."""
     if kind == "eras":
         return f"{count} {'era' if count == 1 else 'eras'}"
     if kind == "topics":
@@ -195,7 +195,7 @@ def _landing_tile_stat(count: int, *, kind: str = "articles") -> str | None:
     if kind == "pending":
         return "Nothing pending" if count == 0 else f"{count} pending"
     if kind == "overview":
-        return "Program overview"
+        return "Program Overview"
     if kind == "articles":
         if count == 0:
             return None
@@ -329,9 +329,9 @@ _FREEPORT_STORY = [
 
 
 SEARCH_XP_PLACEHOLDERS = [
-    "Search programmes, case studies, and account briefings…",
+    "Search programs, case studies, and account briefings…",
     "Try “case studies”, “programs and projects”, “Hidden Mine”…",
-    "Find KYC entries, RFP snippets, and delivery artefacts…",
+    "Find KYC entries, RFP Snippets, and delivery artifacts…",
     "Explore innovation stories and Hall of Fame wins…",
 ]
 
@@ -339,7 +339,7 @@ SEARCH_XP_FILTER_TAGS = [
     "Grasberg",
     "Hidden Mine",
     "Copper",
-    "RFP snippets",
+    "RFP Snippets",
     "Hexaware Journey",
 ]
 
@@ -393,6 +393,25 @@ def _knowledge_repo_feed_recent(db, limit: int = 40):
         """,
         [*keys, limit],
     ).fetchall()
+
+
+def _knowledge_feed_grouped(rows):
+    """Group recent feed rows by knowledge series (canonical module order)."""
+    labels = dict(KNOWLEDGE_MODULES)
+    order = [mod for mod, _ in KNOWLEDGE_MODULES]
+    buckets: dict[str, list] = {mod: [] for mod in order}
+    for row in rows or []:
+        mod = (row["module"] or "").strip() or "other"
+        if mod not in buckets:
+            buckets[mod] = []
+            order.append(mod)
+            labels.setdefault(mod, mod.replace("_", " ").title())
+        buckets[mod].append(row)
+    return [
+        {"module": mod, "label": labels.get(mod, mod), "entries": buckets[mod]}
+        for mod in order
+        if buckets.get(mod)
+    ]
 
 
 def _active_team_count(db) -> int:
@@ -477,7 +496,7 @@ def _landing_page_context(db, user):
             user,
         ),
         _landing_quick_tile(
-            "Knowledge repository",
+            "Knowledge Repository",
             "📚",
             url_for("main.knowledge"),
             knowledge_repo_n,
@@ -516,7 +535,7 @@ def _landing_page_context(db, user):
     if not user:
         quick_access.append(
             _landing_quick_tile(
-                "Program map (KYC)",
+                "Program Map (KYC)",
                 "🗺️",
                 url_for("reference.fmi_kyc"),
                 1,
@@ -529,7 +548,7 @@ def _landing_page_context(db, user):
     if user and user["role"] in ("admin", "moderator"):
         quick_access.append(
             _landing_quick_tile(
-                "Analytics & insight",
+                "Analytics & Insight",
                 "📈",
                 url_for("admin.analytics"),
                 pending_n,
@@ -555,8 +574,8 @@ def _landing_page_context(db, user):
     value_cards = [
         {
             "slug": "delivery",
-            "lens": "Operate & ship",
-            "title": "Delivery teams",
+            "lens": "Operate & Ship",
+            "title": "Delivery Teams",
             "tagline": "Reusable intelligence for sprint-ready delivery.",
             "peek": [
                 "Reuse approved references in proposals",
@@ -564,41 +583,41 @@ def _landing_page_context(db, user):
                 "Cut context switching across teams",
             ],
             "highlights": [
-                "Trusted catalog entries you can cite in client artefacts",
-                "Case studies aligned to programmes and approvals",
+                "Trusted catalog entries you can cite in client artifacts",
+                "Case Studies aligned to programs and approvals",
                 "Cross-team snippets so everyone reads the same story",
             ],
         },
         {
             "slug": "leadership",
-            "lens": "Steer & report",
+            "lens": "Steer & Report",
             "title": "Leadership",
             "tagline": "The partnership narrative — outcomes and signals.",
             "peek": [
                 "Journey timeline at a glance",
                 "Breadth of the knowledge corpus",
-                "Spotlight wins from the catalogue",
+                "Spotlight wins from the catalog",
             ],
             "highlights": [
                 "Freeport–Hexaware Journey for stewardship conversations",
-                "Analytics and KPIs anchored to live catalogue totals",
+                "Analytics and KPIs anchored to live catalog totals",
                 "Innovation and Hall of Fame for visible delivery impact",
             ],
         },
         {
             "slug": "joiners",
-            "lens": "Start strong",
-            "title": "New employees",
+            "lens": "Start Strong",
+            "title": "New Employees",
             "tagline": "Ramp faster — people, onboarding, training in flow.",
             "peek": [
                 "Meet who’s who on the account",
                 "One onboarding path to follow",
-                "Training artefacts without hunting",
+                "Training artifacts without hunting",
             ],
             "highlights": [
                 "Unified onboarding kit instead of fragmented links",
                 "Directory and personas so newcomers find the right owner",
-                "Training corner tuned to how MiNe organizes learning",
+                "Training Corner tuned to how MiNe organizes learning",
             ],
         },
     ]
@@ -662,16 +681,26 @@ def dashboard():
     innovation_n = _count_approved_module(db, "innovation")
     team_n = _active_team_count(db)
 
+    case_studies_n = int(counts.get("case_study", 0) or 0)
+    series_populated = sum(1 for mod, _ in KNOWLEDGE_MODULES if counts.get(mod, 0) > 0)
+    series_total = len(KNOWLEDGE_MODULES)
+
     portal_stats = {
         "knowledge_items": approved_total,
         "projects": projects_n,
         "innovations": innovation_n,
+        "case_studies": case_studies_n,
+        "series_populated": series_populated,
+        "series_total": series_total,
         "team_members": team_n,
     }
 
-    chart_modules = [
-        {"label": label, "value": counts.get(mod, 0)} for mod, label in KNOWLEDGE_MODULES
+    chart_modules_all = [
+        {"label": label, "value": counts.get(mod, 0), "module": mod}
+        for mod, label in KNOWLEDGE_MODULES
     ]
+    chart_empty_labels = [row["label"] for row in chart_modules_all if not row["value"]]
+    chart_modules = [row for row in chart_modules_all if row["value"] > 0]
     _pct_for_bars(chart_modules, "value")
 
     innov_rows = db.execute(
@@ -682,7 +711,11 @@ def dashboard():
         """
     ).fetchall()
     innov_buckets = _innovation_bucket_counts(innov_rows)
-    inn_entries = [{"label": b["label"], "value": int(b["count"])} for b in innov_buckets]
+    inn_entries = [
+        {"label": b["label"], "value": int(b["count"])}
+        for b in innov_buckets
+        if int(b["count"] or 0) > 0
+    ]
     _pct_for_bars(inn_entries, "value")
 
     try:
@@ -715,6 +748,7 @@ def dashboard():
         ).fetchall()
 
     feed_rows = _knowledge_repo_feed_recent(db, 36)
+    knowledge_feed_groups = _knowledge_feed_grouped(feed_rows)
 
     pending_n = None
     if user and user["role"] in ("admin", "moderator"):
@@ -726,9 +760,11 @@ def dashboard():
         "dashboard.html",
         portal_stats=portal_stats,
         chart_modules=chart_modules,
+        chart_empty_labels=chart_empty_labels,
         innovation_bars=inn_entries,
         project_rows=project_rows,
         knowledge_feed=feed_rows,
+        knowledge_feed_groups=knowledge_feed_groups,
         timeline=_FREEPORT_STORY,
         module_labels=dict(KNOWLEDGE_MODULES),
         pending_moderation=pending_n,

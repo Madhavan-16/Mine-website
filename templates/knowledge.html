@@ -21,26 +21,26 @@
   'rfp_snippet': 'edit',
   'blog': 'document'
 } %}
-{% set krepo_title = 'Knowledge repository' if landing else (active_module_label if module else ('Search results' if q else ('By ' ~ author if author else 'Knowledge catalogue'))) %}
-{% set krepo_lede = 'Browse approved Freeport account knowledge by series, then open the items you need.' if landing else 'Filtered catalogue results with search, module, and author controls.' %}
+{% set krepo_title = 'Knowledge Repository' if landing else (active_module_label if module else ('Search Results' if q else ('By ' ~ author if author else 'Knowledge Catalog'))) %}
+{% set krepo_lede = 'Browse approved Freeport account knowledge by series, then open the items you need.' if landing else 'Filtered catalog results with search, module, and author controls.' %}
 
 <div class="krepo{% if not landing %} krepo--list{% endif %}">
   {% call mine_page_head(
       title=krepo_title,
       lede=krepo_lede,
-      kicker='Approved catalogue' if landing else 'Filtered catalogue',
+      kicker='Approved Catalog' if landing else 'Filtered Catalog',
       meta=[
         catalog.total ~ ' items',
         'Overview' if landing else (active_module_label if module else 'Filtered')
       ],
       breadcrumbs=[
         {'label': 'Home', 'href': url_for('main.knowledge') if is_guest else url_for('main.dashboard')},
-        {'label': 'Knowledge repository', 'href': none if landing else url_for('main.knowledge')},
-      ] + ([] if landing else [{'label': (active_module_label if module else ('Search' if q else ('Author' if author else 'Catalogue'))), 'href': none}]),
+        {'label': 'Knowledge Repository', 'href': none if landing else url_for('main.knowledge')},
+      ] + ([] if landing else [{'label': (active_module_label if module else ('Search' if q else ('Author' if author else 'Catalog'))), 'href': none}]),
       class='portal-page-head'
     ) %}
     {% if current_user and not is_guest %}
-      <a class="btn btn-primary" href="{{ url_for('content.content_create', module=module) if module else url_for('content.content_create') }}">+ Create content</a>
+      <a class="btn btn-primary" href="{{ url_for('content.content_create', module=module) if module else url_for('content.content_create') }}">+ Create Content</a>
     {% endif %}
     {% if not landing %}
       <a class="btn btn-secondary" href="{{ url_for('main.knowledge') }}">← Overview</a>
@@ -51,8 +51,8 @@
   <section class="krepo-section" aria-labelledby="krepo-categories-title" data-portal-stagger>
     <div class="krepo-section__head">
       <div>
-        <p class="mine-section-kicker">Catalogue</p>
-        <h2 id="krepo-categories-title" class="krepo-section__title">Browse by series</h2>
+        <p class="mine-section-kicker">Catalog</p>
+        <h2 id="krepo-categories-title" class="krepo-section__title">Browse by Series</h2>
       </div>
       <p class="krepo-section__hint">Jump into a curated module</p>
     </div>
@@ -98,14 +98,14 @@
   <section class="krepo-catalog" aria-labelledby="krepo-catalog-title">
     <div class="krepo-section__head krepo-catalog__head">
       <div>
-        <p class="mine-section-kicker">Catalogue</p>
-        <h2 id="krepo-catalog-title" class="krepo-section__title">{% if landing %}Full catalogue{% else %}Results{% endif %}</h2>
+        <p class="mine-section-kicker">Catalog</p>
+        <h2 id="krepo-catalog-title" class="krepo-section__title">{% if landing %}Full Catalog{% else %}Results{% endif %}</h2>
         <p class="krepo-section__hint">Indexed search · sortable · paginated</p>
       </div>
     </div>
 
     <div class="krepo-list-layout">
-      <aside class="krepo-filters" aria-label="Filter catalogue">
+      <aside class="krepo-filters" aria-label="Filter catalog">
         <h3 class="krepo-filters__title">Refine</h3>
         <form method="get" action="{{ url_for('main.knowledge') }}" class="krepo-filters__form">
           <div class="field">
@@ -185,7 +185,7 @@
                         <time datetime="{{ item.updated_at }}">{{ item.updated_at }}</time>
                       </p>
                       {% if item.summary and item.summary.strip() %}
-                        <p class="krepo-result-card__excerpt">{{ item.summary|truncate(280)|e }}</p>
+                        <p class="krepo-result-card__excerpt">{{ item.summary|readable_summary|truncate(280)|e }}</p>
                       {% endif %}
                     </div>
                     <span class="krepo-result-card__cta" aria-hidden="true">Read →</span>
@@ -200,7 +200,7 @@
         {% else %}
           {{ empty_state(
             'No matching items',
-            'Adjust your filters or browse the full catalogue to find approved knowledge articles.',
+            'Adjust your filters or browse the full catalog to find approved knowledge articles.',
             url_for('main.knowledge'),
             'Reset filters'
           ) }}

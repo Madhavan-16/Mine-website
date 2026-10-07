@@ -2,7 +2,7 @@
 {% from "includes/mine_icon.html" import mine_icon %}
 {% block title %}Dashboard{% endblock %}
 {% block head_extra %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=dash-redesign-3" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}?v=dash-redesign-5" />
 {% endblock %}
 {% block page_header %}{% endblock %}
 {% block content %}
@@ -19,7 +19,7 @@
       <p class="dashboard-kicker">Freeport · Hexaware</p>
       <h1 class="dashboard-title">Welcome back{% if current_user.display_name %}, {{ current_user.display_name }}{% endif %}</h1>
       <p class="dashboard-lede">
-        Command center for journeys, programmes, verified knowledge, and delivery signals across the MiNe catalogue.
+        Command Center for journeys, programs, verified knowledge, and delivery signals across the MiNe catalog.
       </p>
       <div class="mine-page-head__meta dashboard-hero__meta" aria-label="Page context">
         <span>{{ portal_stats.knowledge_items }} catalog items</span>
@@ -29,7 +29,7 @@
         <span>{{ portal_stats.team_members }} associates</span>
       </div>
       <div class="dashboard-hero-actions">
-        <a class="btn btn-primary" href="{{ url_for('main.knowledge') }}">Knowledge repository</a>
+        <a class="btn btn-primary" href="{{ url_for('main.knowledge') }}">Knowledge Repository</a>
         {% if config.get('CHATBOT_ENABLED', True) %}
         <button type="button" class="btn btn-secondary dashboard-hero-actions__chat" data-open-mine-chat>
           <img
@@ -44,7 +44,7 @@
           Ask MiNe
         </button>
         {% endif %}
-        <a class="btn btn-ghost" href="{{ url_for('search.search') }}">Advanced search</a>
+        <a class="btn btn-ghost" href="{{ url_for('search.search') }}">Advanced Search</a>
         {% if pending_moderation is not none and pending_moderation > 0 %}
           <a class="btn btn-secondary dashboard-pill-alert" href="{{ url_for('admin.moderation') }}">
             Moderation queue ({{ pending_moderation }})
@@ -56,22 +56,36 @@
       <a class="dashboard-stat-widget" href="{{ url_for('main.knowledge') }}">
         <span class="dashboard-stat-icon" aria-hidden="true">{{ mine_icon('document', 20) }}</span>
         <span class="dashboard-stat-value">{{ portal_stats.knowledge_items }}</span>
-        <span class="dashboard-stat-label">Catalog items</span>
+        <span class="dashboard-stat-label">Catalog Items</span>
       </a>
       <a class="dashboard-stat-widget" href="{{ url_for('projects.project_list') }}">
         <span class="dashboard-stat-icon" aria-hidden="true">{{ mine_icon('chart', 20) }}</span>
         <span class="dashboard-stat-value">{{ portal_stats.projects }}</span>
-        <span class="dashboard-stat-label">Active projects</span>
+        <span class="dashboard-stat-label">Active Projects</span>
       </a>
+      {% if portal_stats.innovations > 0 %}
       <a class="dashboard-stat-widget" href="{{ url_for('main.innovation') }}">
         <span class="dashboard-stat-icon" aria-hidden="true">{{ mine_icon('bulb', 20) }}</span>
         <span class="dashboard-stat-value">{{ portal_stats.innovations }}</span>
-        <span class="dashboard-stat-label">Innovation posts</span>
+        <span class="dashboard-stat-label">Innovation Posts</span>
       </a>
+      {% elif portal_stats.case_studies > 0 %}
+      <a class="dashboard-stat-widget" href="{{ url_for('main.knowledge', module='case_study') }}">
+        <span class="dashboard-stat-icon" aria-hidden="true">{{ mine_icon('document', 20) }}</span>
+        <span class="dashboard-stat-value">{{ portal_stats.case_studies }}</span>
+        <span class="dashboard-stat-label">Case Studies</span>
+      </a>
+      {% else %}
+      <a class="dashboard-stat-widget" href="{{ url_for('main.knowledge') }}">
+        <span class="dashboard-stat-icon" aria-hidden="true">{{ mine_icon('chart', 20) }}</span>
+        <span class="dashboard-stat-value">{{ portal_stats.series_populated }}/{{ portal_stats.series_total }}</span>
+        <span class="dashboard-stat-label">Series with Content</span>
+      </a>
+      {% endif %}
       <span class="dashboard-stat-widget dashboard-stat-widget--static">
         <span class="dashboard-stat-icon" aria-hidden="true">{{ mine_icon('people', 20) }}</span>
         <span class="dashboard-stat-value">{{ portal_stats.team_members }}</span>
-        <span class="dashboard-stat-label">Active associates</span>
+        <span class="dashboard-stat-label">Active Associates</span>
       </span>
     </div>
   </header>
@@ -79,7 +93,7 @@
   <section class="dashboard-panel-section" aria-labelledby="dash-journey-heading">
     <div class="dashboard-section-head" data-motion-skip>
       <h2 id="dash-journey-heading" class="dashboard-h2">
-        Strategic timeline
+        Strategic Timeline
       </h2>
       <a class="dashboard-section-link" href="{{ url_for('reference.fmi_kyc') }}#kyc-evolution-timeline">Evolution timeline (KYC) →</a>
     </div>
@@ -169,9 +183,10 @@
     <div class="dashboard-split-col">
       <div class="dashboard-panel card">
         <div class="dashboard-panel-head">
-          <h2 class="dashboard-panel-title">Knowledge mix</h2>
-          <span class="dashboard-panel-meta">Approved repository slices</span>
+          <h2 class="dashboard-panel-title">Knowledge Mix</h2>
+          <span class="dashboard-panel-meta">Approved Series with Content</span>
         </div>
+        {% if chart_modules %}
         <div class="dashboard-chart" role="figure" aria-label="Knowledge items by curated module">
           <div class="dashboard-chart-rows">
           {% for row in chart_modules %}
@@ -185,17 +200,26 @@
           {% endfor %}
           </div>
         </div>
+        {% if chart_empty_labels %}
+        <p class="dashboard-chart-gap">
+          Not published yet: {{ chart_empty_labels|join(', ') }}.
+        </p>
+        {% endif %}
+        {% else %}
+        <p class="dashboard-empty dashboard-empty--panel">No approved knowledge series yet. Seed the repository to populate this mix.</p>
+        {% endif %}
         <div class="dashboard-panel-foot">
-          <a href="{{ url_for('main.knowledge') }}">Open repository →</a>
+          <a href="{{ url_for('main.knowledge') }}">Open Repository →</a>
         </div>
       </div>
     </div>
     <div class="dashboard-split-col">
       <div class="dashboard-panel card">
         <div class="dashboard-panel-head">
-          <h2 class="dashboard-panel-title">Innovation signals</h2>
-          <span class="dashboard-panel-meta">Keyword scan of approved catalogue</span>
+          <h2 class="dashboard-panel-title">Innovation Signals</h2>
+          <span class="dashboard-panel-meta">Themes in Approved Innovation Posts</span>
         </div>
+        {% if innovation_bars %}
         <div class="dashboard-chart" role="figure" aria-label="Innovation thematic coverage">
           <div class="dashboard-chart-rows dashboard-chart-rows--accent">
           {% for row in innovation_bars %}
@@ -209,8 +233,15 @@
           {% endfor %}
           </div>
         </div>
+        {% else %}
+        <p class="dashboard-empty dashboard-empty--panel">
+          No innovation themes to chart yet.
+          <a href="{{ url_for('main.innovation') }}">Open the Innovation Center</a>
+          to browse or submit a story.
+        </p>
+        {% endif %}
         <div class="dashboard-panel-foot">
-          <a href="{{ url_for('main.innovation') }}">Innovation hub →</a>
+          <a href="{{ url_for('main.innovation') }}">Innovation Hub →</a>
         </div>
       </div>
     </div>
@@ -218,8 +249,8 @@
 
   <section class="dashboard-panel-section">
     <div class="dashboard-section-head" data-motion-skip>
-      <h2 id="dash-projects-heading" class="dashboard-h2">Active programs & projects</h2>
-      <a class="dashboard-section-link" href="{{ url_for('projects.project_list') }}">View all programmes →</a>
+      <h2 id="dash-projects-heading" class="dashboard-h2">Active Programs & Projects</h2>
+      <a class="dashboard-section-link" href="{{ url_for('projects.project_list') }}">View All Programs →</a>
     </div>
     {% if project_rows %}
       <div class="dashboard-project-grid" aria-labelledby="dash-projects-heading">
@@ -235,7 +266,7 @@
             </header>
             <dl class="dashboard-project-meta">
               <div>
-                <dt>Programme</dt>
+                <dt>Program</dt>
                 <dd>{{ proj.program_name or "—" }}</dd>
               </div>
               <div>
@@ -253,16 +284,16 @@
         {% endfor %}
       </div>
     {% else %}
-      <p class="dashboard-empty">No published projects yet. Once catalogued, they surface here instantly.</p>
+      <p class="dashboard-empty">No published projects yet. Once cataloged, they surface here instantly.</p>
     {% endif %}
   </section>
 
   <section class="dashboard-feed-section card" aria-labelledby="dash-feed-heading">
     <header class="dashboard-feed-head">
       <div>
-        <h2 id="dash-feed-heading" class="dashboard-panel-title">Live knowledge pulse</h2>
+        <h2 id="dash-feed-heading" class="dashboard-panel-title">Live Knowledge Pulse</h2>
         <p class="dashboard-section-lead dashboard-section-lead--tight">
-          Stream of recent approved repository artefacts — refined without leaving MiNe using the spotlight below or full-text scan.
+          Recent approved repository artifacts, grouped by series — filter below or open full-text search.
         </p>
       </div>
       <label class="dashboard-feed-filter">
@@ -281,35 +312,43 @@
       </label>
     </header>
     <div class="dashboard-feed-body">
-      {% if knowledge_feed %}
-        <ul id="dashboard-feed-list" class="dashboard-feed-list">
-          {% for item in knowledge_feed %}
-            {% set label = module_labels.get(item.module, item.module)|replace('_', ' ')|title %}
-            {% set qtext = (item.title ~ ' ' ~ (item.summary or '') ~ ' ' ~ label)|lower %}
-            <li
-              class="dashboard-feed-row"
-              data-feed-search="{{ qtext[:400]|replace('\n',' ')|replace('\r',' ')|trim|e }}"
-            >
-              <div class="dashboard-feed-chip">{{ label }}</div>
-              <div class="dashboard-feed-main">
-                <a class="dashboard-feed-title" href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a>
-                <p class="dashboard-feed-summary">{{ item.summary or '—' }}</p>
-              </div>
-              <span class="dashboard-feed-meta">
-                {% if item.updated_at %}<span class="dashboard-feed-date">{{ item.updated_at }}</span>{% endif %}
-                <span class="dashboard-feed-author">{{ item.author_name }}</span>
-              </span>
-            </li>
+      {% if knowledge_feed_groups %}
+        <div id="dashboard-feed-list" class="dashboard-feed-list">
+          {% for group in knowledge_feed_groups %}
+            <section class="dashboard-feed-group" data-feed-group aria-labelledby="dash-feed-{{ group.module }}">
+              <h3 id="dash-feed-{{ group.module }}" class="dashboard-feed-group__title">
+                <span class="dashboard-feed-chip">{{ group.label }}</span>
+                <span class="dashboard-feed-group__count">{{ group.entries|length }}</span>
+              </h3>
+              <ul class="dashboard-feed-group__list">
+                {% for item in group.entries %}
+                  {% set qtext = (item.title ~ ' ' ~ (item.summary or '') ~ ' ' ~ group.label)|lower %}
+                  <li
+                    class="dashboard-feed-row"
+                    data-feed-search="{{ qtext[:400]|replace('\n',' ')|replace('\r',' ')|trim|e }}"
+                  >
+                    <div class="dashboard-feed-main">
+                      <a class="dashboard-feed-title" href="{{ url_for('content.content_view', cid=item.id) }}">{{ item.title }}</a>
+                      <p class="dashboard-feed-summary">{{ (item.summary|readable_summary) if item.summary else '—' }}</p>
+                    </div>
+                    <span class="dashboard-feed-meta">
+                      {% if item.updated_at %}<span class="dashboard-feed-date">{{ item.updated_at }}</span>{% endif %}
+                      <span class="dashboard-feed-author">{{ item.author_name }}</span>
+                    </span>
+                  </li>
+                {% endfor %}
+              </ul>
+            </section>
           {% endfor %}
-        </ul>
+        </div>
         <p id="dashboard-feed-empty" class="dashboard-empty" hidden>No entries match your filter.</p>
       {% else %}
         <p class="dashboard-empty">Knowledge stream is empty — seed the repository to unlock this view.</p>
       {% endif %}
     </div>
     <footer class="dashboard-feed-foot">
-      <a class="btn btn-secondary" href="{{ url_for('main.knowledge') }}">Repository overview</a>
-      <a class="btn btn-primary" href="{{ url_for('search.search') }}">Search catalogue</a>
+      <a class="btn btn-secondary" href="{{ url_for('main.knowledge') }}">Repository Overview</a>
+      <a class="btn btn-primary" href="{{ url_for('search.search') }}">Search Catalog</a>
     </footer>
   </section>
 </div>

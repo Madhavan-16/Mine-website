@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% from "includes/mine_page_head.html" import mine_page_head %}
-{% block title %}Moderator profile{% endblock %}
+{% block title %}Moderator Profile{% endblock %}
 {% block page_header %}
   {{ mine_page_head(
-      title='Moderator profile',
+      title='Moderator Profile',
       lede='Signed in as ' ~ user.display_name ~ '.',
       meta=['Moderation', user.role],
       breadcrumbs=[
         {'label': 'Dashboard', 'href': url_for('main.dashboard')},
-        {'label': 'Moderator profile', 'href': none}
+        {'label': 'Moderator Profile', 'href': none}
       ]
     ) }}
 {% endblock %}

@@ -65,7 +65,7 @@ def main() -> int:
     get("/search")
     get("/my/submissions", expect=(200, 302))
 
-    # Non-admin should not reach content catalogue directly (redirect)
+    # Non-admin should not reach content catalog directly (redirect)
     r_content = get("/content", expect=(200, 302))
     if r_content.status_code == 302 and "/knowledge" not in (r_content.headers.get("Location") or ""):
         loc = r_content.headers.get("Location", "")

@@ -5,16 +5,16 @@
 {% block title %}Innovation Center{% endblock %}
 {% block page_header %}
   {% call mine_page_head(
-      title='Innovation center',
+      title='Innovation Center',
       lede='Customer value adds, delivery improvements, and reusable ideas from the Freeport account.',
       meta=[
-        (innovation_stats|length ~ ' metric cards') if innovation_stats else 'Program map',
+        (innovation_stats|length ~ ' metric cards') if innovation_stats else 'Program Map',
         ((rows|length ~ ' published') if rows else 'No published items'),
         'Updated Aug 2026'
       ],
       breadcrumbs=[
-        {'label': 'Program map', 'href': url_for('reference.fmi_kyc')},
-        {'label': 'Innovation center', 'href': none}
+        {'label': 'Program Map', 'href': url_for('reference.fmi_kyc')},
+        {'label': 'Innovation Center', 'href': none}
       ]
     ) %}
     {% if current_user.role in ['admin','moderator'] %}

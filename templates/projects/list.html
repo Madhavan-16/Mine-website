@@ -10,7 +10,7 @@
 {% block content %}
   <div class="portal-page projects-portal-page" data-projects-portal data-active-view="cards" data-portfolio-viz='{{ portfolio_viz | tojson }}'>
   {% call mine_page_head(
-      title='Programs & projects',
+      title='Programs & Projects',
       lede='Explore the Freeport delivery portfolio — open any engagement for scope and technology detail, or switch to the delivery runway to see how engagements overlap in time.',
       meta=[
         (rows|length ~ (' active projects' if active == '1' else ' ended projects' if active == '0' else ' projects')),
@@ -18,7 +18,7 @@
       ],
       breadcrumbs=[
         {'label': 'Programs', 'href': none},
-        {'label': 'Programs & projects', 'href': none}
+        {'label': 'Programs & Projects', 'href': none}
       ],
       class='portal-page-head'
     ) %}

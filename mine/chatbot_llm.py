@@ -143,9 +143,9 @@ def _build_user_prompt(
     modes: list[str] = []
     if guest:
         modes.append(
-            "GUEST MODE: Only discuss Knowledge repository, Domain Knowledge "
-            "(copper mining), Freeport–Hexaware Journey, and Know your Customer. "
-            "Do not provide Programs & projects, SOW, Onboarding, Training, Innovation, or Hall of Fame details. "
+            "GUEST MODE: Only discuss Knowledge Repository, Domain Knowledge "
+            "(copper mining), Freeport–Hexaware Journey, and Know Your Customer. "
+            "Do not provide Programs & Projects, SOW, Onboarding, Training, Innovation, or Hall of Fame details. "
             "If asked about those, say they need a full MiNe account."
         )
     if concise:
@@ -566,7 +566,7 @@ _CONTENT_SUGGEST_SYSTEM = (
     "- Use ONLY facts present in the source text. Do not invent clients, metrics, or project names.\n"
     "- Ignore footers, copyright, www.hexaware.com, Confidential, Faster/Better/Cheaper sidebars, page numbers.\n"
     "- Return STRICT JSON only (no markdown fences, no commentary).\n"
-    "- Keep wording clear and professional for a knowledge catalogue.\n"
+    "- Keep wording clear and professional for a knowledge catalog.\n"
 )
 
 _CONTENT_SUGGEST_MAX_CHARS = 14_000
@@ -602,7 +602,7 @@ def suggest_content_fields_from_text(
     module: str | None = None,
     filename: str | None = None,
 ) -> dict[str, Any]:
-    """Use Groq/Gemini to categorize upload text into catalogue form fields.
+    """Use Groq/Gemini to categorize upload text into catalog form fields.
 
     Returns ``{ok, provider?, title?, summary?, business_challenge?, solution?, error?}``.
     Tries the resolved provider first, then the other if both keys are configured.
@@ -634,15 +634,15 @@ def suggest_content_fields_from_text(
     else:
         schema = (
             "{\n"
-            '  "title": "concise catalogue title",\n'
-            '  "summary": "3-5 sentence catalogue summary (not the full document)",\n'
+            '  "title": "concise catalog title",\n'
+            '  "summary": "3-5 sentence catalog summary (not the full document)",\n'
             '  "business_challenge": "",\n'
             '  "solution": ""\n'
             "}"
         )
         task = (
             f"This is a knowledge-series upload (module={mod}). "
-            "Produce a clean title and a short professional summary for the MiNe catalogue. "
+            "Produce a clean title and a short professional summary for the MiNe catalog. "
             "Summary must be a gist, not a dump of the whole file."
         )
 

@@ -4,24 +4,24 @@
 {% from "includes/empty_state.html" import empty_state %}
 {% from "includes/mine_page_head.html" import mine_page_head %}
 {% from "includes/skeleton.html" import mine_skeleton %}
-{% block title %}Content catalogue{% endblock %}
+{% block title %}Content Catalog{% endblock %}
 {% block page_header %}{% endblock %}
 {% block content %}
 <div class="portal-page">
   {% call mine_page_head(
-      title='Content catalogue',
-      lede='Indexed, searchable catalogue across all modules and statuses. Browse approved items in the Knowledge repository.',
+      title='Content Catalog',
+      lede='Indexed, searchable catalog across all modules and statuses. Browse approved items in the Knowledge Repository.',
       meta=[
         catalog.total ~ ' total records',
         'Admin view'
       ],
       breadcrumbs=[
         {'label': 'Dashboard', 'href': url_for('main.dashboard')},
-        {'label': 'Content catalogue', 'href': none}
+        {'label': 'Content Catalog', 'href': none}
       ],
       class='portal-page-head'
     ) %}
-    <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create content</a>
+    <a class="btn btn-primary" href="{{ url_for('content.content_create') }}">+ Create Content</a>
   {% endcall %}
 
   <form method="get" class="catalog-toolbar mine-table-toolbar" action="{{ url_for('content.content_list') }}" data-portal-stagger>
@@ -112,7 +112,7 @@
       'No content records match your filters',
       'Try clearing filters or create a new knowledge item.',
       url_for('content.content_create'),
-      'Create content'
+      'Create Content'
     ) }}
   {% endif %}
 </div>

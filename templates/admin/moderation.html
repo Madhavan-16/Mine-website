@@ -2,7 +2,7 @@
 {% from "includes/status_badge.html" import status_badge %}
 {% from "includes/empty_state.html" import empty_state %}
 {% from "includes/mine_page_head.html" import mine_page_head %}
-{% block title %}Content moderation &amp; governance{% endblock %}
+{% block title %}Content Moderation &amp; Governance{% endblock %}
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/moderation-governance.css') }}" />
 {% endblock %}
@@ -15,8 +15,8 @@
 
 <div class="gov portal-page">
   {% call mine_page_head(
-      title='Review workflow',
-      lede='Contributors submit knowledge for review. Moderators and administrators approve or return items here. Only approved items appear in the public knowledge catalogue.',
+      title='Review Workflow',
+      lede='Contributors submit knowledge for review. Moderators and administrators approve or return items here. Only approved items appear in the public knowledge catalog.',
       meta=[
         pending_n ~ ' in queue',
         approved_n ~ ' published',
@@ -28,7 +28,7 @@
       ],
       class='portal-page-head'
     ) %}
-    <a class="btn btn-secondary" href="{{ url_for('content.content_list') }}">Full catalogue</a>
+    <a class="btn btn-secondary" href="{{ url_for('content.content_list') }}">Full Catalog</a>
   {% endcall %}
 
   <section class="gov-pipeline" aria-labelledby="gov-pipeline-title">
@@ -64,7 +64,7 @@
         <span class="gov-step__num" aria-hidden="true">4</span>
         <div class="gov-step__body">
           <span class="gov-step__label">Published</span>
-          <span class="gov-step__desc">Live in the catalogue</span>
+          <span class="gov-step__desc">Live in the catalog</span>
           <span class="gov-step__count">{{ approved_n }}</span>
         </div>
       </li>
@@ -188,7 +188,7 @@
           'Queue is clear',
           'There are no pending submissions. New items appear here when authors submit for review.',
           url_for('content.content_list'),
-          'Browse catalogue'
+          'Browse Catalog'
         ) }}
       {% endif %}
     </section>

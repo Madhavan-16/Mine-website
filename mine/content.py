@@ -68,7 +68,7 @@ _ALLOWED_UPLOAD_EXTS = sorted(Config.ALLOWED_EXTENSIONS)
 
 
 def _sync_knowledge_persist(cid: int | None = None, *, module: str | None = None, title: str | None = None, deleted: bool = False) -> None:
-    """Mirror knowledge artefacts to Azure durable store (no-op off Azure / for non-knowledge)."""
+    """Mirror knowledge artifacts to Azure durable store (no-op off Azure / for non-knowledge)."""
     try:
         from mine.knowledge_persist import (
             delete_knowledge_from_persist,
@@ -119,7 +119,7 @@ def _office_cloud_can_fetch_document_url(file_url: str) -> bool:
 
 
 def _user_may_create_knowledge_module(role: str | None, module: str | None) -> bool:
-    """Normal users may not create KYC, KYA, or Term of the week (DTOW)."""
+    """Normal users may not create KYC, KYA, or Term of the Week (DTOW)."""
     mod = (module or "").strip()
     if not mod:
         return False
@@ -197,7 +197,7 @@ class StandaloneRepoForm(FlaskForm):
 
 
 class ProjectContentForm(FlaskForm):
-    """Create/edit Programs &amp; projects records (content.module is always <code>projects</code>)."""
+    """Create/edit Programs &amp; Projects records (content.module is always <code>projects</code>)."""
 
     title = StringField("Project name", validators=[DataRequired(), Length(max=500)], render_kw={"id": "title"})
     summary = TextAreaField(
@@ -243,7 +243,9 @@ def _project_fields_filled_for_submit(form) -> list[str]:
 
 
 def _str_or_none(s: str) -> str | None:
-    t = (s or "").strip()
+    from mine.text_cleanup import readable_summary
+
+    t = readable_summary(s or "").strip()
     return t or None
 
 
@@ -571,9 +573,12 @@ def _safe_return_path(raw: str | None) -> str | None:
 
 
 def _normalize_display_text(value: str | None) -> str:
+    from mine.text_cleanup import readable_summary
+
     if not value:
         return ""
-    return "\n".join(line.strip() for line in value.splitlines()).strip()
+    cleaned = readable_summary(value)
+    return "\n".join(line.strip() for line in cleaned.splitlines()).strip()
 
 
 def _content_series_neighbors(db, cid: int, module: str):
@@ -871,7 +876,7 @@ def content_create():
             return redirect(url_for("repo_standalone.repo_new", segment=seg))
         if role == "user" and req_mod in RESTRICTED_KNOWLEDGE_CREATE_MODULES:
             flash(
-                "Only administrators and moderators can add KYC, KYA, or Term of the week items.",
+                "Only administrators and moderators can add KYC, KYA, or Term of the Week items.",
                 "warning",
             )
             return redirect(url_for("content.content_create"))
@@ -886,7 +891,7 @@ def content_create():
         mod_sl = (form.module.data or "").strip()
         if not _user_may_create_knowledge_module(role, mod_sl):
             flash(
-                "Choose a series you are allowed to upload (newsletter, case studies, RFP snippets, blogs & whitepapers)."
+                "Choose a series you are allowed to upload (newsletter, case studies, RFP Snippets, blogs & whitepapers)."
                 if role == "user"
                 else "Choose one of the knowledge-repository series.",
                 "danger",
@@ -910,7 +915,7 @@ def content_create():
                 "success",
             )
         else:
-            flash("Draft saved. Open it anytime from My submissions, then Submit for review when ready.", "success")
+            flash("Draft saved. Open it anytime from My Submissions, then Submit for review when ready.", "success")
         return redirect(url_for("content.content_view", cid=cid))
     if request.method == "POST" and not form.validate_on_submit():
         flash("Please fix the highlighted errors and try again.", "danger")
@@ -1041,7 +1046,7 @@ def content_edit(cid: int):
     if not _can_edit_knowledge_row(user, row):
         status = (row["status"] or "").strip().lower()
         if status == "pending":
-            flash("This item is awaiting moderation. You can view it, but only admins can change published catalogue edits after approval.", "warning")
+            flash("This item is awaiting moderation. You can view it, but only admins can change published catalog edits after approval.", "warning")
         elif status == "approved" and user["role"] != "admin":
             flash("Only administrators can edit approved knowledge-repository content.", "warning")
         else:
@@ -1076,7 +1081,7 @@ def content_edit(cid: int):
             and new_mod != old_mod
         ):
             flash(
-                "Only administrators and moderators can move content into KYC, KYA, or Term of the week.",
+                "Only administrators and moderators can move content into KYC, KYA, or Term of the Week.",
                 "danger",
             )
             form.module.choices = _knowledge_series_form_choices(old_mod, role=role)

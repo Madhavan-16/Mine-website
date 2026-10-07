@@ -1,4 +1,4 @@
-"""Paginated, sortable, FTS-indexed catalogue queries."""
+"""Paginated, sortable, FTS-indexed catalog queries."""
 
 from __future__ import annotations
 
@@ -150,7 +150,7 @@ def query_catalog(
     page: int = 1,
     per_page: int = CATALOG_PAGE_SIZE_DEFAULT,
 ) -> dict[str, Any]:
-    """Return paginated catalogue rows with total count and paging metadata."""
+    """Return paginated catalog rows with total count and paging metadata."""
     qtext = (q or "").strip()
     page = max(1, int(page or 1))
     per_page = min(CATALOG_PAGE_SIZE_MAX, max(1, int(per_page or CATALOG_PAGE_SIZE_DEFAULT)))
@@ -308,7 +308,7 @@ def catalog_query_params(
     sort: str | None = None,
     per_page: int | None = None,
 ) -> dict[str, str | int]:
-    """URL query params for catalogue filter links (omit empties)."""
+    """URL query params for catalog filter links (omit empties)."""
     raw = {
         "q": (q or "").strip(),
         "module": (module or "").strip(),

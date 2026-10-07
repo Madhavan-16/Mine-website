@@ -26,7 +26,7 @@ class SearchSection:
 SEARCH_SECTIONS: tuple[SearchSection, ...] = (
     SearchSection(
         id="knowledge",
-        label="Knowledge repository",
+        label="Knowledge Repository",
         aliases=(
             "knowledge repository",
             "knowledge repo",
@@ -42,28 +42,28 @@ SEARCH_SECTIONS: tuple[SearchSection, ...] = (
     ),
     SearchSection(
         id="case_study",
-        label="Case studies",
+        label="Case Studies",
         aliases=("case study", "case studies", "case-study", "case-studies", "cases", "case"),
         kind="knowledge",
         module="case_study",
     ),
     SearchSection(
         id="kyc_series",
-        label="KYC series",
+        label="KYC Series",
         aliases=("kyc series", "kyc episode", "kyc episodes", "kyc entry", "kyc entries", "kyc"),
         kind="knowledge",
         module="kyc",
     ),
     SearchSection(
         id="kya",
-        label="KYA series",
+        label="KYA Series",
         aliases=("kya series", "kya episode", "kya episodes", "kya", "know your account"),
         kind="knowledge",
         module="kya",
     ),
     SearchSection(
         id="domain_term",
-        label="Term of the week",
+        label="Term of the Week",
         aliases=("term of the week", "domain term", "domain terms", "terms", "term"),
         kind="knowledge",
         module="domain_term",
@@ -77,14 +77,14 @@ SEARCH_SECTIONS: tuple[SearchSection, ...] = (
     ),
     SearchSection(
         id="rfp_snippet",
-        label="RFP snippets",
+        label="RFP Snippets",
         aliases=("rfp snippets", "rfp snippet", "rfp"),
         kind="knowledge",
         module="rfp_snippet",
     ),
     SearchSection(
         id="blog",
-        label="Blogs & whitepapers",
+        label="Blogs & Whitepapers",
         aliases=(
             "blogs and whitepapers",
             "blogs & whitepapers",
@@ -98,7 +98,7 @@ SEARCH_SECTIONS: tuple[SearchSection, ...] = (
     ),
     SearchSection(
         id="projects",
-        label="Programs & projects",
+        label="Programs & Projects",
         aliases=(
             "programs and projects",
             "program and projects",
@@ -123,21 +123,21 @@ SEARCH_SECTIONS: tuple[SearchSection, ...] = (
     ),
     SearchSection(
         id="onboarding",
-        label="Onboarding kit",
+        label="Onboarding Kit",
         aliases=("onboarding kit", "onboarding", "onboard", "on-boarding"),
         kind="route",
         endpoint="main.onboarding",
     ),
     SearchSection(
         id="innovation",
-        label="Innovation center",
+        label="Innovation Center",
         aliases=("innovation center", "innovation centre", "innovation", "innovate"),
         kind="route",
         endpoint="main.innovation",
     ),
     SearchSection(
         id="training",
-        label="Training corner",
+        label="Training Corner",
         aliases=("training corner", "training", "train", "learn"),
         kind="route",
         endpoint="main.training",
@@ -151,7 +151,7 @@ SEARCH_SECTIONS: tuple[SearchSection, ...] = (
     ),
     SearchSection(
         id="journey",
-        label="Hexaware Journey",
+        label="Freeport–Hexaware Journey",
         aliases=(
             "hexaware journey",
             "freeport journey",
@@ -180,7 +180,7 @@ SEARCH_SECTIONS: tuple[SearchSection, ...] = (
     ),
     SearchSection(
         id="fmi_kyc",
-        label="Know your Customer — Freeport",
+        label="Know Your Customer — Freeport",
         aliases=(
             "know your customer freeport",
             "know your customer",
@@ -308,7 +308,7 @@ def section_open_url(section: SearchSection, remainder: str | None = None) -> st
 
 def resolve_section_navigation(q: str, module: str | None = None) -> str | None:
     """Return a redirect URL when the query is primarily section navigation."""
-    del module  # Section intent wins over catalogue filters unless stay=1 on search page.
+    del module  # Section intent wins over catalog filters unless stay=1 on search page.
     normalized = _normalize_query(q)
     if not normalized:
         return None
@@ -374,7 +374,7 @@ def matching_sections(q: str, limit: int = 8) -> list[SearchSection]:
 
 
 def result_url_for_content(module: str, content_id: int) -> str:
-    """Module-aware link for a catalogue search hit."""
+    """Module-aware link for a catalog search hit."""
     mod = (module or "").strip()
     if mod == "projects":
         return url_for("projects.project_list", open=content_id)

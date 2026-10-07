@@ -1,4 +1,4 @@
-{# Knowledge-series content view — sections + catalogue pagination (page chrome via mine_page_head) #}
+{# Knowledge-series content view — sections + catalog pagination (page chrome via mine_page_head) #}
 {% from "includes/status_badge.html" import status_badge %}
 {% set series_label = knowledge_module_labels[row.module] %}
 {% set is_case_study = row.module == 'case_study' %}
@@ -137,7 +137,7 @@
   </div>
 
   {% if item_status == 'approved' and (prev_row or next_row) %}
-    <footer class="kview-pager" aria-label="Catalogue navigation">
+    <footer class="kview-pager" aria-label="Catalog navigation">
       {% if prev_row %}
         <a class="kview-pager__link kview-pager__link--prev"
            href="{{ url_for('content.content_view', cid=prev_row.id, section=section, return_to=return_to or none) }}">

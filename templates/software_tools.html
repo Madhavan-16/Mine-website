@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 {% from "includes/mine_page_head.html" import mine_page_head %}
-{% block title %}Software &amp; tools — master list{% endblock %}
+{% block title %}Software &amp; Tools — Master List{% endblock %}
 {% block page_header %}
   {% call mine_page_head(
-      title='Software & tools',
+      title='Software & Tools',
       lede='Approved IDEs, platforms, mining systems, and collaboration tools used on the Freeport account. Treat this register as the program-office source of truth.',
       meta=['8 tools', '5 categories', 'Updated Aug 2026'],
       breadcrumbs=[
         {'label': 'Home', 'href': url_for('main.dashboard')},
-        {'label': 'Software & tools', 'href': none}
+        {'label': 'Software & Tools', 'href': none}
       ]
     ) %}
-    <a class="btn btn-secondary" href="{{ url_for('main.onboarding') }}">Onboarding kit</a>
+    <a class="btn btn-secondary" href="{{ url_for('main.onboarding') }}">Onboarding Kit</a>
   {% endcall %}
 {% endblock %}
 {% block content %}
@@ -114,7 +114,7 @@
       </table>
     </div>
     <p class="mine-table__empty" data-table-empty="software">No tools match this search or filter.</p>
-    <p class="meta">Keep this list aligned with the Onboarding kit Master tools tab. Add tenant-specific URLs as program office confirms them.</p>
+    <p class="meta">Keep this list aligned with the Onboarding Kit Master tools tab. Add tenant-specific URLs as program office confirms them.</p>
   </section>
 {% endblock %}
 {% block scripts_extra %}

@@ -354,7 +354,7 @@
   color: var(--hex-grey-500);
 }
 
-/* Catalogue prev / next */
+/* Catalog prev / next */
 .kview-pager {
   display: flex;
   align-items: stretch;

@@ -27,8 +27,8 @@ _STAFF_SECTION_IDS = frozenset(
 
 _PAGE_BLURBS: dict[str, str] = {
     "knowledge": (
-        "The Knowledge repository holds approved Freeport–Hexaware knowledge articles "
-        "(KYC/KYA series, term of the week, newsletters, case studies, RFP snippets, blogs)."
+        "The Knowledge Repository holds approved Freeport–Hexaware knowledge articles "
+        "(KYC/KYA Series, term of the week, newsletters, case studies, RFP Snippets, blogs)."
     ),
     "journey": (
         "Freeport–Hexaware Journey covers the partnership story and digital/mining transformation themes, "
@@ -39,21 +39,21 @@ _PAGE_BLURBS: dict[str, str] = {
         "digital enablement, and related operations topics."
     ),
     "fmi_kyc": (
-        "Know your Customer — Freeport introduces Freeport-McMoRan as the account customer: "
+        "Know Your Customer — Freeport introduces Freeport-McMoRan as the account customer: "
         "business context, evolution timeline, and engagement background."
     ),
     "projects": (
-        "Programs & projects is the portfolio of Freeport engagement programmes and delivery projects "
+        "Programs & Projects is the Freeport engagement portfolio of programs and delivery projects "
         "(status, managers, and published project records)."
     ),
     "onboarding": (
-        "Onboarding kit helps new joiners ramp up with Freeport–Hexaware orientation notes and resources."
+        "Onboarding Kit helps new joiners ramp up with Freeport–Hexaware orientation notes and resources."
     ),
     "training": (
-        "Training corner collects learning materials and training items for the Freeport engagement."
+        "Training Corner collects learning materials and training items for the Freeport engagement."
     ),
     "innovation": (
-        "Innovation center highlights innovation stories and ideas from the Freeport–Hexaware team."
+        "Innovation Center highlights innovation stories and ideas from the Freeport–Hexaware team."
     ),
     "hall_of_fame": (
         "Hall of Fame celebrates wins and standout contributions from the engagement."
@@ -79,16 +79,16 @@ _HELP_REPLY = (
 
 _HELP_REPLY_GUEST = (
     "Hey — I'm Ask MiNe. As Guest you can explore Knowledge, Domain Knowledge, "
-    "Freeport–Hexaware Journey, and Know your Customer. "
-    "Sign in with a full account for Programs & projects and other staff sections."
+    "Freeport–Hexaware Journey, and Know Your Customer. "
+    "Sign in with a full account for Programs & Projects and other staff sections."
 )
 
 _GUEST_STAFF_REPLY = (
     "That area is available to full MiNe accounts (not Guest).\n\n"
-    "Sign in with your username to open **Programs & projects**, SOW details, "
+    "Sign in with your username to open **Programs & Projects**, SOW details, "
     "**Onboarding**, **Training**, **Innovation**, or **Hall of Fame**.\n\n"
     "As Guest you can browse **Knowledge**, **Domain Knowledge**, **Journey**, "
-    "and **Know your Customer**."
+    "and **Know Your Customer**."
 )
 
 _GUEST_STAFF_EXACT = frozenset(
@@ -257,7 +257,7 @@ def _exact_section_intent(q: str, allowed: frozenset[str]) -> str | None:
 
 
 def _wants_project_portfolio_list(q: str) -> bool:
-    """True when the user wants the Programs & projects portfolio list (not one named SOW)."""
+    """True when the user wants the Programs & Projects portfolio list (not one named SOW)."""
     qn = _normalize(q)
     if not qn:
         return False
@@ -326,7 +326,7 @@ def _wants_project_portfolio_list(q: str) -> bool:
 
 
 def _list_active_portfolio_projects(*, limit: int = 8) -> list[dict[str, Any]]:
-    """Active Programs & projects catalog entries with deep-links when available."""
+    """Active Programs & Projects catalog entries with deep-links when available."""
     try:
         from mine.project_catalog import load_project_section_catalog
 
@@ -360,7 +360,7 @@ def _list_active_portfolio_projects(*, limit: int = 8) -> list[dict[str, Any]]:
                 "title": title,
                 "summary": _snippet(overview, 220),
                 "url": url,
-                "module_label": "Programs & projects",
+                "module_label": "Programs & Projects",
                 "module": "projects",
                 "detail": {
                     "overview": overview,
@@ -1158,7 +1158,7 @@ def _follow_up_suggestions(topic: str = "", *, guest: bool = False) -> list[dict
             {"label": "Knowledge Base", "query": "knowledge"},
             {"label": "Domain Knowledge", "query": "domain knowledge"},
             {"label": "Journey", "query": "journey"},
-            {"label": "Know your Customer", "query": "know your customer"},
+            {"label": "Know Your Customer", "query": "know your customer"},
             {
                 "label": "Mining Process",
                 "query": "what are the major mining operations",
@@ -1242,7 +1242,7 @@ def _knowledge_hits(
         )
         rows = catalog.get("rows") or []
     except Exception:
-        current_app.logger.exception("Chatbot catalogue search failed for %r", q)
+        current_app.logger.exception("Chatbot catalog search failed for %r", q)
         rows = []
 
     # Series-name queries (e.g. "case studies" / "onboarding") often don't FTS-match article titles —
@@ -1361,7 +1361,7 @@ def _project_catalog_hits(q: str, *, limit: int = 4) -> list[dict[str, Any]]:
                     "title": title,
                     "summary": summary,
                     "url": url,
-                    "module_label": "Programs & projects",
+                    "module_label": "Programs & Projects",
                     "module": "projects",
                     "detail": {
                         "overview": overview,
@@ -1532,7 +1532,7 @@ def _retrieve_mine_content(q: str, *, guest: bool, concise: bool = False) -> tup
         seen.add(key)
         merged.append(item)
 
-    # If we found project/knowledge hits, also attach the Programs & projects hub.
+    # If we found project/knowledge hits, also attach the Programs & Projects hub.
     if merged and not guest and "projects" in allowed:
         if any((a.get("module") == "projects") for a in merged):
             hub = _page_hit("projects")
@@ -1560,7 +1560,7 @@ def _compose_answer(q: str, pages: list[dict], articles: list[dict], *, note: st
             return (
                 "I couldn't find that information in the Guest-accessible MiNe pages.\n\n"
                 "Try **knowledge**, **domain knowledge**, **journey**, or **know your customer**.\n\n"
-                "Programs & projects and SOW details need a full MiNe account."
+                "Programs & Projects and SOW details need a full MiNe account."
             )
         return (
             "I couldn't find that information in the MiNe knowledge repository.\n\n"
@@ -1577,7 +1577,7 @@ def _compose_answer(q: str, pages: list[dict], articles: list[dict], *, note: st
         if note:
             parts.append(note)
         parts.append(
-            f"Here are the active Freeport–Hexaware programmes and projects that match “{q_clean}”:"
+            f"Here are the active Freeport–Hexaware programs and projects that match “{q_clean}”:"
         )
         for a in project_items[:8]:
             line = f"• **{a.get('title')}**"
@@ -1943,7 +1943,7 @@ def answer_question(
             fallback = "You're welcome — anything else I can help with?"
         greet_prompt = (
             "Say a short friendly hello. Mention Guest can use Knowledge, Domain Knowledge, "
-            "Journey, and Know your Customer. Do not mention projects, SOW, onboarding, or training."
+            "Journey, and Know Your Customer. Do not mention projects, SOW, onboarding, or training."
             if guest
             else "Say a short friendly hello and ask how you can help. Do not list portal pages."
         )
@@ -2216,7 +2216,7 @@ def answer_question(
                 articles = _project_catalog_hits(q, limit=6) or _knowledge_hits(
                     db, q, limit=6, module="projects", list_module_if_empty=True, include_projects=True
                 )
-            note = "Programs & projects in the MiNe portfolio."
+            note = "Programs & Projects in the MiNe portfolio."
             fallback = _compose_answer(q, pages, articles, note=note, guest=guest)
             llm = _maybe_llm_reply(
                 display_q,
@@ -2376,8 +2376,8 @@ def answer_question(
     fallback = (
         (
             "I couldn't find that in Guest-accessible MiNe pages.\n\n"
-            "Try Knowledge, Domain Knowledge, Journey, or Know your Customer — "
-            "or sign in with a full account for Programs & projects."
+            "Try Knowledge, Domain Knowledge, Journey, or Know Your Customer — "
+            "or sign in with a full account for Programs & Projects."
         )
         if guest
         else (
@@ -2401,7 +2401,7 @@ def answer_question(
         reply = (
             (
                 "I couldn't find that in Guest-accessible MiNe pages, and no free LLM API key is configured.\n\n"
-                "Try Knowledge, Domain Knowledge, Journey, or Know your Customer."
+                "Try Knowledge, Domain Knowledge, Journey, or Know Your Customer."
             )
             if guest
             else (

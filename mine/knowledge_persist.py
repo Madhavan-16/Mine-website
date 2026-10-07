@@ -1,11 +1,11 @@
 """
-Knowledge-artefact persistence on Azure App Service.
+Knowledge-artifact persistence on Azure App Service.
 
 Policy
 ------
 - UI, CSS/JS, static images, text/layout, projects config, and non-knowledge
   content come from local git push (wwwroot).
-- Knowledge-repository artefacts (KYC, KYA, term of the week, newsletter,
+- Knowledge-repository artifacts (KYC, KYA, term of the week, newsletter,
   case studies, RFP snippets, blogs + attachments) are **website-primary**:
   create / edit / approve / reject on the live site. They are mirrored under
   /home/data/mine/knowledge and merged back into wwwroot after every deploy

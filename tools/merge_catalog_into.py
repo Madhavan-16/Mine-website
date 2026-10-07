@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Merge catalogue content from a SOURCE database into a TARGET database.
+Merge catalog content from a SOURCE database into a TARGET database.
 
 Use cases
 ---------
-1) Merge knowledge artefacts only (recommended for Azure ↔ local):
+1) Merge knowledge artifacts only (recommended for Azure ↔ local):
      python tools/merge_catalog_into.py --source mine.db --target azure-mine.db ^
          --source-uploads uploads --target-uploads azure-uploads --modules knowledge
 
-2) Publish full local catalogue onto a downloaded Azure DB (then upload that DB back):
+2) Publish full local catalog onto a downloaded Azure DB (then upload that DB back):
      python tools/merge_catalog_into.py --source mine.db --target azure-mine.db ^
          --source-uploads uploads --target-uploads azure-uploads
 

@@ -14,9 +14,9 @@
 <div class="search-page">
   {{ mine_page_head(
       title='Search MiNe',
-      lede='Find knowledge, sections, and tags across the governed Freeport catalogue.',
-      kicker='Universal catalogue search',
-      meta=['Universal catalogue search', (rows|length ~ ' results') if q else 'Ready'],
+      lede='Find knowledge, sections, and tags across the governed Freeport catalog.',
+      kicker='Universal Catalog Search',
+      meta=['Universal Catalog Search', (rows|length ~ ' results') if q else 'Ready'],
       breadcrumbs=[
         {'label': 'Dashboard', 'href': url_for('main.dashboard')},
         {'label': 'Search', 'href': none}
@@ -100,7 +100,7 @@
 
     {{ empty_state(
       'Start your search',
-      'Enter a query to search the approved catalogue and MiNe sections — try case studies, training, or programs and projects.',
+      'Enter a query to search the approved catalog and MiNe sections — try case studies, training, or programs and projects.',
       url_for('main.knowledge'),
       'Browse knowledge'
     ) }}
@@ -123,7 +123,7 @@
 
           {% if section_shortcuts and rows %} · {% endif %}
 
-          {% if rows %}{{ rows|length }} catalogue item{% if rows|length != 1 %}s{% endif %}{% endif %}
+          {% if rows %}{{ rows|length }} catalog item{% if rows|length != 1 %}s{% endif %}{% endif %}
 
         {% endif %}
 
@@ -173,7 +173,7 @@
 
       {% if rows and rows|length > 0 %}
 
-        <h2 class="search-page__results-subtitle">Catalogue items</h2>
+        <h2 class="search-page__results-subtitle">Catalog Items</h2>
 
         <ul class="search-page__result-list" role="list">
 
@@ -199,13 +199,13 @@
 
                 {% if item.summary and item.summary.strip() %}
 
-                  <p class="search-page__result-excerpt">{{ item.summary|truncate(320)|e }}</p>
+                  <p class="search-page__result-excerpt">{{ item.summary|readable_summary|truncate(320)|e }}</p>
 
                 {% endif %}
 
                 <a class="search-page__result-link" href="{{ item.result_url }}">
 
-                  {% if item.module == 'projects' %}Open in Programs &amp; projects →{% else %}Read item →{% endif %}
+                  {% if item.module == 'projects' %}Open in Programs &amp; Projects →{% else %}Read item →{% endif %}
 
                 </a>
 
@@ -219,10 +219,10 @@
 
       {% else %}
 
-        <h2 class="search-page__results-subtitle">Catalogue items</h2>
+        <h2 class="search-page__results-subtitle">Catalog Items</h2>
 
         {{ empty_state(
-          'No catalogue matches',
+          'No catalog matches',
           'Try a title word, tag, or change the section filter. Related pages above may still help.',
           url_for('main.knowledge'),
           'Browse knowledge repository'

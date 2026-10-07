@@ -3,7 +3,7 @@
 {% block title %}Training Corner{% endblock %}
 {% block page_header %}
   {% call mine_page_head(
-      title='Training corner',
+      title='Training Corner',
       lede='Pick a topic, then open the folder in Teams. Contents stay in the channel for members with access.',
       meta=[
         teams_folder_count ~ ' Teams folders',
@@ -11,8 +11,8 @@
         'Training_Documents'
       ],
       breadcrumbs=[
-        {'label': 'Program map', 'href': url_for('reference.fmi_kyc')},
-        {'label': 'Training corner', 'href': none}
+        {'label': 'Program Map', 'href': url_for('reference.fmi_kyc')},
+        {'label': 'Training Corner', 'href': none}
       ]
     ) %}
     {% if teams_root_url %}
@@ -77,7 +77,7 @@
         <a class="btn btn-primary" href="{{ url_for('repo_standalone.repo_new', segment='training') }}">Add training item</a>
       {% endif %}
     </div>
-    {% set empty_message = 'Approved training items will appear in this catalogue once they are published.' %}
+    {% set empty_message = 'Approved training items will appear in this catalog once they are published.' %}
     {% if current_user.role in ['admin','moderator'] %}
       {% set empty_cta_href = url_for('repo_standalone.repo_new', segment='training') %}
       {% set empty_cta_label = 'Add training item' %}

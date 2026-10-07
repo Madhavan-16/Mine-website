@@ -8,12 +8,12 @@
 {% endblock %}
 {% block page_header %}
   {% call mine_page_head(
-      title='Onboarding kit',
+      title='Onboarding Kit',
       lede='One place for first-week guidance, required software, and the evolving master tool register for the Freeport account.',
       meta=['Freeport account', '3 sections', 'Updated Aug 2026'],
       breadcrumbs=[
-        {'label': 'Program map', 'href': url_for('reference.fmi_kyc')},
-        {'label': 'Onboarding kit', 'href': none}
+        {'label': 'Program Map', 'href': url_for('reference.fmi_kyc')},
+        {'label': 'Onboarding Kit', 'href': none}
       ]
     ) %}
     {% if current_user.role in ['admin','moderator'] %}
@@ -31,7 +31,7 @@
       <input type="radio" name="ob-tab" id="ob-tab-master" />
       <div class="tab-labels" role="tablist" aria-label="Onboarding sections">
         <label for="ob-tab-dos" role="tab">Do’s &amp; don’ts</label>
-        <label for="ob-tab-tools" role="tab">Software &amp; tools</label>
+        <label for="ob-tab-tools" role="tab">Software &amp; Tools</label>
         <label for="ob-tab-master" role="tab">Master tools</label>
       </div>
       <div class="tab-panels">
@@ -75,7 +75,7 @@
             <header class="ob-section-head">
               <div>
                 <p class="ob-section-kicker">Required setup</p>
-                <h2 class="ob-section-title">Software &amp; tools</h2>
+                <h2 class="ob-section-title">Software &amp; Tools</h2>
               </div>
             </header>
             <div class="mine-table-toolbar" aria-label="Software and tools controls">
@@ -262,7 +262,7 @@
               </table>
             </div>
             <p class="mine-table__empty" data-table-empty="master">No tools match this search.</p>
-            <p class="meta">Aligned with the <a href="{{ url_for('main.software_tools') }}">Software &amp; tools</a> master list. Update both when the program office adds tools.</p>
+            <p class="meta">Aligned with the <a href="{{ url_for('main.software_tools') }}">Software &amp; Tools</a> master list. Update both when the program office adds tools.</p>
           </section>
         </div>
       </div>

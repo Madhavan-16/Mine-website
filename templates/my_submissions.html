@@ -2,12 +2,12 @@
 {% from "includes/status_badge.html" import status_badge %}
 {% from "includes/empty_state.html" import empty_state %}
 {% from "includes/mine_page_head.html" import mine_page_head %}
-{% block title %}My submissions{% endblock %}
+{% block title %}My Submissions{% endblock %}
 {% block page_header %}{% endblock %}
 {% block content %}
 <div class="portal-page">
   {% call mine_page_head(
-      title='My submissions',
+      title='My Submissions',
       lede='Track drafts, pending reviews, and published knowledge items you have created.',
       meta=[
         rows|length ~ ' total',
@@ -15,7 +15,7 @@
       ],
       breadcrumbs=[
         {'label': 'Dashboard', 'href': url_for('main.dashboard')},
-        {'label': 'My submissions', 'href': none}
+        {'label': 'My Submissions', 'href': none}
       ],
       class='portal-page-head'
     ) %}

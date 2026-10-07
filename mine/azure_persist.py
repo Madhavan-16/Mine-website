@@ -1,7 +1,7 @@
-"""Azure App Service layout: wwwroot from git push; knowledge artefacts dual-persisted.
+"""Azure App Service layout: wwwroot from git push; knowledge artifacts dual-persisted.
 
 UI, static assets, images, projects config, and the live wwwroot DB/uploads come
-from local ``git push``. Knowledge-repository artefacts also mirror under
+from local ``git push``. Knowledge-repository artifacts also mirror under
 ``/home/data/mine/knowledge`` so website uploads survive the next deploy.
 """
 
@@ -48,7 +48,7 @@ def ensure_azure_persistent_storage(app) -> None:
     ensure_knowledge_persist_dirs()
     app.logger.info(
         "Azure data policy: live DATABASE=%s UPLOAD_FOLDER=%s (from git deploy); "
-        "knowledge artefacts also mirrored at %s",
+        "knowledge artifacts also mirrored at %s",
         app.config.get("DATABASE"),
         app.config.get("UPLOAD_FOLDER"),
         knowledge_persist_root(),

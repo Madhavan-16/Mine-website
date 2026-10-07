@@ -8,7 +8,7 @@ Your MiNe app URL (example):
 | What | How it updates |
 |------|----------------|
 | UI, CSS/JS, images, text boxes, journey assets, projects config, users, non-knowledge content | **Local → git push only** (wwwroot) |
-| Knowledge repository artefacts (KYC, KYA, term of the week, newsletter, case studies, RFP snippets, blogs & files) | **Website only** — create, edit, approve/reject on the live portal |
+| Knowledge repository artifacts (KYC, KYA, term of the week, newsletter, case studies, RFP snippets, blogs & files) | **Website only** — create, edit, approve/reject on the live portal |
 
 Live paths on Azure:
 

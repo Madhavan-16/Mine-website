@@ -316,7 +316,7 @@
   color: var(--hex-grey-600);
 }
 
-/* ——— Catalogue toolbar (search / sort / pagination) ——— */
+/* ——— Catalog toolbar (search / sort / pagination) ——— */
 .catalog-toolbar {
   margin-bottom: 16px;
   padding: 16px 18px;

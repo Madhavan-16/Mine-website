@@ -4,6 +4,7 @@
   if (!input || !list) return;
 
   const items = list.querySelectorAll("[data-feed-search]");
+  const groups = list.querySelectorAll("[data-feed-group]");
   const empty = document.getElementById("dashboard-feed-empty");
 
   input.addEventListener("input", function () {
@@ -14,6 +15,10 @@
       const show = !q || hay.includes(q);
       el.hidden = !show;
       if (show) visible++;
+    });
+    groups.forEach(function (group) {
+      const anyVisible = group.querySelector("[data-feed-search]:not([hidden])");
+      group.hidden = !anyVisible;
     });
     if (empty) empty.hidden = visible > 0;
   });

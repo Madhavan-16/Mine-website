@@ -17,7 +17,10 @@ def title_from_filename(filename: str) -> str:
 
 
 def _norm_ws(s: str) -> str:
-    return re.sub(r"\s+", " ", (s or "").replace("\x00", "")).strip()
+    from mine.text_cleanup import collapse_spaced_glyphs
+
+    cleaned = collapse_spaced_glyphs((s or "").replace("\x00", ""))
+    return re.sub(r"\s+", " ", cleaned).strip()
 
 
 def _clip(s: str, max_len: int) -> str:
@@ -1092,6 +1095,8 @@ def suggest_from_upload(filename: str, data: bytes, *, module: str | None = None
         summary = ""
         full_text = ""
 
+    from mine.text_cleanup import readable_summary
+
     # Case study PDF/DOCX (and other text extracts): segment into the three form fields
     if mod == "case_study":
         blob = full_text or summary or ""
@@ -1101,8 +1106,8 @@ def suggest_from_upload(filename: str, data: bytes, *, module: str | None = None
                 "title": _clean_autofill_title((cs_title or title)[:500]),
                 "summary": "",
                 "body": "",
-                "business_challenge": (challenge or "")[:6000],
-                "solution": (solution or "")[:6000],
+                "business_challenge": readable_summary(challenge or "")[:6000],
+                "solution": readable_summary(solution or "")[:6000],
                 "_source_text": blob,
             }
         return {
@@ -1116,7 +1121,7 @@ def suggest_from_upload(filename: str, data: bytes, *, module: str | None = None
 
     return {
         "title": _clean_autofill_title((title or title_from_filename(name))[:500]),
-        "summary": (summary or "")[:2000],
+        "summary": readable_summary(summary or "")[:2000],
         "body": "",
         "business_challenge": "",
         "solution": "",
