@@ -72,9 +72,8 @@
   var stage = document.getElementById("img-zoom-stage");
   var target = document.getElementById("img-zoom-target");
   var closeBtn = document.getElementById("img-zoom-close");
-  var triggers = root.querySelectorAll(".zoomable-image");
   if (!modal || !stage || !target || !closeBtn) return;
-  if (!triggers.length) return;
+  var triggers = root.querySelectorAll(".zoomable-image");
 
   function openZoom(src, alt) {
     target.classList.remove("is-boosted");
@@ -106,9 +105,91 @@
       openZoom(img.currentSrc || img.src, img.alt);
     });
   });
+
+  function equipSlug(name) {
+    return name
+      .replace(/&/g, "and")
+      .replace(/\//g, "-")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+
+  var equipSection = root.querySelector(".equip-section");
+  var equipBase = equipSection && equipSection.getAttribute("data-equip-image-base");
+  var equipModal = document.getElementById("equip-detail-modal");
+  var equipTitle = document.getElementById("equip-detail-title");
+  var equipImg = document.getElementById("equip-detail-img");
+  var equipDesc = document.getElementById("equip-detail-desc");
+  var equipClose = document.getElementById("equip-detail-close");
+
+  function closeEquipDetail() {
+    if (!equipModal) return;
+    equipModal.classList.remove("is-open");
+    equipModal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
+  function openEquipDetail(title, desc, src, alt) {
+    if (!equipModal || !equipTitle || !equipImg || !equipDesc) return;
+    equipTitle.textContent = title;
+    if (desc && desc.indexOf("<") >= 0) {
+      equipDesc.innerHTML = desc;
+    } else {
+      equipDesc.textContent = desc || "";
+    }
+    equipImg.onerror = function () {
+      equipImg.onerror = null;
+      equipImg.removeAttribute("src");
+      equipImg.alt = "Photo unavailable";
+    };
+    equipImg.src = src;
+    equipImg.alt = alt || title;
+    equipModal.classList.add("is-open");
+    equipModal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  if (equipBase && equipModal && equipClose) {
+    equipClose.addEventListener("click", closeEquipDetail);
+    equipModal.addEventListener("click", function (e) {
+      if (e.target === equipModal) closeEquipDetail();
+    });
+    root.querySelectorAll(".equip-card__name").forEach(function (titleEl) {
+      var card = titleEl.closest(".equip-card");
+      if (!card) return;
+      var title = titleEl.textContent.trim();
+      var descEl = card.querySelector(".equip-card__desc");
+      var desc = descEl ? descEl.innerHTML.trim() : "";
+      titleEl.setAttribute("tabindex", "0");
+      titleEl.setAttribute("role", "button");
+      titleEl.setAttribute("aria-label", "Open reference photo for " + title);
+      function openEquip() {
+        openEquipDetail(
+          title,
+          desc,
+          equipBase + "/" + equipSlug(title) + ".jpg",
+          "Reference photo: " + title
+        );
+      }
+      titleEl.addEventListener("click", function (e) {
+        e.preventDefault();
+        openEquip();
+      });
+      titleEl.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openEquip();
+        }
+      });
+    });
+  }
+
   closeBtn.addEventListener("click", closeZoom);
   modal.addEventListener("click", function (e) { if (e.target === modal) closeZoom(); });
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && modal.classList.contains("is-open")) closeZoom();
+    if (e.key !== "Escape") return;
+    if (equipModal && equipModal.classList.contains("is-open")) closeEquipDetail();
+    else if (modal.classList.contains("is-open")) closeZoom();
   });
 })();
