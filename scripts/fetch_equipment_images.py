@@ -21,6 +21,13 @@ ENWIKI = "https://en.wikipedia.org/w/api.php"
 DIRECT: dict[str, str] = {
     "jaw-cone-impact-crusher": "https://upload.wikimedia.org/wikipedia/commons/d/d5/Compound_Cone_Crusher_%28VSC_series%29.jpg",
     "agglomerator": "https://upload.wikimedia.org/wikipedia/commons/d/d9/PELLETIZER.jpg",
+    "rotary-blast-hole-drill": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Rotary_Blast_Drill_%28early_1960s%29.jpg",
+    "pre-split-drill": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Narva_mine_blasthole_drilling.jpg",
+    "stemming-equipment": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Rotary_Boring_Drill_-_DPLA_-_179d8dc8dcd477bd286fc67cab44853e_%28page_1%29.jpg",
+    "water-truck": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Truck_and_sprayer_at_Shotton_Mine.jpg",
+    "conveyor-belt-stacker": "https://upload.wikimedia.org/wikipedia/commons/4/41/Brockman_4_Stacker.JPG",
+    "tower-mill-isamill": "https://upload.wikimedia.org/wikipedia/commons/9/9e/IsaMill_shell_slides_off.png",
+    "sampler-tsf": "https://upload.wikimedia.org/wikipedia/commons/9/98/Highland_Valley_Copper_Mine.JPG",
 }
 
 # Commons search phrases aligned to FMI open-pit copper + PA process areas.

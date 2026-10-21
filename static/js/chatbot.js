@@ -26,6 +26,34 @@
   var STORAGE_PREFIX = "mine-chat-ephemeral:";
   var storageKey = STORAGE_PREFIX + userKey;
 
+  /** Repair UTF-8 mojibake (â€¦ / â†' / â) in assistant bubbles. */
+  function normalizeAssistantText(src) {
+    var t = String(src || "");
+    if (!t || (t.indexOf("â") === -1 && t.indexOf("Ã") === -1 && t.indexOf("\ufffd") === -1)) {
+      return t;
+    }
+    var pairs = [
+      ["â†’", "\u2192"],
+      ["â€”", "\u2014"],
+      ["â€“", "\u2013"],
+      ["â€™", "'"],
+      ["â€œ", "\u201c"],
+      ["â€\u009d", "\u201d"],
+      ["â€¦", "\u2026"],
+      ["Â·", "\u00b7"],
+      ["Â ", " "],
+    ];
+    pairs.forEach(function (p) {
+      if (t.indexOf(p[0]) !== -1) {
+        t = t.split(p[0]).join(p[1]);
+      }
+    });
+    t = t.replace(/\ufffd/g, "");
+    t = t.replace(/\u2014/g, " \u2014 ").replace(/\u2013/g, "-").replace(/\u2192/g, " \u2192 ");
+    t = t.replace(/[ \t]{2,}/g, " ");
+    return t;
+  }
+
   /** Remove any chat keys from disk-like browser storage (never keep cross-user data). */
   function purgeChatStorage(allUsers) {
     function scrub(store) {
@@ -1322,7 +1350,7 @@
       appendBot(fullText, sources, followUps);
       return;
     }
-    var text = fullText || streamState.text || "";
+    var text = normalizeAssistantText(fullText || streamState.text || "");
     if (streamState.pending) {
       streamState.pending = false;
     }
@@ -1464,7 +1492,7 @@
           return postChatJson(q, historyPayload);
         }
         var reader = res.body.getReader();
-        var decoder = new TextDecoder();
+        var decoder = new TextDecoder("utf-8");
         var buffer = "";
         var finalPayload = null;
         var streamFailed = null;

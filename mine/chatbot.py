@@ -13,6 +13,7 @@ from mine.catalog_modules import KNOWLEDGE_SERIES_MODULE_KEYS, STANDALONE_REPO_M
 from mine.catalog_query import query_catalog
 from mine.db import get_db
 from mine.guest import is_guest_user
+from mine.text_cleanup import chat_assistant_text
 from mine.project_catalog import load_project_section_catalog
 from mine.search_nav import SEARCH_SECTIONS, section_open_url, section_search_hits
 
@@ -1867,7 +1868,7 @@ def _out(
     if guest:
         prepared = _guest_safe_sources(prepared)
     payload: dict[str, Any] = {
-        "reply": (reply or "").strip(),
+        "reply": chat_assistant_text(reply),
         "sources": prepared,
         "query": query,
         "follow_ups": follow_ups if follow_ups is not None else [],
@@ -1907,7 +1908,7 @@ def answer_question(
     # Cache only standalone questions (no prior turns). Skip cache when streaming.
     cache_key = ""
     if not token_sink and not hist and not _is_followup_question(q):
-        cache_key = f"v8|{int(guest)}|{_normalize(search_q)}|{_normalize(page_path)}"
+        cache_key = f"v9|{int(guest)}|{_normalize(search_q)}|{_normalize(page_path)}"
         cached = _cache_get(cache_key)
         if cached:
             if token_sink:
@@ -2536,7 +2537,7 @@ def chat_stream():
 
     return Response(
         stream_with_context(generate()),
-        mimetype="text/event-stream",
+        mimetype="text/event-stream; charset=utf-8",
         headers={
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no",

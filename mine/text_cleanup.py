@@ -216,3 +216,64 @@ def strip_outline_numbers(text: str | None) -> str:
 def readable_summary(text: str | None) -> str:
     """Card/excerpt cleanup: fix spaced glyphs and drop inconsistent outline numbers."""
     return strip_outline_numbers(collapse_spaced_glyphs(text))
+
+
+# UTF-8 punctuation mis-read as Windows-1252 / Latin-1 (common in mis-decoded HTTP streams).
+_LITERAL_MOJIBAKE: tuple[tuple[str, str], ...] = (
+    ("â†’", "\u2192"),
+    ("â†‘", "\u2191"),
+    ("â†“", "\u2193"),
+    ("â€”", "\u2014"),
+    ("â€“", "\u2013"),
+    ("â€˜", "\u2018"),
+    ("â€™", "\u2019"),
+    ("â€œ", "\u201c"),
+    ("â€\u009d", "\u201d"),
+    ("â€¦", "\u2026"),
+    ("Â·", "\u00b7"),
+    ("Â ", " "),
+    ("Ã—", "\u00d7"),
+    ("Ã©", "\u00e9"),
+    ("Ã¨", "\u00e8"),
+    ("Ã ", "\u00e0"),
+)
+
+
+def fix_mojibake(text: str | None) -> str:
+    """Repair UTF-8 text that was decoded as Latin-1 / CP1252."""
+    if not text:
+        return ""
+    t = text.replace("\ufeff", "").replace("\u200b", "")
+    if not any(ch in t for ch in ("â", "Ã", "\ufffd")):
+        return t
+    try:
+        candidate = t.encode("latin-1").decode("utf-8")
+        before = t.count("â") + t.count("Ã") + t.count("\ufffd")
+        after = candidate.count("â") + candidate.count("Ã") + candidate.count("\ufffd")
+        if after <= before and "\ufffd" not in candidate:
+            t = candidate
+    except (UnicodeDecodeError, UnicodeEncodeError):
+        pass
+    for bad, good in _LITERAL_MOJIBAKE:
+        if bad in t:
+            t = t.replace(bad, good)
+    return t
+
+
+def chat_assistant_text(text: str | None) -> str:
+    """Normalize assistant chat bubbles for safe UTF-8 display."""
+    t = fix_mojibake(text)
+    if not t:
+        return ""
+    # Drop stray replacement chars left from broken streams; prefer ASCII separators in chat.
+    t = t.replace("\ufffd", "")
+    t = (
+        t.replace("\u2014", " — ")
+        .replace("\u2013", "-")
+        .replace("\u2011", "-")
+        .replace("\u2192", " → ")
+        .replace("\u00a0", " ")
+    )
+    t = re.sub(r"[ \t]{2,}", " ", t)
+    t = re.sub(r" *\n *", "\n", t)
+    return t.strip()

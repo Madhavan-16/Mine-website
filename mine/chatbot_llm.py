@@ -408,10 +408,11 @@ def _iter_groq_stream(
             continue
         got_any = False
         try:
-            for raw in resp.iter_lines(decode_unicode=True):
+            # Always decode SSE as UTF-8 (decode_unicode=True can mis-read API bodies on Windows).
+            for raw in resp.iter_lines(decode_unicode=False):
                 if not raw:
                     continue
-                line = raw.strip() if isinstance(raw, str) else raw.decode("utf-8", "ignore").strip()
+                line = raw.decode("utf-8", "replace").strip()
                 if not line.startswith("data:"):
                     continue
                 data_str = line[5:].strip()
